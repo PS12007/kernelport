@@ -61,9 +61,13 @@ def zoo(
             f"{p.num_passed}/{len(p.cases)}" if p.cases else escape(p.reason),
             f"{b['original_ms']:.4f}" if b and b["original_ms"] is not None else "-",
             f"{b['port_ms']:.4f}" if b else "-",
-            f"{b['speedup']:.2f}x" if b and b["speedup"] is not None else "-",
+            (f"{b['speedup']:.2f}x" + ("" if b["comparable"] else " [dim](n/c)[/]"))
+            if b and b["speedup"] is not None else "-",
         )
     con.print(table)
+    notes = {b["note"] for e in entries for b in e.bench.values() if not b["comparable"]}
+    for note in notes:
+        con.print(f"[dim](n/c) not comparable: {escape(note)}[/]")
     for e in entries:
         for r in [e.original, *e.ports.values()]:
             if r.status == "FAIL":

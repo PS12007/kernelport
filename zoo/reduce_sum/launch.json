@@ -16,6 +16,8 @@
     {"name": "odd_1023", "dims": {"n": 1023}},
     {"name": "odd_4097", "dims": {"n": 4097}},
     {"name": "pow2_65536", "dims": {"n": 65536}},
+    {"name": "accumulate_1000", "dims": {"n": 1000},
+     "init": {"out": {"dist": "normal", "step": 0.0625, "mean": 10.0}}},
     {"name": "large_16M", "dims": {"n": 16777216}}
   ],
   "init": {"x": {"dist": "normal", "edges": true, "step": 0.0625}, "out": {"dist": "zeros"}},

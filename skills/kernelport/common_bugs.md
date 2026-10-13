@@ -17,6 +17,8 @@ failure report against these symptoms first.
 | Off by exactly one element / shifted | Inclusive vs exclusive scan, off-by-one in offsets |
 | `inout` output wrong | Overwrote instead of updating (`y = a*x` instead of `y = a*x + y`), or ignored the initial value |
 | Integer outputs differ | Wrong rounding/truncation, int32 overflow in index math |
+| Different wrong values on each run, or only at large sizes | Data race: several threads/iterations write one element without an atomic (missing `__syncthreads` / `tl.atomic_add`; on cpu, `out[0] += v` inside `prange`) |
+| `error: TypeError: run() returned a value` (cpu) | Outputs must be written in place; `run` must return None |
 | Crash / illegal address | Unmasked out-of-bounds load, index array value used without bounds |
 
 ## Checklist before calling verify_port
@@ -27,7 +29,8 @@ failure report against these symptoms first.
 - [ ] Bounds handled for every size in the spec: 1, 7, odd, power of two, large.
 - [ ] Reductions accumulate in float32 for fp16/bf16 inputs.
 - [ ] Index math cannot overflow 32 bits for the large case.
-- [ ] No shortcuts that skip the kernel (calling torch / numpy on the data instead of the backend).
+- [ ] No shortcuts that skip the kernel (calling torch / numpy library ops that do the kernel's work
+      instead of writing it for the backend).
 
 ## When you are stuck
 

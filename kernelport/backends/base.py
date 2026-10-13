@@ -15,6 +15,7 @@ have none of the GPU packages.
 from __future__ import annotations
 
 import importlib
+import inspect
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -90,6 +91,18 @@ class Backend:
     def supports(self, dtype: str) -> bool:
         """Whether this backend runs cases of ``dtype``."""
         return dtype in self.config.dtypes
+
+
+def bind_kwargs(fn, spec, tensors: dict, scalars: dict) -> dict:
+    """Match launch.json params to run()'s signature, by name."""
+    available = {p.name: (tensors[p.name] if p.is_tensor else scalars[p.name]) for p in spec.params}
+    accepted = inspect.signature(fn).parameters
+    if any(v.kind == v.VAR_KEYWORD for v in accepted.values()):
+        return available
+    missing = [k for k, v in accepted.items() if k not in available and v.default is inspect.Parameter.empty]
+    if missing:
+        raise TypeError(f"run() asks for unknown params {missing}; launch.json params are {list(available)}")
+    return {k: v for k, v in available.items() if k in accepted}
 
 
 _cache: dict[str, Backend] = {}

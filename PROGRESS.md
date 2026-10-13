@@ -89,6 +89,20 @@
   returned inline as `content`); CLI `kernelport report [--md]`. SKILL.md step 9 uses the markdown report.
   6 report tests on a synthetic workspace (no GPU). 187 tests pass.
 
+- **M11 CPU (Numba)** (2026-10-13): `backends/cpu/runner.py`: port = `run(...)` over C-contiguous NumPy
+  arrays with launch.json shapes, outputs written in place (returning a value is an error), loaded once per
+  file hash so Numba compiles once per dtype, wall-clock timing marked not comparable. dtypes float32/float64
+  (fp16/bf16 skipped and named). `cpu_name()` now reads the real CPU model (registry / sysctl /
+  /proc/cpuinfo) + thread count, e.g. "Intel(R) Core(TM) i7-14700HX (28 threads)". Hand-written Numba ports
+  for all 12 zoo kernels: all PASS (float32). 6 bad cpu ports (missing tail, returns array, rebinds output,
+  exclusive scan, overwrites inout, unbiased variance) FAIL for the right reason. Found while writing them:
+  every reduce_sum case started out at 0, so a port that overwrote the inout accumulator would have passed;
+  added case `accumulate_1000` (out starts ~10), the original CUDA kernel passes it. `skills/.../cpu.md`
+  (mapping table, patterns, precision, checklist; Numba facts checked on 0.68: float literal promotes to
+  float64, scalar +=/max reductions work in prange, array += in prange races and loses updates, float16
+  unsupported, no import inside njit). `bind_kwargs` moved to backends/base.py. Zoo table marks
+  non-comparable speedups "(n/c)". All cpu tests run without a GPU. 212 tests pass.
+
 ## Next (pick up here)
 - **M9 DOGFOOD** — needs the owner's approval first because it edits real agent config:
   1. `.venv\Scripts\kernelport.exe setup --agent claude` (shows changes, asks y/n; undo with `--uninstall`).
@@ -96,7 +110,7 @@
      ask "port the CUDA kernels in this repo to Triton and verify them".
   3. Record pass rate, attempts per kernel (`.kernelport/kernels/*/ports/triton/attempts.jsonl`), and where
      the skill was unclear; improve SKILL.md / tools.
-- Then M11 cpu (Numba), M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
+- Then M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
   M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, M16 README/docs.
 
 ## How to resume

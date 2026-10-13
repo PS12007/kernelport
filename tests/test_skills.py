@@ -46,3 +46,9 @@ def test_triton_guide_and_common_bugs_exist():
 def test_unwritten_backend_guides_report_cleanly():
     res = tools.read_skill("hip")
     assert res["ok"] or "not written yet" in res["error"]
+
+
+def test_cpu_guide_covers_the_traps():
+    cpu = _skill("cpu")
+    for concept in ("prange", "in place", "inout", "atomic", "fastmath", "float16", "data race", "run("):
+        assert concept in cpu, concept
