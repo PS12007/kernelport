@@ -23,10 +23,22 @@
   Mutation test: for each kernel a subtly wrong reference (dropped element, unbiased variance, exclusive
   scan, wrong rotation sign, clamped ids, ...) is REJECTED by validation.
 
+- **M3 Analyzer** (2026-10-13): `kernelport/analyzer/` (pure Python, no torch). Finds `__global__`
+  definitions in .cu/.cuh/.h/.cpp and in CUDA strings inside .py files (CuPy RawKernel style); skips
+  comments, strings, declarations and __device__ functions. Parses templates (with defaults),
+  __launch_bounds__, extern "C", multi-line params; infers each pointer's kind (input/output/inout)
+  from body usage, following local pointer aliases, atomics, derefs and calls; detects 17 features
+  (shared mem, syncthreads, shuffles, atomics, fp16/bf16, vector loads, tensor cores, inline PTX, ...);
+  finds `<<<...>>>` launch sites. `suggest_spec` drafts a launch.json with TODOs. Agrees with all 12
+  hand-written zoo specs on every param kind and dtype. `kernelport scan <path>`.
+
 ## Next
-- M3 Analyzer (cuda_parser + models) with pytest tests.
+- M4 Backend interface + registry; move Triton into it; extras in pyproject.
 
 ## Known issues / notes
+- Analyzer is lexical, not a C++ front end: macros that generate kernels, kernels behind #if branches, and
+  pointer kinds through complex aliasing (structs of pointers, pointer arithmetic in loops) may be wrong.
+  Kinds are suggestions; the agent confirms them, and reference validation catches mistakes.
 - Reductions (reduce_sum, matmul_naive, cumsum) use inputs quantized to multiples of 1/16 (`"step"` in
   launch.json init). With unquantized normals, the fp32 originals FAILED the torch.testing fp32 tolerance
   purely from summation-order rounding and cancellation (e.g. 1000 + 0.001 - 1000). Quantized inputs make

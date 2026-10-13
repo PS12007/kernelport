@@ -4,7 +4,7 @@
   "entry": "transpose<{T}>",
   "dtypes": ["float32", "float16"],
   "params": [
-    {"name": "inp", "kind": "input", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "inp", "kind": "input", "dtype": "T", "shape": ["rows", "cols"], "cuda_name": "in"},
     {"name": "out", "kind": "output", "dtype": "T", "shape": ["cols", "rows"]},
     {"name": "rows", "kind": "scalar", "dtype": "int32", "value": "rows"},
     {"name": "cols", "kind": "scalar", "dtype": "int32", "value": "cols"}

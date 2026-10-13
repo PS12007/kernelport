@@ -73,5 +73,32 @@ def zoo(
     raise typer.Exit(1 if failed else 0)
 
 
+@app.command()
+def scan(
+    path: str = typer.Argument(".", help="File or directory to scan."),
+    as_json: bool = typer.Option(False, "--json", help="Print JSON."),
+) -> None:
+    """Find CUDA kernels and show their signatures and features."""
+    from pathlib import Path
+
+    from rich.console import Console
+    from rich.markup import escape
+    from rich.table import Table
+
+    from kernelport.analyzer.cuda_parser import scan as scan_path
+
+    kernels = scan_path(Path(path))
+    if as_json:
+        print(json.dumps([k.to_dict(include_source=False) for k in kernels], indent=2))
+        return
+    table = Table(title=f"{len(kernels)} CUDA kernels in {path}")
+    for col in ("id", "line", "params", "features", "launches"):
+        table.add_column(col)
+    for k in kernels:
+        params = ", ".join(f"{p.name}:{p.kind}" for p in k.params)
+        table.add_row(escape(k.id), str(k.line), escape(params), ", ".join(k.features), str(len(k.launches)))
+    Console().print(table)
+
+
 if __name__ == "__main__":
     app()

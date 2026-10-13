@@ -63,6 +63,7 @@ class ParamSpec:
     dtype: str
     shape: list[Any] = field(default_factory=list)  # tensors only
     value: Any = None  # scalars only: expression over dims
+    cuda_name: str | None = None  # original CUDA name if renamed (e.g. "in" -> "in_")
 
     def resolved_dtype(self, t: str) -> str:
         """Dtype with the template placeholder ``T`` replaced."""
@@ -114,7 +115,7 @@ class LaunchSpec:
     @classmethod
     def from_dict(cls, d: dict) -> "LaunchSpec":
         """Build and validate a spec from parsed JSON."""
-        d = dict(d)
+        d = {k: v for k, v in d.items() if not k.startswith("_")}  # "_notes", "_comment"
         d["params"] = [ParamSpec(**p) for p in d["params"]]
         d["cases"] = [CaseSpec(**c) for c in d["cases"]]
         spec = cls(**d)
