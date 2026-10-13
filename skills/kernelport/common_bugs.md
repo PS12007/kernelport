@@ -9,6 +9,7 @@ failure report against these symptoms first.
 | `unexpected NaN` everywhere | Port never writes the output (wrote to a copy, returned a new tensor, wrong param name) |
 | `unexpected NaN` in a few rows | 0/0 or inf-inf: missing max-subtraction (softmax), uninitialised accumulator, masked lanes with a non-neutral `other=` |
 | Fails only for rows longer than one block (e.g. cols=4097, not 1024) | Chunk loop missing or reduction only covers the first chunk |
+| Small errors (1e-4 to 1e-2) only when the size is not a multiple of the block (7, 1000, 4097 fail; 1, 512, 1024 pass) | Masked lanes feed a reduction: they load `other=0.0` and then contribute (e.g. `(0 - mean)**2` in a variance). Wrap the term: `tl.where(mask, d * d, 0.0)` |
 | Fails only for tiny sizes (1, 7) | Block size larger than data without a mask, or division by a size that becomes 0 |
 | Fails only for fp16 / bf16 | Accumulating in half precision; missing `.to(float32)` before math |
 | Fails only for float32 with ~1e-3 error | TF32 / fast-math / reduced-precision instructions |

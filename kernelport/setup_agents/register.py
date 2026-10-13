@@ -240,6 +240,7 @@ def uninstall(home: Path) -> Path | None:
                         _write(path, text + "\n")
             elif st.get("method") == "cli" and st.get("previous_entry") is None:
                 _run(["claude", "mcp", "remove", SERVER_NAME, "--scope", "user"])
+                _drop_empty_servers(path, st.get("original_backup"))
             elif path.is_file():
                 data = _read_json(path)
                 servers = data.get("mcpServers", {})
@@ -265,6 +266,33 @@ def uninstall(home: Path) -> Path | None:
         del state[agent]
     save_state(home, state)
     return dest
+
+
+def _drop_empty_servers(path: Path, original_backup: str | None) -> None:
+    """`claude mcp add` creates a top-level "mcpServers" and `remove` leaves it as {}.
+
+    If the pre-install file had no such key, delete the empty one again, but only
+    when re-serialising reproduces the file's current bytes exactly (so nothing
+    else in a file the agent owns is reformatted).
+    """
+    if not original_backup or not Path(original_backup).is_file() or not path.is_file():
+        return
+    try:
+        before = json.loads(Path(original_backup).read_text(encoding="utf-8"))
+        raw = path.read_bytes().decode("utf-8")  # keep CRLF: read_text would translate it
+        data = json.loads(raw)
+    except (OSError, ValueError):
+        return
+    if "mcpServers" in before or data.get("mcpServers") != {}:
+        return
+    eol = "\r\n" if "\r\n" in raw else "\n"
+    def dump(d: dict) -> str:
+        return json.dumps(d, indent=2, ensure_ascii=False).replace("\n", eol)
+    trailing = raw[len(raw.rstrip("\r\n")):]
+    if dump(data) + trailing != raw:
+        return  # formatting differs: leave the harmless empty key rather than rewrite the file
+    del data["mcpServers"]
+    path.write_bytes((dump(data) + trailing).encode("utf-8"))
 
 
 def _restore_from_backup(backup_dir: Path, original: Path) -> None:

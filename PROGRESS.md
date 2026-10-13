@@ -112,13 +112,20 @@
   table), docs/installation.md (extras, NVIDIA / CPU-only installs, agent setup), docs/how-it-works.md
   (why each verification step exists, statuses, workspace layout). 222 tests pass.
 
+- **M9 Dogfood** (2026-10-13, approved by owner): `kernelport setup --agent claude` registered the server via
+  `claude mcp add`; `claude mcp list` showed it Connected and the skill was discovered. Instead of a separate
+  `claude -p` session (would spend the owner's credits), the agent workflow was run by hand through the real
+  MCP server over stdio (same command Claude Code uses) on a scratch repo with only rope/layernorm/cumsum .cu
+  files, following SKILL.md. Result: 3/3 references frozen on the first validation, 6/6 ports PASS (Triton +
+  cpu); 2 ports needed one repair each (layernorm: masked lanes added mean^2 to the variance; cumsum: carry
+  computed as max instead of sum), both diagnosed from the failure report. Fixes from findings:
+  read_kernel returns compact params (name/type/kind); common_bugs gained the "masked lanes feed a reduction"
+  symptom row; suggested specs note bfloat16 for T-templated kernels. Uninstall left an empty top-level
+  `"mcpServers": {}` (created by `claude mcp add`, kept by `remove`): `--uninstall` now deletes it when the
+  original had none and the file round-trips byte-exactly (CRLF-safe). ~/.claude.json was then verified
+  identical to the pre-setup snapshot (all top-level keys and values), skill dir removed, ~/.kernelport removed.
+
 ## Next (pick up here)
-- **M9 DOGFOOD** — needs the owner's approval first because it edits real agent config:
-  1. `.venv\Scripts\kernelport.exe setup --agent claude` (shows changes, asks y/n; undo with `--uninstall`).
-  2. Copy the zoo WITHOUT ports/ into a scratch repo (`git init` it), open a fresh Claude Code session there,
-     ask "port the CUDA kernels in this repo to Triton and verify them".
-  3. Record pass rate, attempts per kernel (`.kernelport/kernels/*/ports/triton/attempts.jsonl`), and where
-     the skill was unclear; improve SKILL.md / tools.
 - Then M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
   M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, M16 README/docs.
 

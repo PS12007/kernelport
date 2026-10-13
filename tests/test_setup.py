@@ -162,3 +162,28 @@ def test_cli_install_and_uninstall(home):
     assert res.exit_code == 0, res.output
     assert not (home / ".claude.json").exists()
     assert not (home / ".claude" / "skills" / "kernelport").exists()
+
+
+def test_empty_servers_left_by_claude_cli_is_removed(tmp_path):
+    """`claude mcp remove` leaves "mcpServers": {}; drop it when the original file had none."""
+    from kernelport.setup_agents.register import _drop_empty_servers
+
+    orig = tmp_path / "orig.json"
+    orig.write_text(json.dumps({"a": 1, "projects": {"p": {"mcpServers": {}}}}, indent=2) + "\n")
+    cfg = tmp_path / ".claude.json"
+    after = {"a": 1, "projects": {"p": {"mcpServers": {}}}, "mcpServers": {}}
+    cfg.write_text(json.dumps(after, indent=2) + "\n")
+    _drop_empty_servers(cfg, str(orig))
+    assert cfg.read_bytes() == orig.read_bytes()  # nested per-project keys untouched
+
+    # original already had the key: keep it
+    orig.write_text(json.dumps({"mcpServers": {}}, indent=2))
+    cfg.write_text(json.dumps({"mcpServers": {}}, indent=2))
+    _drop_empty_servers(cfg, str(orig))
+    assert json.loads(cfg.read_text()) == {"mcpServers": {}}
+
+    # formatting we cannot reproduce: leave the file alone
+    orig.write_text("{}")
+    cfg.write_text('{"a":1,"mcpServers":{}}')
+    _drop_empty_servers(cfg, str(orig))
+    assert cfg.read_text() == '{"a":1,"mcpServers":{}}'

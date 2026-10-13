@@ -111,7 +111,9 @@ def read_kernel(kernel_id: str, root: str | None = None) -> dict:
     out = {
         "ok": True, "kernel_id": rec.id, "name": rec.name, "file": rec.info["file"],
         "line": rec.info["line"], "source": source,
-        "params": rec.info["params"], "template_params": rec.info["template_params"],
+        # compact: the full analyzer record (read/written flags, base types) lives in kernel.json
+        "params": [{"name": q["name"], "type": q["type"], "kind": q["kind"]} for q in rec.info["params"]],
+        "template_params": rec.info["template_params"],
         "features": rec.info["features"], "launches": rec.info["launches"],
         "input_spec": spec, "input_spec_origin": spec_origin,
         "input_spec_has_todo": bool(spec) and has_todo(spec),

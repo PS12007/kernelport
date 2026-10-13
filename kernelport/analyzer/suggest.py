@@ -94,6 +94,9 @@ def suggest_spec(kernel: KernelInfo) -> dict:
     if any(f in kernel.features for f in ("atomics",)) or any(
             k in kernel.name.lower() for k in ("sum", "reduce", "matmul", "gemm", "scan", "cumsum", "dot")):
         notes.append("accumulating kernel: consider \"step\": 0.0625 in init so float sums are exact in any order")
+    if any(p.dtype == "T" for p in kernel.params):
+        notes.append("templated on T: add \"bfloat16\" to dtypes if the source includes cuda_bf16.h "
+                     "and T may be __nv_bfloat16")
 
     return {
         "name": kernel.name,
