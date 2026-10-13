@@ -18,7 +18,11 @@
     {"name": "odd_33x65x17", "dims": {"M": 33, "N": 65, "K": 17}},
     {"name": "odd_127x129x1023", "dims": {"M": 127, "N": 129, "K": 1023}},
     {"name": "pow2_256", "dims": {"M": 256, "N": 256, "K": 256}},
-    {"name": "large_1024", "dims": {"M": 1024, "N": 1024, "K": 1024}}
+    {"name": "large_1024", "dims": {"M": 1024, "N": 1024, "K": 1024}},
+    {"name": "fullprec_33x65x17", "dims": {"M": 33, "N": 65, "K": 17},
+     "init": {"A": {"dist": "normal", "edges": true, "step": null}, "B": {"dist": "normal", "step": null}}},
+    {"name": "fullprec_64x64x64", "dims": {"M": 64, "N": 64, "K": 64},
+     "init": {"A": {"dist": "normal", "step": null}, "B": {"dist": "normal", "step": null}}}
   ],
   "init": {"A": {"dist": "normal", "edges": true, "step": 0.0625}, "B": {"dist": "normal", "step": 0.0625}},
   "bench_case": "large_1024"

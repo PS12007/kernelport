@@ -59,8 +59,17 @@
   budget reported. Tests call every tool directly, run the full workflow on the GPU, and talk to the real
   server over stdio. 161 tests pass.
 
+- **M7 Skills** (2026-10-13): `skills/kernelport/SKILL.md` (frontmatter, hard rules, 9-step workflow with
+  tool per step, launch.json and reference format, reading failure reports, final reporting),
+  `backends/triton.md` (CUDA->Triton mapping table, patterns, precision notes, checklist; every Triton API
+  named was checked against triton 3.7.1), `common_bugs.md` (symptom -> cause table, checklist).
+  Found while writing the guide: quantized matmul inputs are exact in TF32, so a TF32 port would have
+  passed. Added two full-precision matmul cases (small K); a TF32 `tl.dot` port now FAILS exactly those
+  cases while the `input_precision="ieee"` port passes 16/16. Skill-consistency tests (every tool and
+  param kind documented). 168 tests pass.
+
 ## Next
-- M7 Skills: SKILL.md workflow + Triton guide + common bugs.
+- M8 `kernelport setup` (Claude Code first; backup, approval, uninstall, --print), then Codex, Cursor, Gemini CLI.
 
 ## Known issues / notes
 - Requires mcp>=2.0 (FastMCP was renamed MCPServer in 2.x; we use the 2.x API only).

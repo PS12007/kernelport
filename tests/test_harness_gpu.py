@@ -43,6 +43,7 @@ def test_good_triton_port_passes(kernel):
     ("relu", "relu_leaky.py", "outside tolerance"),
     ("softmax", "softmax_no_max.py", "NaN"),
     ("softmax", "softmax_first_chunk_sum.py", "outside tolerance"),
+    ("matmul_naive", "matmul_tf32.py", "outside tolerance"),
 ])
 def test_bad_port_fails(kernel, port, expect):
     from kernelport.zoo import verify_zoo_port
