@@ -1,0 +1,27 @@
+{
+  "name": "vector_add",
+  "source": "kernel.cu",
+  "entry": "vector_add<{T}>",
+  "dtypes": ["float32", "float16", "bfloat16"],
+  "params": [
+    {"name": "a", "kind": "input", "dtype": "T", "shape": ["n"]},
+    {"name": "b", "kind": "input", "dtype": "T", "shape": ["n"]},
+    {"name": "out", "kind": "output", "dtype": "T", "shape": ["n"]},
+    {"name": "n", "kind": "scalar", "dtype": "int32", "value": "n"}
+  ],
+  "launch": {"grid": ["cdiv(n, 256)"], "block": [256], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1", "dims": {"n": 1}},
+    {"name": "tiny_7", "dims": {"n": 7}},
+    {"name": "odd_1000", "dims": {"n": 1000}},
+    {"name": "odd_1023", "dims": {"n": 1023}},
+    {"name": "odd_4097", "dims": {"n": 4097}},
+    {"name": "pow2_65536", "dims": {"n": 65536}},
+    {"name": "large_16M", "dims": {"n": 16777216}}
+  ],
+  "init": {
+    "a": {"dist": "normal", "edges": true},
+    "b": {"dist": "normal"}
+  },
+  "bench_case": "large_16M"
+}

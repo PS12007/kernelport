@@ -28,5 +28,50 @@ def doctor(as_json: bool = typer.Option(False, "--json", help="Print JSON instea
     raise typer.Exit(0 if report.ok else 1)
 
 
+@app.command()
+def zoo(
+    backend: str = typer.Option("triton", help="Port backend to verify."),
+    kernel: list[str] = typer.Option(None, "--kernel", "-k", help="Only these kernels."),
+    no_bench: bool = typer.Option(False, "--no-bench", help="Skip benchmarking."),
+) -> None:
+    """Validate zoo originals, verify stored ports, and benchmark passing ports."""
+    from pathlib import Path
+
+    from rich.console import Console
+    from rich.markup import escape
+    from rich.table import Table
+
+    from kernelport.zoo import find_zoo, run_zoo
+
+    con = Console()
+    entries = run_zoo(find_zoo(), kernel or None, (backend,), bench=not no_bench,
+                      out_dir=Path(".kernelport") / "zoo")
+    colors = {"PASS": "green", "FAIL": "red", "UNVERIFIED": "yellow", "SKIPPED": "dim"}
+    table = Table(title=f"zoo: original vs reference, {backend} port vs reference")
+    for col in ("kernel", "original", "cases", backend, "cases", "orig ms", "port ms", "speedup"):
+        table.add_column(col)
+    for e in entries:
+        p = e.ports[backend]
+        b = e.bench.get(backend)
+        table.add_row(
+            e.kernel,
+            f"[{colors[e.original.status]}]{e.original.status}[/]",
+            f"{e.original.num_passed}/{len(e.original.cases)}",
+            f"[{colors[p.status]}]{p.status}[/]",
+            f"{p.num_passed}/{len(p.cases)}" if p.cases else escape(p.reason),
+            f"{b['original_ms']:.4f}" if b else "-",
+            f"{b['port_ms']:.4f}" if b else "-",
+            f"{b['speedup']:.2f}x" if b else "-",
+        )
+    con.print(table)
+    for e in entries:
+        for r in [e.original, *e.ports.values()]:
+            if r.status == "FAIL":
+                con.print(escape(r.failure_report()))
+    failed = any(e.original.status == "FAIL" or any(r.status == "FAIL" for r in e.ports.values())
+                 for e in entries)
+    raise typer.Exit(1 if failed else 0)
+
+
 if __name__ == "__main__":
     app()

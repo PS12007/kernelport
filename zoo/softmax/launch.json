@@ -1,0 +1,26 @@
+{
+  "name": "softmax",
+  "source": "kernel.cu",
+  "entry": "softmax<{T}>",
+  "dtypes": ["float32", "float16", "bfloat16"],
+  "params": [
+    {"name": "x", "kind": "input", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "y", "kind": "output", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "rows", "kind": "scalar", "dtype": "int32", "value": "rows"},
+    {"name": "cols", "kind": "scalar", "dtype": "int32", "value": "cols"}
+  ],
+  "launch": {"grid": ["rows"], "block": [256], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1", "dims": {"rows": 1, "cols": 1}},
+    {"name": "tiny_3x7", "dims": {"rows": 3, "cols": 7}},
+    {"name": "odd_7x1000", "dims": {"rows": 7, "cols": 1000}},
+    {"name": "odd_5x1023", "dims": {"rows": 5, "cols": 1023}},
+    {"name": "odd_3x4097", "dims": {"rows": 3, "cols": 4097}},
+    {"name": "pow2_64x1024", "dims": {"rows": 64, "cols": 1024}},
+    {"name": "large_4096x4096", "dims": {"rows": 4096, "cols": 4096}},
+    {"name": "edges_big_8x513", "dims": {"rows": 8, "cols": 513},
+     "init": {"x": {"dist": "normal", "std": 30.0, "edges": true, "edge_big": 10000.0}}}
+  ],
+  "init": {"x": {"dist": "normal", "std": 3.0, "edges": true}},
+  "bench_case": "large_4096x4096"
+}
