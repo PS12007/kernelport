@@ -139,8 +139,19 @@
   racy non-atomic out[0] +=) FAIL for the right reason. Shader error excerpts are ASCII-fied (box chars
   crashed cp1252 consoles). Doctor smoke test for webgpu. skills/.../webgpu.md written.
 
+- **M15 Built-in agent (optional)** (2026-10-13): `kernelport/agent.py` + `kernelport agent "<task>"`.
+  Manual tool-use loop (not the beta tool runner, so the budget/tool surface/client stay testable) over the
+  11 tools; tool schemas generated from the tool signatures with `root` removed (the model cannot choose
+  the workspace); system prompt = preamble + MCP instructions + SKILL.md, cached (stable, no timestamps);
+  default model claude-opus-5-5, effort high, max_tokens 16000, turn budget 80; refusal / max_tokens /
+  max_turns stop the loop; parallel tool results returned in one message; tool exceptions become
+  is_error results; server-side refusal fallbacks (`fallbacks: "default"`) on by default. Asks for
+  confirmation before spending. The SDK is imported only when a real client is built
+  (`pip install kernelport[agent]`). NOT run against the live API (owner: no API credits); 7 tests with a
+  scripted fake client cover the loop.
+
 ## Next (pick up here)
-- M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, rest of M16 docs.
+- M13 metal (Mac), M14 AMD/HIP, rest of M16 docs.
 
 ## How to resume
 - Env: `.venv` (Python 3.12, torch 2.11.0+cu128, triton-windows 3.7.1, cupy-cuda12x 14.2). `kernelport doctor`.

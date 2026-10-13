@@ -63,6 +63,21 @@ Then, in your repo, ask your agent:
 Ports for a backend that is not available on the current machine are saved as **UNVERIFIED**,
 never PASS. Commit `.kernelport/` and run `kernelport verify` on the right machine to verify them there.
 
+## No coding agent? Use the built-in one (optional)
+
+```bash
+pip install "kernelport[agent] @ git+https://github.com/PS12007/kernelport"
+export ANTHROPIC_API_KEY=...        # or: ant auth login
+kernelport agent "port the CUDA kernels in this repo to Triton and verify them"
+```
+
+`kernelport agent` runs Claude (default `claude-opus-5-5`) in a tool-use loop over the same 11
+tools the MCP server exposes, with the workflow skill as its system prompt. It can only act
+through those tools, so all writes stay in `.kernelport/` and it cannot run shell commands.
+Runs are billed to **your** Anthropic account, so it asks before starting (`--yes` skips the
+prompt). The run stops at `--max-turns` (default 80). Server-side refusal fallbacks are on by
+default (`--no-fallbacks` to disable).
+
 ## The kernel zoo
 
 `zoo/` holds 12 CUDA kernels with launch specs and references: vector_add, relu, saxpy,
@@ -110,6 +125,7 @@ Every MCP tool has a CLI equivalent, so you can drive the workflow by hand or fr
 | `kernelport report [--md]` | `make_report` | HTML or Markdown report |
 | `kernelport setup` | – | register with Claude Code / Codex / Cursor / Gemini CLI |
 | `kernelport mcp` | – | run the MCP server on stdio |
+| `kernelport agent "<task>"` | – | optional built-in agent (your Anthropic API key) |
 
 ## Development
 

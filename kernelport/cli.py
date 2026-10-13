@@ -363,6 +363,44 @@ def setup(
 
 
 @app.command()
+def agent(
+    task: str = typer.Argument(TRY_PROMPT, help="What to do, in plain words."),
+    model: str = typer.Option(None, help="Claude model id (default: claude-opus-5-5)."),
+    effort: str = typer.Option("high", help="low | medium | high | xhigh | max"),
+    max_turns: int = typer.Option(80, help="Stop after this many model turns."),
+    no_fallbacks: bool = typer.Option(False, "--no-fallbacks", help="Disable server-side refusal fallbacks."),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Start without the cost confirmation."),
+) -> None:
+    """Built-in agent (optional): Claude drives the kernelport tools via YOUR Anthropic API key.
+
+    For people without a coding agent. Needs `pip install kernelport[agent]` and ANTHROPIC_API_KEY
+    (or an `ant auth login` profile). Every run is billed to that account.
+    """
+    from rich.console import Console
+    from rich.markup import escape
+
+    from kernelport import agent as kp_agent
+    from kernelport.workspace import find_root
+
+    con = Console()
+    root = find_root()
+    model = model or kp_agent.DEFAULT_MODEL
+    con.print(f"repo: {escape(str(root))}\nmodel: {model} (effort {effort}), up to {max_turns} turns\n"
+              "This uses the Anthropic API and is billed to your account.")
+    if not yes and not typer.confirm("Start?", default=False):
+        raise typer.Exit(1)
+    try:
+        res = kp_agent.run_agent(task, root, model=model, effort=effort, max_turns=max_turns,
+                                 fallbacks=not no_fallbacks, on_event=lambda s: con.print(escape(s)))
+    except RuntimeError as exc:
+        con.print(f"[red]{escape(str(exc))}[/]")
+        raise typer.Exit(2)
+    con.print(f"\n[dim]stop: {res.stop_reason}; {res.turns} turns, {res.tool_calls} tool calls; tokens in "
+              f"{res.input_tokens} (cache read {res.cache_read_tokens}), out {res.output_tokens}[/]")
+    raise typer.Exit(0 if res.stop_reason == "end_turn" else 1)
+
+
+@app.command()
 def mcp() -> None:
     """Start the MCP server on stdio (used by agent configs)."""
     from kernelport.mcp_server import main as serve
