@@ -40,8 +40,16 @@
   imports (CLI, analyzer, spec, registry, configs) pull in no torch/GPU package; wheel's base
   Requires-Dist is only mcp, typer, rich, numpy. 119 tests pass.
 
+- **M5 Workspace** (2026-10-13): `kernelport/workspace.py`. `.kernelport/` holds index, analyzer snapshots,
+  candidate spec + reference, `frozen/` (written only by a passing CUDA validation, with a sha256 manifest;
+  any edit to frozen files is detected and blocks verification), ports per backend, `attempts.jsonl`, and
+  latest result per hardware. Every path is built from validated names and checked to stay inside
+  `.kernelport/` (no `..`, separators, drive letters, or symlink escapes). Status is honest: a stored PASS
+  becomes UNVERIFIED if the port or frozen reference changed since. Files are written byte-exact so hashes
+  match on Windows. 29 workspace tests (1 skipped: symlinks need admin on Windows).
+
 ## Next
-- M5 Workspace (.kernelport/) with frozen references, input specs, attempt logs, results.
+- M6 MCP server exposing all tools + matching CLI commands; tests calling each tool directly.
 
 ## Known issues / notes
 - The zoo is not shipped in the wheel; `kernelport zoo` needs a repo checkout (or cwd containing zoo/).

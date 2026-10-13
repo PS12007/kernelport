@@ -49,10 +49,11 @@ def is_available() -> tuple[bool, str]:
 
 
 @lru_cache(maxsize=64)
-def _compile(source: str, entries: tuple[str, ...]):
+def _compile(source: str, entries: tuple[str, ...], include_dir: str):
     import cupy as cp
 
-    mod = cp.RawModule(code=NVRTC_PRELUDE + source, options=NVRTC_OPTIONS, name_expressions=list(entries))
+    options = NVRTC_OPTIONS + (f"-I{include_dir}",)  # so #include "local.cuh" works
+    mod = cp.RawModule(code=NVRTC_PRELUDE + source, options=options, name_expressions=list(entries))
     return {e: mod.get_function(e) for e in entries}
 
 
@@ -60,7 +61,7 @@ def get_kernel(source_path: Path, spec: LaunchSpec, dtype: str):
     """Compiled CuPy function for this spec's entry at ``dtype``."""
     source = Path(source_path).read_text(encoding="utf-8")
     entries = tuple(sorted({spec.entry_for(t) for t in spec.dtypes}))
-    return _compile(source, entries)[spec.entry_for(dtype)]
+    return _compile(source, entries, str(Path(source_path).resolve().parent))[spec.entry_for(dtype)]
 
 
 def _as_cupy(t: torch.Tensor):
