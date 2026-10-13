@@ -80,6 +80,15 @@
   13 setup tests (fake home dir). 181 tests pass. On this machine only Claude Code is detected.
   NOT yet run against the real ~/.claude.json: that needs the owner's go-ahead (M9 step 1).
 
+- **M10 Report** (2026-10-13): `kernelport/report/data.py` collects everything once (statuses from
+  `Workspace.status()`, frozen-reference provenance, attempt history and attempts-to-first-PASS, latest
+  failure report that still applies, tolerances used, benchmarks marked stale when the port changed);
+  `report/html.py` renders a self-contained page (summary tiles, kernel x backend matrix, per-kernel
+  details, light/dark, no network loads, all values escaped, data embedded as JSON) and `report/markdown.py`
+  the same data for PR comments / agent replies. `make_report(format="html"|"markdown")` (markdown also
+  returned inline as `content`); CLI `kernelport report [--md]`. SKILL.md step 9 uses the markdown report.
+  6 report tests on a synthetic workspace (no GPU). 187 tests pass.
+
 ## Next (pick up here)
 - **M9 DOGFOOD** — needs the owner's approval first because it edits real agent config:
   1. `.venv\Scripts\kernelport.exe setup --agent claude` (shows changes, asks y/n; undo with `--uninstall`).
@@ -87,7 +96,7 @@
      ask "port the CUDA kernels in this repo to Triton and verify them".
   3. Record pass rate, attempts per kernel (`.kernelport/kernels/*/ports/triton/attempts.jsonl`), and where
      the skill was unclear; improve SKILL.md / tools.
-- Then M10 report, M11 cpu (Numba), M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
+- Then M11 cpu (Numba), M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
   M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, M16 README/docs.
 
 ## How to resume
@@ -99,7 +108,6 @@
 
 ## Known issues / notes
 - Requires mcp>=2.0 (FastMCP was renamed MCPServer in 2.x; we use the 2.x API only).
-- make_report is minimal until M10.
 - The zoo is not shipped in the wheel; `kernelport zoo` needs a repo checkout (or cwd containing zoo/).
 - Analyzer is lexical, not a C++ front end: macros that generate kernels, kernels behind #if branches, and
   pointer kinds through complex aliasing (structs of pointers, pointer arithmetic in loops) may be wrong.

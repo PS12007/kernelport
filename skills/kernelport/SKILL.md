@@ -143,7 +143,8 @@ the offending line of your port.
 
 ## Step 9: what to tell the user
 
-Show `list_status()` as a table and give the `make_report()` path. For each kernel and
+Call `make_report(format="markdown")` and show its `content` (the status matrix, benchmarks,
+and what needs attention), then give the path of the HTML report from `make_report()`. For each kernel and
 backend state PASS / FAIL / UNVERIFIED / SKIPPED exactly as reported, with the
 hardware it was verified on and the speedup if benchmarked. For FAILs, include the
 last suspected bug. Never round UNVERIFIED up to "should work".

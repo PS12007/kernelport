@@ -253,11 +253,16 @@ def status(as_json: bool = JSON_OPT) -> None:
 
 
 @app.command()
-def report(as_json: bool = JSON_OPT) -> None:
-    """Build the HTML report (MCP: make_report)."""
+def report(markdown: bool = typer.Option(False, "--markdown", "--md", help="Write report.md and print it."),
+           as_json: bool = JSON_OPT) -> None:
+    """Build the HTML (or Markdown) report (MCP: make_report)."""
     from kernelport import tools
 
-    _emit(tools.make_report(), as_json)
+    res = tools.make_report("markdown" if markdown else "html")
+    if markdown and not as_json and res.get("ok"):
+        print(res["content"])
+        return
+    _emit(res, as_json)
 
 
 TRY_PROMPT = 'port the CUDA kernels in this repo to Triton and verify them'

@@ -74,9 +74,9 @@ def build_server() -> MCPServer:
         return tools.list_status()
 
     @server.tool()
-    def make_report() -> dict[str, Any]:
-        """Build the HTML report and return its path."""
-        return tools.make_report()
+    def make_report(format: str = "html") -> dict[str, Any]:
+        """Write the report: format "html" (returns its path) or "markdown" (also returns the text as content)."""
+        return tools.make_report(format)
 
     return server
 

@@ -296,15 +296,30 @@ def list_status(root: str | None = None) -> dict:
     return {"ok": True, "rows": rows, "counts": counts, "summary": summary}
 
 
-def make_report(root: str | None = None) -> dict:
-    """Build the HTML report in .kernelport/report.html and return its path."""
-    from kernelport.report.html import build_report
+def make_report(format: str = "html", root: str | None = None) -> dict:
+    """Write the report to .kernelport/report.html (format="html") or report.md (format="markdown").
 
+    The Markdown variant is also returned inline as ``content``, ready to paste into a reply or PR.
+    """
+    from kernelport.report.html import build_report
+    from kernelport.report.markdown import build_markdown
+
+    if format not in ("html", "markdown"):
+        return _err(f"unknown format {format!r}; choose html or markdown")
     ws = _ws(root)
     if not ws.dir.is_dir():
         return _err("workspace is empty; nothing to report")
+    rows = ws.status()
+    counts: dict[str, int] = {}
+    for r in rows:
+        counts[r["status"]] = counts.get(r["status"], 0) + 1
+    tally = ", ".join(f"{v} {k}" for k, v in sorted(counts.items()))
+    if format == "markdown":
+        path = build_markdown(ws)
+        return {"ok": True, "path": str(path), "counts": counts,
+                "content": path.read_text(encoding="utf-8"), "summary": f"report written to {path} ({tally})"}
     path = build_report(ws)
-    return {"ok": True, "path": str(path), "summary": f"report written to {path}"}
+    return {"ok": True, "path": str(path), "counts": counts, "summary": f"report written to {path} ({tally})"}
 
 
 TOOLS = [kernelport_doctor, scan_kernels, read_kernel, read_skill, write_reference, validate_reference,
