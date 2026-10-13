@@ -103,6 +103,15 @@
   unsupported, no import inside njit). `bind_kwargs` moved to backends/base.py. Zoo table marks
   non-comparable speedups "(n/c)". All cpu tests run without a GPU. 212 tests pass.
 
+- **Zoo Triton ports complete** (2026-10-13): Triton ports for the remaining 8 kernels (saxpy, transpose,
+  reduce_sum with tl.atomic_add, layernorm/rmsnorm with tl.sqrt_rn, rope, embedding_gather, cumsum with
+  tl.cumsum + carry). All 12 Triton ports PASS every case in fp32/fp16/bf16 on the RTX 5060; speedups vs
+  the original 1.00-1.30x (memory bound), matmul 6.2x (tiled tl.dot vs naive). cpu softmax stores exp once
+  (64 -> 35 ms). README has the full results table.
+- **M16 docs (part)** (2026-10-13): README rewritten (pipeline, quick start, backends, zoo results, CLI/MCP
+  table), docs/installation.md (extras, NVIDIA / CPU-only installs, agent setup), docs/how-it-works.md
+  (why each verification step exists, statuses, workspace layout). 222 tests pass.
+
 ## Next (pick up here)
 - **M9 DOGFOOD** — needs the owner's approval first because it edits real agent config:
   1. `.venv\Scripts\kernelport.exe setup --agent claude` (shows changes, asks y/n; undo with `--uninstall`).

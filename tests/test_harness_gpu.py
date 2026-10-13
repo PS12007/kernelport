@@ -11,7 +11,6 @@ import pytest
 from conftest import ZOO, needs_cuda, needs_triton
 
 BAD = Path(__file__).parent / "bad_ports"
-M1_KERNELS = ["vector_add", "relu", "softmax"]
 
 
 @needs_cuda
@@ -24,8 +23,15 @@ def test_wrong_reference_fails_validation(tmp_path):
     assert validate_original(kdir, "test").status == "FAIL"
 
 
+TRITON_PORTS = sorted(p.parent.parent.name for p in ZOO.glob("*/ports/triton.py"))
+
+
+def test_every_zoo_kernel_has_a_triton_port():
+    assert len(TRITON_PORTS) == 12
+
+
 @needs_triton
-@pytest.mark.parametrize("kernel", M1_KERNELS)
+@pytest.mark.parametrize("kernel", TRITON_PORTS)
 def test_good_triton_port_passes(kernel):
     from kernelport.zoo import verify_zoo_port
 

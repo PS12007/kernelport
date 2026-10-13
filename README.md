@@ -71,15 +71,23 @@ cumsum. Between them they use templates, shared memory, `__syncthreads`, warp sh
 atomics, block reductions, scans, gathers and int64 indices. Every original passes its reference.
 `kernelport zoo --backend triton|cpu` validates them and verifies the stored ports.
 
-Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX, float32, bench case of each spec:
+Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX (28 threads), bench case of each spec
+(the largest), float32. Every stored port passes every case: Triton in fp32/fp16/bf16, cpu in fp32.
 
-| kernel | triton | cpu |
+| kernel | triton vs original CUDA | cpu (Numba) |
 |---|---|---|
-| vector_add | PASS, 1.00x vs CUDA | PASS |
-| relu | PASS, 1.02x | PASS, 5.8 ms (n/c) |
-| softmax | PASS, 1.00x | PASS, 61 ms (n/c) |
-| matmul_naive | PASS, 6.07x (tiled `tl.dot`, IEEE fp32) | PASS, 40 ms (n/c) |
-| other 8 kernels | no stored port yet | PASS |
+| vector_add | PASS, 1.00x | PASS, 7.8 ms (n/c) |
+| relu | PASS, 1.04x | PASS, 5.7 ms (n/c) |
+| saxpy | PASS, 1.00x | PASS, 6.4 ms (n/c) |
+| transpose | PASS, 1.00x | PASS, 11.2 ms (n/c) |
+| reduce_sum | PASS, 1.04x | PASS, 3.4 ms (n/c) |
+| softmax | PASS, 1.00x | PASS, 35.5 ms (n/c) |
+| layernorm | PASS, 1.00x | PASS, 9.1 ms (n/c) |
+| rmsnorm | PASS, 1.00x | PASS, 7.0 ms (n/c) |
+| matmul_naive | PASS, 6.20x (tiled `tl.dot`, IEEE fp32) | PASS, 40.3 ms (n/c) |
+| rope | PASS, 1.00x | PASS, 13.1 ms (n/c) |
+| embedding_gather | PASS, 1.02x | PASS, 11.8 ms (n/c) |
+| cumsum | PASS, 1.30x | PASS, 6.9 ms (n/c) |
 
 (n/c = CPU wall-clock time, not comparable to GPU kernel time.)
 
