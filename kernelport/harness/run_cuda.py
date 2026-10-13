@@ -49,19 +49,30 @@ def is_available() -> tuple[bool, str]:
 
 
 @lru_cache(maxsize=64)
-def _compile(source: str, entries: tuple[str, ...], include_dir: str):
+def _compile(source: str, entries: tuple[str, ...], include_dir: str,
+             prelude: str = NVRTC_PRELUDE, options: tuple[str, ...] = NVRTC_OPTIONS):
     import cupy as cp
 
-    options = NVRTC_OPTIONS + (f"-I{include_dir}",)  # so #include "local.cuh" works
-    mod = cp.RawModule(code=NVRTC_PRELUDE + source, options=options, name_expressions=list(entries))
+    opts = options + (f"-I{include_dir}",)  # so #include "local.cuh" works
+    mod = cp.RawModule(code=prelude + source, options=opts, name_expressions=list(entries))
     return {e: mod.get_function(e) for e in entries}
 
 
-def get_kernel(source_path: Path, spec: LaunchSpec, dtype: str):
-    """Compiled CuPy function for this spec's entry at ``dtype``."""
+def get_kernel(source_path: Path, spec: LaunchSpec, dtype: str, *, type_names: dict[str, str] | None = None,
+               prelude: str = NVRTC_PRELUDE, options: tuple[str, ...] = NVRTC_OPTIONS):
+    """Compiled CuPy function for this spec's entry at ``dtype``.
+
+    ``type_names`` maps dtypes to the C++ names substituted for ``{T}`` in the entry
+    (CUDA names by default; the hip backend passes HIP names). CuPy compiles with
+    NVRTC on NVIDIA and hipRTC on ROCm.
+    """
+    def entry(t: str) -> str:
+        return spec.entry.replace("{T}", type_names[t]) if type_names else spec.entry_for(t)
+
     source = Path(source_path).read_text(encoding="utf-8")
-    entries = tuple(sorted({spec.entry_for(t) for t in spec.dtypes}))
-    return _compile(source, entries, str(Path(source_path).resolve().parent))[spec.entry_for(dtype)]
+    entries = tuple(sorted({entry(t) for t in spec.dtypes}))
+    funcs = _compile(source, entries, str(Path(source_path).resolve().parent), prelude, options)
+    return funcs[entry(dtype)]
 
 
 def _as_cupy(t: torch.Tensor):
@@ -72,7 +83,7 @@ def _as_cupy(t: torch.Tensor):
     return cp.asarray(t)
 
 
-def _kernel_args(spec: LaunchSpec, data: CaseData, dev: dict[str, torch.Tensor]) -> list[Any]:
+def kernel_args(spec: LaunchSpec, data: CaseData, dev: dict[str, torch.Tensor]) -> list[Any]:
     args: list[Any] = []
     for p in spec.params:
         if p.is_tensor:
@@ -87,7 +98,7 @@ def prepare(source_path: Path, spec: LaunchSpec, data: CaseData):
     kern = get_kernel(source_path, spec, data.dtype)
     dev = {k: v.to("cuda") for k, v in data.tensors.items()}
     grid, block, shmem = spec.grid_block(data.dims)
-    args = tuple(_kernel_args(spec, data, dev))
+    args = tuple(kernel_args(spec, data, dev))
 
     def launch() -> None:
         kern(grid, block, args, shared_mem=shmem)

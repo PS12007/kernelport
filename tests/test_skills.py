@@ -59,3 +59,12 @@ def test_webgpu_guide_covers_the_traps():
     for concept in ("workgroupBarrier", "65535", "vec2<u32>", "BINDINGS", "atomicCompareExchangeWeak",
                     "alias T", "params.", "fn main", "grid("):
         assert concept in w, concept
+
+
+def test_metal_and_hip_guides_exist_and_state_their_status():
+    m, h = _skill("metal"), _skill("hip")
+    for concept in ("thread_position_in_grid", "threadgroup_barrier", "_out", "n[0]", "precise", "TOTAL threads"):
+        assert concept in m, concept
+    for concept in ("__hip_bfloat16", "warpSize", "64", "hipRTC"):
+        assert concept in h, concept
+    assert "not yet" in m and "not yet" in h  # honest about unverified status

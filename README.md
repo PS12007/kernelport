@@ -8,7 +8,7 @@ one against a reference that was itself validated against the original CUDA kern
 only ever reported as **PASS** if its current code ran on real hardware and matched.
 
 > Status: early development (0.1.0.dev0). Triton, CPU and WebGPU backends work and are verified;
-> Metal and HIP are registered but not implemented yet. See [PROGRESS.md](PROGRESS.md).
+> Metal and HIP runners and zoo ports are written but not yet verified on a Mac / AMD GPU. See [PROGRESS.md](PROGRESS.md).
 
 ## How it works
 
@@ -56,9 +56,9 @@ Then, in your repo, ask your agent:
 |---|---|---|---|
 | `triton` | Triton (Python) | NVIDIA (triton / triton-windows), AMD ROCm | working |
 | `cpu` | Numba (Python) | any machine | working (float32/float64) |
-| `metal` | MLX / Metal | Apple Silicon | planned |
+| `metal` | Metal kernel bodies via MLX `metal_kernel` | Apple Silicon | written, **not yet verified on a Mac** |
 | `webgpu` | WGSL | any Vulkan / Metal / D3D12 GPU via wgpu-native (core WebGPU only, so browser-portable) | working (float32/float16) |
-| `hip` | HIP C++ | AMD ROCm | planned |
+| `hip` | HIP C++ via hipRTC (CuPy ROCm) | AMD ROCm | written, launch path tested on NVIDIA, **not yet verified on AMD** |
 
 Ports for a backend that is not available on the current machine are saved as **UNVERIFIED**,
 never PASS. Commit `.kernelport/` and run `kernelport verify` on the right machine to verify them there.

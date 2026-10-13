@@ -1,4 +1,4 @@
-"""Capability check for the hip backend."""
+"""Capability check for the hip backend (ROCm torch + ROCm CuPy with hipRTC)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,18 @@ def is_available() -> tuple[bool, str]:
 
     if not getattr(torch.version, "hip", None):
         return False, "needs a ROCm build of torch on an AMD GPU"
-    return False, "hip runner not implemented yet (M14)"
+    if not torch.cuda.is_available():
+        return False, "ROCm torch sees no AMD GPU"
+    if importlib.util.find_spec("cupy") is None:
+        return False, "cupy (ROCm build, e.g. cupy-rocm-6-0) not installed; it provides hipRTC compilation"
+    try:
+        import cupy
+
+        if not getattr(cupy.cuda.runtime, "is_hip", False):
+            return False, "cupy is the CUDA build; install the ROCm build (e.g. cupy-rocm-6-0)"
+    except Exception as exc:
+        return False, f"cupy failed to import: {exc}"
+    return True, f"hipRTC via CuPy on ROCm {torch.version.hip}"
 
 
 def hardware_name() -> str:

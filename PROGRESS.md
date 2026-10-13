@@ -150,8 +150,25 @@
   (`pip install kernelport[agent]`). NOT run against the live API (owner: no API credits); 7 tests with a
   scripted fake client cover the loop.
 
+- **M13 Metal + M14 HIP (written, NOT verified on real hardware)** (2026-10-13):
+  - metal: `backends/metal/runner.py` on `mx.fast.metal_kernel`. Port = Metal kernel body `SOURCE`,
+    `THREADGROUP`, `grid()` in TOTAL threads; inputs = input/inout tensors then scalars as 1-element
+    arrays; outputs = outputs + inouts as `<name>_out`; template T; NaN `INIT_VALUE`; `ATOMIC_OUTPUTS`;
+    `HEADER`; bf16 converted through float32 (exact). 12 zoo metal ports (precise:: math). Tests use a fake
+    `mlx.core` to check the exact metal_kernel build/call arguments; real verification is skipped off-Mac.
+  - hip: `backends/hip/runner.py` reuses the CuPy RawModule path (hipRTC on ROCm CuPy) with HIP type names
+    (`__hip_bfloat16`); launched exactly like the original (launch.json grid/block). `run_cuda.get_kernel`
+    now takes type names / prelude / options. 12 zoo hip ports: 11 are header swaps of the originals,
+    rmsnorm rewritten with a wave-size-independent shared-memory reduction (CUDA used 32-lane shuffles;
+    AMD CDNA wavefronts are 64). Launch path tested for real on NVIDIA (HIP ports compiled with NVRTC after
+    mapping headers back): vector_add, rmsnorm, reduce_sum, softmax PASS all dtypes. hipRTC acceptance and
+    AMD results are unverified until someone runs `kernelport zoo --backend hip` on ROCm.
+  - skills/.../metal.md and hip.md, both stating their unverified status.
+
 ## Next (pick up here)
-- M13 metal (Mac), M14 AMD/HIP, rest of M16 docs.
+- Run `kernelport zoo --backend metal` on an Apple Silicon Mac and `--backend hip` on an AMD/ROCm box;
+  fix what fails (the runners were written blind). Optionally: browser (Playwright) check for WGSL ports,
+  live smoke test of `kernelport agent` with the owner's go-ahead (costs API credits).
 
 ## How to resume
 - Env: `.venv` (Python 3.12, torch 2.11.0+cu128, triton-windows 3.7.1, cupy-cuda12x 14.2). `kernelport doctor`.
