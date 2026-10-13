@@ -1,0 +1,31 @@
+{
+  "name": "rmsnorm",
+  "source": "kernel.cu",
+  "entry": "rmsnorm<{T}>",
+  "dtypes": ["float32", "float16", "bfloat16"],
+  "params": [
+    {"name": "x", "kind": "input", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "weight", "kind": "input", "dtype": "T", "shape": ["cols"]},
+    {"name": "y", "kind": "output", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "rows", "kind": "scalar", "dtype": "int32", "value": "rows"},
+    {"name": "cols", "kind": "scalar", "dtype": "int32", "value": "cols"},
+    {"name": "eps", "kind": "scalar", "dtype": "float32", "value": "1e-6"}
+  ],
+  "launch": {"grid": ["rows"], "block": [256], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1", "dims": {"rows": 1, "cols": 1}},
+    {"name": "tiny_3x7", "dims": {"rows": 3, "cols": 7}},
+    {"name": "odd_7x1000", "dims": {"rows": 7, "cols": 1000}},
+    {"name": "odd_5x1023", "dims": {"rows": 5, "cols": 1023}},
+    {"name": "odd_3x4097", "dims": {"rows": 3, "cols": 4097}},
+    {"name": "pow2_64x1024", "dims": {"rows": 64, "cols": 1024}},
+    {"name": "large_4096x4096", "dims": {"rows": 4096, "cols": 4096}},
+    {"name": "zeros_2x64", "dims": {"rows": 2, "cols": 64},
+     "init": {"x": {"dist": "zeros"}}}
+  ],
+  "init": {
+    "x": {"dist": "normal", "edges": true},
+    "weight": {"dist": "uniform", "low": 0.5, "high": 1.5}
+  },
+  "bench_case": "large_4096x4096"
+}

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import zlib
 from dataclasses import dataclass
 from functools import lru_cache
@@ -19,6 +20,7 @@ from typing import Any
 import numpy as np
 import torch
 
+from kernelport.harness.expr import evaluate
 from kernelport.harness.spec import FLOAT_DTYPES, CaseSpec, LaunchSpec, ParamSpec
 
 TORCH_DTYPES: dict[str, torch.dtype] = {
@@ -35,6 +37,7 @@ TORCH_DTYPES: dict[str, torch.dtype] = {
 
 INT_SENTINEL = -0x5A5A5A5  # fills int outputs so unwritten elements are visible
 DEFAULT_EDGE_BIG = 1000.0
+NUMERIC_INIT_KEYS = ("low", "high", "mean", "std", "edge_big", "step")
 
 
 @dataclass
@@ -120,6 +123,14 @@ def _base_values(init_json: str, shape: tuple[int, ...], is_float: bool, seed: i
     if init.get("edges") and is_float:
         edges = _edge_values(float(init.get("edge_big", DEFAULT_EDGE_BIG)))[:n]
         vals[: len(edges)] = edges
+    step = init.get("step")
+    if step and is_float:
+        # Snap to multiples of a power-of-two step. Sums of such values are exact
+        # in float32 (while partial sums stay below 2**24 * step), so reductions
+        # give the same answer in any order and strict tolerances still apply.
+        if not math.log2(step).is_integer():
+            raise ValueError(f"step must be a power of two, got {step}")
+        vals = np.round(vals / step) * step
     vals = np.ascontiguousarray(vals.reshape(shape))
     vals.flags.writeable = False
     return vals
@@ -154,6 +165,9 @@ def make_case(spec: LaunchSpec, case: CaseSpec, dtype: str) -> CaseData:
             t = _sentinel(shape, pdtype)
         else:
             init = {**spec.init.get(p.name, {}), **case.init.get(p.name, {})}
+            # Numeric fields may be expressions over dims, e.g. "high": "max_pos".
+            init = {k: (evaluate(v, case.dims) if k in NUMERIC_INIT_KEYS and isinstance(v, str) else v)
+                    for k, v in init.items()}
             t = _generate(init, shape, pdtype, _seed_for(spec, case, p.name))
         tensors[p.name] = t
         h.update(f"{p.name}:{pdtype}:{shape}".encode())

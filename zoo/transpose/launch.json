@@ -1,0 +1,24 @@
+{
+  "name": "transpose",
+  "source": "kernel.cu",
+  "entry": "transpose<{T}>",
+  "dtypes": ["float32", "float16"],
+  "params": [
+    {"name": "inp", "kind": "input", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "out", "kind": "output", "dtype": "T", "shape": ["cols", "rows"]},
+    {"name": "rows", "kind": "scalar", "dtype": "int32", "value": "rows"},
+    {"name": "cols", "kind": "scalar", "dtype": "int32", "value": "cols"}
+  ],
+  "launch": {"grid": ["cdiv(cols, 32)", "cdiv(rows, 32)"], "block": [32, 8], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1", "dims": {"rows": 1, "cols": 1}},
+    {"name": "tiny_3x7", "dims": {"rows": 3, "cols": 7}},
+    {"name": "odd_1000x3", "dims": {"rows": 1000, "cols": 3}},
+    {"name": "odd_33x1023", "dims": {"rows": 33, "cols": 1023}},
+    {"name": "odd_97x4097", "dims": {"rows": 97, "cols": 4097}},
+    {"name": "pow2_256x512", "dims": {"rows": 256, "cols": 512}},
+    {"name": "large_4096x4096", "dims": {"rows": 4096, "cols": 4096}}
+  ],
+  "init": {"inp": {"dist": "normal", "edges": true}},
+  "bench_case": "large_4096x4096"
+}

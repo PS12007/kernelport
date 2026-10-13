@@ -1,0 +1,25 @@
+{
+  "name": "matmul_naive",
+  "source": "kernel.cu",
+  "entry": "matmul_naive<{T}>",
+  "dtypes": ["float32", "float16"],
+  "params": [
+    {"name": "A", "kind": "input", "dtype": "T", "shape": ["M", "K"]},
+    {"name": "B", "kind": "input", "dtype": "T", "shape": ["K", "N"]},
+    {"name": "C", "kind": "output", "dtype": "T", "shape": ["M", "N"]},
+    {"name": "M", "kind": "scalar", "dtype": "int32", "value": "M"},
+    {"name": "N", "kind": "scalar", "dtype": "int32", "value": "N"},
+    {"name": "K", "kind": "scalar", "dtype": "int32", "value": "K"}
+  ],
+  "launch": {"grid": ["cdiv(N, 16)", "cdiv(M, 16)"], "block": [16, 16], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1x1", "dims": {"M": 1, "N": 1, "K": 1}},
+    {"name": "tiny_3x5x7", "dims": {"M": 3, "N": 5, "K": 7}},
+    {"name": "odd_33x65x17", "dims": {"M": 33, "N": 65, "K": 17}},
+    {"name": "odd_127x129x1023", "dims": {"M": 127, "N": 129, "K": 1023}},
+    {"name": "pow2_256", "dims": {"M": 256, "N": 256, "K": 256}},
+    {"name": "large_1024", "dims": {"M": 1024, "N": 1024, "K": 1024}}
+  ],
+  "init": {"A": {"dist": "normal", "edges": true, "step": 0.0625}, "B": {"dist": "normal", "step": 0.0625}},
+  "bench_case": "large_1024"
+}

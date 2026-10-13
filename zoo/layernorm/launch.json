@@ -1,0 +1,33 @@
+{
+  "name": "layernorm",
+  "source": "kernel.cu",
+  "entry": "layernorm<{T}>",
+  "dtypes": ["float32", "float16", "bfloat16"],
+  "params": [
+    {"name": "x", "kind": "input", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "gamma", "kind": "input", "dtype": "T", "shape": ["cols"]},
+    {"name": "beta", "kind": "input", "dtype": "T", "shape": ["cols"]},
+    {"name": "y", "kind": "output", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "rows", "kind": "scalar", "dtype": "int32", "value": "rows"},
+    {"name": "cols", "kind": "scalar", "dtype": "int32", "value": "cols"},
+    {"name": "eps", "kind": "scalar", "dtype": "float32", "value": "1e-5"}
+  ],
+  "launch": {"grid": ["rows"], "block": [256], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1", "dims": {"rows": 1, "cols": 1}},
+    {"name": "tiny_3x7", "dims": {"rows": 3, "cols": 7}},
+    {"name": "odd_7x1000", "dims": {"rows": 7, "cols": 1000}},
+    {"name": "odd_5x1023", "dims": {"rows": 5, "cols": 1023}},
+    {"name": "odd_3x4097", "dims": {"rows": 3, "cols": 4097}},
+    {"name": "pow2_64x1024", "dims": {"rows": 64, "cols": 1024}},
+    {"name": "large_4096x4096", "dims": {"rows": 4096, "cols": 4096}},
+    {"name": "offset_16x768", "dims": {"rows": 16, "cols": 768},
+     "init": {"x": {"dist": "normal", "mean": 100.0, "std": 2.0}}}
+  ],
+  "init": {
+    "x": {"dist": "normal", "edges": true},
+    "gamma": {"dist": "uniform", "low": 0.5, "high": 1.5},
+    "beta": {"dist": "normal", "std": 0.1}
+  },
+  "bench_case": "large_4096x4096"
+}

@@ -15,10 +15,23 @@
   compile error, no-op, leaky relu, no max-subtraction, partial row sum) all FAIL with the right reason.
   62 tests pass.
 
+- **M2 Zoo** (2026-10-13): all 12 kernels (vector_add, relu, saxpy, transpose, reduce_sum, softmax,
+  layernorm, rmsnorm, matmul_naive, rope, embedding_gather, cumsum) have kernel.cu + launch.json +
+  reference.py, and every original PASSES its reference on every case (fp32 everywhere, fp16 everywhere,
+  bf16 where the kernel supports it). Kernels cover templates, shared memory tiles, __syncthreads,
+  warp shuffles, atomics, block reductions, scans, gathers, int64 indices, in-place (inout) params.
+  Mutation test: for each kernel a subtly wrong reference (dropped element, unbiased variance, exclusive
+  scan, wrong rotation sign, clamped ids, ...) is REJECTED by validation.
+
 ## Next
-- M2 Complete the zoo (CUDA + launch.json + reference for the remaining 9 kernels). All originals must pass.
+- M3 Analyzer (cuda_parser + models) with pytest tests.
 
 ## Known issues / notes
+- Reductions (reduce_sum, matmul_naive, cumsum) use inputs quantized to multiples of 1/16 (`"step"` in
+  launch.json init). With unquantized normals, the fp32 originals FAILED the torch.testing fp32 tolerance
+  purely from summation-order rounding and cancellation (e.g. 1000 + 0.001 - 1000). Quantized inputs make
+  every summation order exact, so strict tolerances stay and real bugs still show. Tolerances were NOT
+  changed. Alternative for later (needs owner sign-off): a condition-aware tolerance for accumulations.
 - Harness design decisions (M1):
   - Inputs come from PCG64 `random_raw` bits converted with exact IEEE ops only (no log/sin/cos), so every
     platform regenerates bit-identical inputs. Golden hashes in tests/test_inputs.py pin this.

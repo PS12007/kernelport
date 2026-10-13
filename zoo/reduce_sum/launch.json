@@ -1,0 +1,23 @@
+{
+  "name": "reduce_sum",
+  "source": "kernel.cu",
+  "entry": "reduce_sum<{T}>",
+  "dtypes": ["float32", "float16"],
+  "params": [
+    {"name": "x", "kind": "input", "dtype": "T", "shape": ["n"]},
+    {"name": "out", "kind": "inout", "dtype": "float32", "shape": [1]},
+    {"name": "n", "kind": "scalar", "dtype": "int32", "value": "n"}
+  ],
+  "launch": {"grid": ["min(cdiv(n, 256), 1024)"], "block": [256], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1", "dims": {"n": 1}},
+    {"name": "tiny_7", "dims": {"n": 7}},
+    {"name": "odd_1000", "dims": {"n": 1000}},
+    {"name": "odd_1023", "dims": {"n": 1023}},
+    {"name": "odd_4097", "dims": {"n": 4097}},
+    {"name": "pow2_65536", "dims": {"n": 65536}},
+    {"name": "large_16M", "dims": {"n": 16777216}}
+  ],
+  "init": {"x": {"dist": "normal", "edges": true, "step": 0.0625}, "out": {"dist": "zeros"}},
+  "bench_case": "large_16M"
+}

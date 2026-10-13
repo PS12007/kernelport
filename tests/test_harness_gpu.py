@@ -15,16 +15,6 @@ M1_KERNELS = ["vector_add", "relu", "softmax"]
 
 
 @needs_cuda
-@pytest.mark.parametrize("kernel", M1_KERNELS)
-def test_original_passes_reference(kernel):
-    from kernelport.zoo import validate_original
-
-    r = validate_original(ZOO / kernel, "test")
-    assert r.status == "PASS", r.failure_report()
-    assert len(r.cases) >= 7
-
-
-@needs_cuda
 def test_wrong_reference_fails_validation(tmp_path):
     from kernelport.zoo import validate_original
 

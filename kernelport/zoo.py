@@ -42,8 +42,9 @@ def list_kernels(zoo: Path) -> list[str]:
     return sorted(p.name for p in zoo.iterdir() if (p / "launch.json").is_file())
 
 
-def validate_original(kdir: Path, hardware: str) -> RunResult:
-    """Run the original CUDA kernel against its reference."""
+def validate_original(kdir: Path, hardware: str, reference: Path | None = None,
+                      stop_after_failures: int | None = None) -> RunResult:
+    """Run the original CUDA kernel against its reference (or an alternative reference file)."""
     from kernelport.harness import run_cuda
     from kernelport.harness.verify import run_cases
 
@@ -53,8 +54,9 @@ def validate_original(kdir: Path, hardware: str) -> RunResult:
         return RunResult(kernel=spec.name, backend="cuda", status="UNVERIFIED", hardware=hardware, reason=why)
     src = kdir / spec.source
     return run_cases(kernel=spec.name, backend="cuda", hardware=hardware, spec=spec,
-                     reference_path=kdir / "reference.py",
+                     reference_path=reference or kdir / "reference.py",
                      runner=lambda d: run_cuda.run_original(src, spec, d),
+                     stop_after_failures=stop_after_failures,
                      code_hash=run_cuda.source_hash(src))
 
 

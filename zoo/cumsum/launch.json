@@ -1,0 +1,24 @@
+{
+  "name": "cumsum",
+  "source": "kernel.cu",
+  "entry": "cumsum<{T}>",
+  "dtypes": ["float32", "float16"],
+  "params": [
+    {"name": "x", "kind": "input", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "y", "kind": "output", "dtype": "T", "shape": ["rows", "cols"]},
+    {"name": "rows", "kind": "scalar", "dtype": "int32", "value": "rows"},
+    {"name": "cols", "kind": "scalar", "dtype": "int32", "value": "cols"}
+  ],
+  "launch": {"grid": ["rows"], "block": [256], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1", "dims": {"rows": 1, "cols": 1}},
+    {"name": "tiny_3x7", "dims": {"rows": 3, "cols": 7}},
+    {"name": "odd_7x1000", "dims": {"rows": 7, "cols": 1000}},
+    {"name": "odd_5x1023", "dims": {"rows": 5, "cols": 1023}},
+    {"name": "odd_3x4097", "dims": {"rows": 3, "cols": 4097}},
+    {"name": "pow2_64x1024", "dims": {"rows": 64, "cols": 1024}},
+    {"name": "large_4096x4096", "dims": {"rows": 4096, "cols": 4096}}
+  ],
+  "init": {"x": {"dist": "normal", "edges": true, "step": 0.0625}},
+  "bench_case": "large_4096x4096"
+}

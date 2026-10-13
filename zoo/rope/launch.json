@@ -1,0 +1,33 @@
+{
+  "name": "rope",
+  "source": "kernel.cu",
+  "entry": "rope<{T}>",
+  "dtypes": ["float32", "float16", "bfloat16"],
+  "params": [
+    {"name": "positions", "kind": "input", "dtype": "int64", "shape": ["tokens"]},
+    {"name": "x", "kind": "input", "dtype": "T", "shape": ["tokens", "heads", "head_dim"]},
+    {"name": "cos_cache", "kind": "input", "dtype": "float32", "shape": ["max_pos", "head_dim // 2"]},
+    {"name": "sin_cache", "kind": "input", "dtype": "float32", "shape": ["max_pos", "head_dim // 2"]},
+    {"name": "y", "kind": "output", "dtype": "T", "shape": ["tokens", "heads", "head_dim"]},
+    {"name": "tokens", "kind": "scalar", "dtype": "int32", "value": "tokens"},
+    {"name": "heads", "kind": "scalar", "dtype": "int32", "value": "heads"},
+    {"name": "head_dim", "kind": "scalar", "dtype": "int32", "value": "head_dim"}
+  ],
+  "launch": {"grid": ["tokens"], "block": [128], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1tok_1h_2d", "dims": {"tokens": 1, "heads": 1, "head_dim": 2, "max_pos": 4}},
+    {"name": "tiny_7tok_3h_8d", "dims": {"tokens": 7, "heads": 3, "head_dim": 8, "max_pos": 16}},
+    {"name": "odd_1000tok_5h_64d", "dims": {"tokens": 1000, "heads": 5, "head_dim": 64, "max_pos": 2048}},
+    {"name": "odd_1023tok_7h_128d", "dims": {"tokens": 1023, "heads": 7, "head_dim": 128, "max_pos": 4096}},
+    {"name": "odd_17tok_3h_4097pairs", "dims": {"tokens": 17, "heads": 3, "head_dim": 8194, "max_pos": 32}},
+    {"name": "pow2_1024tok_8h_64d", "dims": {"tokens": 1024, "heads": 8, "head_dim": 64, "max_pos": 1024}},
+    {"name": "large_8192tok_32h_128d", "dims": {"tokens": 8192, "heads": 32, "head_dim": 128, "max_pos": 8192}}
+  ],
+  "init": {
+    "positions": {"dist": "randint", "low": 0, "high": "max_pos"},
+    "x": {"dist": "normal", "edges": true},
+    "cos_cache": {"dist": "uniform", "low": -1.0, "high": 1.0},
+    "sin_cache": {"dist": "uniform", "low": -1.0, "high": 1.0}
+  },
+  "bench_case": "large_8192tok_32h_128d"
+}

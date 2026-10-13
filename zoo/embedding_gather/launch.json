@@ -1,0 +1,28 @@
+{
+  "name": "embedding_gather",
+  "source": "kernel.cu",
+  "entry": "embedding_gather<{T}>",
+  "dtypes": ["float32", "float16", "bfloat16"],
+  "params": [
+    {"name": "ids", "kind": "input", "dtype": "int64", "shape": ["tokens"]},
+    {"name": "table", "kind": "input", "dtype": "T", "shape": ["vocab", "dim"]},
+    {"name": "out", "kind": "output", "dtype": "T", "shape": ["tokens", "dim"]},
+    {"name": "tokens", "kind": "scalar", "dtype": "int32", "value": "tokens"},
+    {"name": "dim", "kind": "scalar", "dtype": "int32", "value": "dim"}
+  ],
+  "launch": {"grid": ["tokens"], "block": [128], "shared_mem": 0},
+  "cases": [
+    {"name": "tiny_1x1", "dims": {"tokens": 1, "vocab": 1, "dim": 1}},
+    {"name": "tiny_7x3", "dims": {"tokens": 7, "vocab": 5, "dim": 3}},
+    {"name": "odd_1000x1000", "dims": {"tokens": 1000, "vocab": 997, "dim": 1000}},
+    {"name": "odd_1023x1023", "dims": {"tokens": 1023, "vocab": 50257, "dim": 1023}},
+    {"name": "odd_31x4097", "dims": {"tokens": 31, "vocab": 300, "dim": 4097}},
+    {"name": "pow2_1024x512", "dims": {"tokens": 1024, "vocab": 32768, "dim": 512}},
+    {"name": "large_8192x4096", "dims": {"tokens": 8192, "vocab": 32000, "dim": 4096}}
+  ],
+  "init": {
+    "ids": {"dist": "randint", "low": 0, "high": "vocab"},
+    "table": {"dist": "normal", "edges": true}
+  },
+  "bench_case": "large_8192x4096"
+}
