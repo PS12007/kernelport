@@ -88,9 +88,20 @@ class Backend:
         p.sync()
         return p.fetch()
 
+    def dtypes(self) -> tuple[str, ...]:
+        """dtypes runnable here: the config's, narrowed by the capability module if it knows better
+        (e.g. float16 only on WebGPU adapters with shader-f16)."""
+        fn = getattr(self._cap, "supported_dtypes", None)
+        if fn is None:
+            return self.config.dtypes
+        try:
+            return tuple(d for d in self.config.dtypes if d in fn())
+        except Exception:
+            return self.config.dtypes
+
     def supports(self, dtype: str) -> bool:
-        """Whether this backend runs cases of ``dtype``."""
-        return dtype in self.config.dtypes
+        """Whether this backend runs cases of ``dtype`` here."""
+        return dtype in self.dtypes()
 
 
 def bind_kwargs(fn, spec, tensors: dict, scalars: dict) -> dict:

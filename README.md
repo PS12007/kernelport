@@ -7,8 +7,8 @@ Cursor, Gemini CLI) writes the ports; kernelport runs them on real hardware and 
 one against a reference that was itself validated against the original CUDA kernel. A port is
 only ever reported as **PASS** if its current code ran on real hardware and matched.
 
-> Status: early development (0.1.0.dev0). Triton and CPU backends work; Metal, WebGPU and HIP
-> are registered but not implemented yet. See [PROGRESS.md](PROGRESS.md).
+> Status: early development (0.1.0.dev0). Triton, CPU and WebGPU backends work and are verified;
+> Metal and HIP are registered but not implemented yet. See [PROGRESS.md](PROGRESS.md).
 
 ## How it works
 
@@ -57,7 +57,7 @@ Then, in your repo, ask your agent:
 | `triton` | Triton (Python) | NVIDIA (triton / triton-windows), AMD ROCm | working |
 | `cpu` | Numba (Python) | any machine | working (float32/float64) |
 | `metal` | MLX / Metal | Apple Silicon | planned |
-| `webgpu` | WGSL | browsers (via headless Chromium) | planned |
+| `webgpu` | WGSL | any Vulkan / Metal / D3D12 GPU via wgpu-native (core WebGPU only, so browser-portable) | working (float32/float16) |
 | `hip` | HIP C++ | AMD ROCm | planned |
 
 Ports for a backend that is not available on the current machine are saved as **UNVERIFIED**,
@@ -72,24 +72,24 @@ atomics, block reductions, scans, gathers and int64 indices. Every original pass
 `kernelport zoo --backend triton|cpu` validates them and verifies the stored ports.
 
 Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX (28 threads), bench case of each spec
-(the largest), float32. Every stored port passes every case: Triton in fp32/fp16/bf16, cpu in fp32.
+(the largest), float32. Every stored port passes every case: Triton in fp32/fp16/bf16, cpu in fp32, webgpu in fp32/fp16.
 
-| kernel | triton vs original CUDA | cpu (Numba) |
-|---|---|---|
-| vector_add | PASS, 1.00x | PASS, 7.8 ms (n/c) |
-| relu | PASS, 1.04x | PASS, 5.7 ms (n/c) |
-| saxpy | PASS, 1.00x | PASS, 6.4 ms (n/c) |
-| transpose | PASS, 1.00x | PASS, 11.2 ms (n/c) |
-| reduce_sum | PASS, 1.04x | PASS, 3.4 ms (n/c) |
-| softmax | PASS, 1.00x | PASS, 35.5 ms (n/c) |
-| layernorm | PASS, 1.00x | PASS, 9.1 ms (n/c) |
-| rmsnorm | PASS, 1.00x | PASS, 7.0 ms (n/c) |
-| matmul_naive | PASS, 6.20x (tiled `tl.dot`, IEEE fp32) | PASS, 40.3 ms (n/c) |
-| rope | PASS, 1.00x | PASS, 13.1 ms (n/c) |
-| embedding_gather | PASS, 1.02x | PASS, 11.8 ms (n/c) |
-| cumsum | PASS, 1.30x | PASS, 6.9 ms (n/c) |
+| kernel | triton vs original CUDA | cpu (Numba) | webgpu (WGSL) |
+|---|---|---|---|
+| vector_add | PASS, 1.00x | PASS, 7.8 ms (n/c) | PASS, 1.12 ms (n/c) |
+| relu | PASS, 1.04x | PASS, 5.7 ms (n/c) | PASS, 1.06 ms (n/c) |
+| saxpy | PASS, 1.00x | PASS, 6.4 ms (n/c) | PASS, 1.08 ms (n/c) |
+| transpose | PASS, 1.00x | PASS, 11.2 ms (n/c) | PASS, 1.06 ms (n/c) |
+| reduce_sum | PASS, 1.04x | PASS, 3.4 ms (n/c) | PASS, 0.58 ms (n/c) |
+| softmax | PASS, 1.00x | PASS, 35.5 ms (n/c) | PASS, 0.67 ms (n/c) |
+| layernorm | PASS, 1.00x | PASS, 9.1 ms (n/c) | PASS, 0.96 ms (n/c) |
+| rmsnorm | PASS, 1.00x | PASS, 7.0 ms (n/c) | PASS, 1.13 ms (n/c) |
+| matmul_naive | PASS, 6.20x (tiled `tl.dot`, IEEE fp32) | PASS, 40.3 ms (n/c) | PASS, 4.21 ms (n/c) |
+| rope | PASS, 1.00x | PASS, 13.1 ms (n/c) | PASS, 1.42 ms (n/c) |
+| embedding_gather | PASS, 1.02x | PASS, 11.8 ms (n/c) | PASS, 1.46 ms (n/c) |
+| cumsum | PASS, 1.30x | PASS, 6.9 ms (n/c) | PASS, 1.18 ms (n/c) |
 
-(n/c = CPU wall-clock time, not comparable to GPU kernel time.)
+(n/c = wall-clock time (CPU, or WebGPU including submission), not comparable to GPU kernel time.)
 
 ## CLI
 

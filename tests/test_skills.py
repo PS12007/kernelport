@@ -52,3 +52,10 @@ def test_cpu_guide_covers_the_traps():
     cpu = _skill("cpu")
     for concept in ("prange", "in place", "inout", "atomic", "fastmath", "float16", "data race", "run("):
         assert concept in cpu, concept
+
+
+def test_webgpu_guide_covers_the_traps():
+    w = _skill("webgpu")
+    for concept in ("workgroupBarrier", "65535", "vec2<u32>", "BINDINGS", "atomicCompareExchangeWeak",
+                    "alias T", "params.", "fn main", "grid("):
+        assert concept in w, concept

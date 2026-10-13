@@ -1,1 +1,1 @@
-"""WGSL compute shaders in headless Chrome via Playwright backend."""
+"""WebGPU backend: WGSL compute shaders run through wgpu-native."""

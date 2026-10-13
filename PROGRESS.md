@@ -125,9 +125,22 @@
   original had none and the file round-trips byte-exactly (CRLF-safe). ~/.claude.json was then verified
   identical to the pre-setup snapshot (all top-level keys and values), skill dir removed, ~/.kernelport removed.
 
+- **M12 WebGPU** (2026-10-13): runner on wgpu-native (`wgpu` 0.32 wheel, 3.4 MB; owner approved small
+  downloads only, so Playwright Chromium was NOT used). Port = Python file with `WGSL` (entry `main`) and
+  `grid(...)`. The runner appends the bindings: `alias T`, one storage buffer per tensor param named like
+  the param (read for inputs, read_write for outputs/inouts), int64 as vec2<u32>, and a `params` uniform
+  struct of scalars; `BINDINGS` overrides a buffer type (atomics). Only core WebGPU features + shader-f16
+  are enabled, so passing WGSL is browser-portable. Explicit bind group layouts, pipelines cached per shader
+  text. dtypes: float32, float16 when the adapter has shader-f16 (Backend.dtypes() now asks the capability
+  module, so f16 is skipped, not failed, elsewhere). Worked around a wgpu 0.32 bug
+  (queue.on_submitted_work_done_sync has a wrong C callback signature) by syncing with a 4-byte readback.
+  All 12 zoo kernels have WGSL ports: all PASS fp32+fp16 on the RTX 5060 via Vulkan. 4 bad ports
+  (no grid-stride on 16M, >65535 workgroups, wrong buffer name -> compile error with WGSL line numbers,
+  racy non-atomic out[0] +=) FAIL for the right reason. Shader error excerpts are ASCII-fied (box chars
+  crashed cp1252 consoles). Doctor smoke test for webgpu. skills/.../webgpu.md written.
+
 ## Next (pick up here)
-- Then M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
-  M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, M16 README/docs.
+- M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, rest of M16 docs.
 
 ## How to resume
 - Env: `.venv` (Python 3.12, torch 2.11.0+cu128, triton-windows 3.7.1, cupy-cuda12x 14.2). `kernelport doctor`.

@@ -48,7 +48,7 @@ def test_core_imports_without_torch():
         "import kernelport.harness.spec, kernelport.harness.results, kernelport.harness.tolerances\n"
         "from kernelport.backends.base import get_backend, BACKEND_NAMES\n"
         "[get_backend(n).config for n in BACKEND_NAMES]\n"
-        "bad = [m for m in ('torch', 'triton', 'cupy', 'numba', 'mlx', 'playwright') if m in sys.modules]\n"
+        "bad = [m for m in ('torch', 'triton', 'cupy', 'numba', 'mlx', 'playwright', 'wgpu') if m in sys.modules]\n"
         "print(','.join(bad))\n"
     )
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, cwd=ROOT, check=True)

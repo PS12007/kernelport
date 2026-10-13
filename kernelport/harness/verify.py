@@ -35,9 +35,14 @@ def _user_frames(exc: BaseException) -> str:
     return "\n".join(keep[-3:])
 
 
+# Shader compilers (naga, Metal) draw source excerpts with box characters; Windows
+# consoles in legacy code pages cannot print them.
+_BOX = str.maketrans({"┌": "+", "─": "-", "│": "|", "└": "+", "├": "+"})
+
+
 def _short_error(exc: BaseException) -> str:
     """Exception text plus user-code frames, capped so it fits an agent's context."""
-    msg = str(exc).split("\nTraceback (most recent call last)")[0].strip()
+    msg = str(exc).split("\nTraceback (most recent call last)")[0].strip().translate(_BOX)
     text = f"{type(exc).__name__}: {msg}"
     frames = _user_frames(exc)
     full = f"{text}\n{frames}" if frames else text

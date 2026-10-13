@@ -20,7 +20,7 @@ EXTRA_MARKERS: dict[str, list[str]] = {
     "cuda": ["torch", "cupy"],
     "triton": ["torch", "triton"],
     "metal": ["mlx"],
-    "webgpu": ["playwright"],
+    "webgpu": ["wgpu"],
     "cpu": ["numba"],
     "agent": ["anthropic"],
 }
@@ -153,6 +153,36 @@ def _smoke_metal() -> None:
         raise AssertionError("MLX metal kernel produced wrong result")
 
 
+def _smoke_webgpu() -> None:
+    import numpy as np
+    import wgpu
+
+    from kernelport.backends.webgpu.runner import device
+
+    dev = device()
+    a = np.arange(1000, dtype=np.float32)
+    buf = dev.create_buffer_with_data(data=a.tobytes(), usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC)
+    module = dev.create_shader_module(code="""
+@group(0) @binding(0) var<storage, read_write> a: array<f32>;
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    if (gid.x < 1000u) { a[gid.x] = a[gid.x] + 2.0; }
+}""")
+    pipe = dev.create_compute_pipeline(layout="auto", compute={"module": module, "entry_point": "main"})
+    group = dev.create_bind_group(layout=pipe.get_bind_group_layout(0),
+                                  entries=[{"binding": 0, "resource": {"buffer": buf}}])
+    enc = dev.create_command_encoder()
+    cp = enc.begin_compute_pass()
+    cp.set_pipeline(pipe)
+    cp.set_bind_group(0, group)
+    cp.dispatch_workgroups(4)
+    cp.end()
+    dev.queue.submit([enc.finish()])
+    out = np.frombuffer(dev.queue.read_buffer(buf), dtype=np.float32)
+    if not np.array_equal(out, a + 2.0):
+        raise AssertionError("WGSL kernel produced wrong result")
+
+
 # --------------------------------------------------------------- capabilities
 
 def _cuda_gpu() -> tuple[bool, str]:
@@ -185,7 +215,8 @@ def _registry_check(name: str) -> Callable[[], tuple[bool, str]]:
 
 
 # The original CUDA runner is not a port backend; every port backend comes from the registry.
-SMOKES: dict[str, Callable[[], None]] = {"triton": _smoke_triton, "cpu": _smoke_cpu, "metal": _smoke_metal}
+SMOKES: dict[str, Callable[[], None]] = {"triton": _smoke_triton, "cpu": _smoke_cpu, "metal": _smoke_metal,
+                                         "webgpu": _smoke_webgpu}
 BACKENDS: list[tuple[str, Callable[[], tuple[bool, str]], Callable[[], None] | None]] = [
     ("cuda (original)", _check_cuda, _smoke_cuda),
     *[(n, _registry_check(n), SMOKES.get(n)) for n in ("triton", "cpu", "metal", "webgpu", "hip")],

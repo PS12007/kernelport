@@ -73,7 +73,7 @@ def verify_port(spec: LaunchSpec, reference: Path, port: Path, backend: str,
     return run_cases(kernel=spec.name, backend=backend, hardware=be.hardware_name(), spec=spec,
                      reference_path=reference, runner=lambda d: be.run(port, spec, d),
                      code_hash=file_hash(port), tol_overrides=be.config.tolerances,
-                     supported_dtypes=be.config.dtypes, stop_after_failures=stop_after_failures)
+                     supported_dtypes=be.dtypes(), stop_after_failures=stop_after_failures)
 
 
 def verify_zoo_port(kdir: Path, port: Path, backend: str = "triton") -> RunResult:
