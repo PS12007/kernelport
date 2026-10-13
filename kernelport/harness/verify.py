@@ -47,15 +47,20 @@ def _short_error(exc: BaseException) -> str:
 def run_cases(*, kernel: str, backend: str, hardware: str, spec: LaunchSpec,
               reference_path: Path, runner: Runner, code_hash: str,
               tol_overrides: dict[str, Tolerance] | None = None,
-              stop_after_failures: int | None = None) -> RunResult:
+              stop_after_failures: int | None = None,
+              supported_dtypes: tuple[str, ...] | None = None) -> RunResult:
     """Run ``runner`` on every (case, dtype) and compare against the reference.
 
-    Status is PASS only if every case ran and every output matched.
+    Cases whose dtype is not in ``supported_dtypes`` are skipped and named in
+    the result's reason. Status is PASS only if every remaining case ran and
+    every output matched; if nothing remains, status is SKIPPED.
     """
     cases: list[CaseResult] = []
     used_tols: dict[str, dict] = {}
     failures = 0
-    for case, dtype in spec.iter_cases():
+    todo = [(c, t) for c, t in spec.iter_cases() if supported_dtypes is None or t in supported_dtypes]
+    skipped = sorted({t for _, t in spec.iter_cases()} - {t for _, t in todo})
+    for case, dtype in todo:
         data = make_case(spec, case, dtype)
         cr = CaseResult(case.name, dtype, False, data.input_hash)
         try:
@@ -99,9 +104,17 @@ def run_cases(*, kernel: str, backend: str, hardware: str, spec: LaunchSpec,
             if stop_after_failures and failures >= stop_after_failures:
                 break
 
-    all_ran = len(cases) == sum(1 for _ in spec.iter_cases())
-    status = "PASS" if all_ran and cases and all(c.passed for c in cases) else "FAIL"
-    reason = "" if all_ran else f"stopped early after {failures} failing cases"
+    all_ran = len(cases) == len(todo)
+    if not todo:
+        status = "SKIPPED"
+    else:
+        status = "PASS" if all_ran and all(c.passed for c in cases) else "FAIL"
+    notes = []
+    if not all_ran:
+        notes.append(f"stopped early after {failures} failing cases")
+    if skipped:
+        notes.append(f"dtypes not supported by this backend, not tested: {', '.join(skipped)}")
+    reason = "; ".join(notes)
     return RunResult(kernel=kernel, backend=backend, status=status, hardware=hardware,
                      reason=reason, code_hash=code_hash, reference_hash=file_hash(reference_path),
                      spec_hash=spec.hash(), tolerances=used_tols, cases=cases)

@@ -5,7 +5,7 @@ Layout of each zoo entry::
     zoo/<kernel>/kernel.cu       original CUDA
     zoo/<kernel>/launch.json     launch + input spec
     zoo/<kernel>/reference.py    plain PyTorch reference
-    zoo/<kernel>/ports/<backend>.py   stored hand-written ports
+    zoo/<kernel>/ports/<backend><ext>   stored hand-written ports
 """
 
 from __future__ import annotations
@@ -13,10 +13,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from kernelport.backends.base import get_backend
 from kernelport.harness.results import RunResult
 from kernelport.harness.spec import LaunchSpec
-
-PORT_BACKENDS = ("triton",)
 
 
 @dataclass
@@ -30,7 +29,7 @@ class ZooEntry:
 
 
 def find_zoo(start: Path | None = None) -> Path:
-    """Locate the zoo/ directory (repo checkout or cwd)."""
+    """Locate the zoo/ directory (cwd first, then the repo checkout)."""
     for base in [start or Path.cwd(), Path(__file__).resolve().parent.parent]:
         if (base / "zoo").is_dir():
             return base / "zoo"
@@ -60,41 +59,57 @@ def validate_original(kdir: Path, hardware: str, reference: Path | None = None,
                      code_hash=run_cuda.source_hash(src))
 
 
-def verify_triton(kdir: Path, port: Path, hardware: str) -> RunResult:
-    """Verify a Triton port against the reference."""
-    from kernelport.harness import run_triton
+def verify_port(spec: LaunchSpec, reference: Path, port: Path, backend: str,
+                stop_after_failures: int | None = None) -> RunResult:
+    """Verify a port on ``backend`` against the reference. UNVERIFIED if the backend is unavailable."""
     from kernelport.harness.reference import file_hash
     from kernelport.harness.verify import run_cases
 
-    spec = LaunchSpec.load(kdir / "launch.json")
-    ok, why = run_triton.is_available()
+    be = get_backend(backend)
+    ok, why = be.is_available()
     if not ok:
-        return RunResult(kernel=spec.name, backend="triton", status="UNVERIFIED", hardware=hardware, reason=why)
-    return run_cases(kernel=spec.name, backend="triton", hardware=hardware, spec=spec,
-                     reference_path=kdir / "reference.py",
-                     runner=lambda d: run_triton.run_port(port, spec, d),
-                     code_hash=file_hash(port))
+        return RunResult(kernel=spec.name, backend=backend, status="UNVERIFIED",
+                         hardware=be.hardware_name(), reason=why, code_hash=file_hash(port))
+    return run_cases(kernel=spec.name, backend=backend, hardware=be.hardware_name(), spec=spec,
+                     reference_path=reference, runner=lambda d: be.run(port, spec, d),
+                     code_hash=file_hash(port), tol_overrides=be.config.tolerances,
+                     supported_dtypes=be.config.dtypes, stop_after_failures=stop_after_failures)
 
 
-def bench_pair(kdir: Path, port: Path, dtype: str = "float32") -> dict:
-    """Time original vs Triton port on the spec's bench case."""
-    from kernelport.bench.timer import time_cuda
-    from kernelport.harness import run_cuda, run_triton
+def verify_zoo_port(kdir: Path, port: Path, backend: str = "triton") -> RunResult:
+    """verify_port for a zoo directory."""
+    return verify_port(LaunchSpec.load(kdir / "launch.json"), kdir / "reference.py", port, backend)
+
+
+def bench_port(spec: LaunchSpec, source: Path, port: Path, backend: str, dtype: str = "float32") -> dict:
+    """Time the original CUDA kernel and the port on the spec's bench case.
+
+    The original is timed only when CUDA is available here; otherwise only the port.
+    """
+    from kernelport.bench.timer import time_cuda, time_wall
+    from kernelport.harness import run_cuda
     from kernelport.harness.inputs import make_case
 
-    spec = LaunchSpec.load(kdir / "launch.json")
+    be = get_backend(backend)
     case = spec.get_case(spec.bench_case) if spec.bench_case else spec.cases[-1]
     data = make_case(spec, case, dtype)
-    orig_launch, _ = run_cuda.prepare(kdir / spec.source, spec, data)
-    port_launch, _ = run_triton.prepare(port, spec, data)
-    t_orig = time_cuda(orig_launch)
-    t_port = time_cuda(port_launch)
-    return {"case": case.name, "dtype": dtype, "original_ms": t_orig.median_ms,
-            "port_ms": t_port.median_ms, "speedup": t_orig.median_ms / t_port.median_ms,
-            "method": t_port.method}
+    prepared = be.prepare(port, spec, data)
+    if prepared.timer == "cuda_event":
+        t_port = time_cuda(prepared.launch)
+    else:
+        t_port = time_wall(prepared.launch, prepared.sync)
+    out = {"case": case.name, "dtype": dtype, "port_ms": t_port.median_ms, "method": t_port.method,
+           "hardware": be.hardware_name(), "comparable": be.config.timing_comparable,
+           "note": be.config.timing_note, "original_ms": None, "speedup": None}
+    if run_cuda.is_available()[0]:
+        orig_launch, _ = run_cuda.prepare(source, spec, data)
+        t_orig = time_cuda(orig_launch)
+        out["original_ms"] = t_orig.median_ms
+        out["speedup"] = t_orig.median_ms / t_port.median_ms
+    return out
 
 
-def run_zoo(zoo: Path, kernels: list[str] | None = None, backends: tuple[str, ...] = PORT_BACKENDS,
+def run_zoo(zoo: Path, kernels: list[str] | None = None, backends: tuple[str, ...] = ("triton",),
             bench: bool = True, out_dir: Path | None = None) -> list[ZooEntry]:
     """Validate originals, verify stored ports, and benchmark the passing ones."""
     from kernelport.hardware import gpu_name
@@ -103,21 +118,24 @@ def run_zoo(zoo: Path, kernels: list[str] | None = None, backends: tuple[str, ..
     entries = []
     for name in kernels or list_kernels(zoo):
         kdir = zoo / name
+        spec = LaunchSpec.load(kdir / "launch.json")
         entry = ZooEntry(name, validate_original(kdir, hw))
         for backend in backends:
-            port = kdir / "ports" / f"{backend}.py"
+            be = get_backend(backend)
+            port = kdir / "ports" / f"{backend}{be.config.extension}"
             if not port.is_file():
                 entry.ports[backend] = RunResult(kernel=name, backend=backend, status="SKIPPED",
-                                                 hardware=hw, reason="no stored port")
+                                                 hardware=be.hardware_name(), reason="no stored port")
                 continue
-            if entry.original.status != "PASS":
+            if entry.original.status == "FAIL":
                 entry.ports[backend] = RunResult(kernel=name, backend=backend, status="SKIPPED",
-                                                 hardware=hw, reason="original did not pass its reference")
+                                                 hardware=be.hardware_name(),
+                                                 reason="original did not pass its reference")
                 continue
-            res = verify_triton(kdir, port, hw)
+            res = verify_port(spec, kdir / "reference.py", port, backend)
             entry.ports[backend] = res
             if bench and res.status == "PASS":
-                entry.bench[backend] = bench_pair(kdir, port)
+                entry.bench[backend] = bench_port(spec, kdir / spec.source, port, backend)
         if out_dir:
             entry.original.save(out_dir / name / "cuda" / "result.json")
             for b, r in entry.ports.items():

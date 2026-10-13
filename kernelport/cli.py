@@ -59,9 +59,9 @@ def zoo(
             f"{e.original.num_passed}/{len(e.original.cases)}",
             f"[{colors[p.status]}]{p.status}[/]",
             f"{p.num_passed}/{len(p.cases)}" if p.cases else escape(p.reason),
-            f"{b['original_ms']:.4f}" if b else "-",
+            f"{b['original_ms']:.4f}" if b and b["original_ms"] is not None else "-",
             f"{b['port_ms']:.4f}" if b else "-",
-            f"{b['speedup']:.2f}x" if b else "-",
+            f"{b['speedup']:.2f}x" if b and b["speedup"] is not None else "-",
         )
     con.print(table)
     for e in entries:

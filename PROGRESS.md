@@ -32,10 +32,19 @@
   finds `<<<...>>>` launch sites. `suggest_spec` drafts a launch.json with TODOs. Agrees with all 12
   hand-written zoo specs on every param kind and dtype. `kernelport scan <path>`.
 
+- **M4 Backends** (2026-10-13): `kernelport/backends/base.py` (BackendConfig, Backend facade, Prepared,
+  registry). Each backend = config.py + capability.py (+ runner.py once implemented). Triton moved into
+  `backends/triton/`; cpu/metal/webgpu/hip registered as stubs whose capability checks give clear reasons.
+  Verification skips dtypes a backend does not support and names them in the result; if nothing is left
+  the status is SKIPPED (never PASS). Doctor reads port backends from the registry. Test proves core
+  imports (CLI, analyzer, spec, registry, configs) pull in no torch/GPU package; wheel's base
+  Requires-Dist is only mcp, typer, rich, numpy. 119 tests pass.
+
 ## Next
-- M4 Backend interface + registry; move Triton into it; extras in pyproject.
+- M5 Workspace (.kernelport/) with frozen references, input specs, attempt logs, results.
 
 ## Known issues / notes
+- The zoo is not shipped in the wheel; `kernelport zoo` needs a repo checkout (or cwd containing zoo/).
 - Analyzer is lexical, not a C++ front end: macros that generate kernels, kernels behind #if branches, and
   pointer kinds through complex aliasing (structs of pointers, pointer arithmetic in loops) may be wrong.
   Kinds are suggestions; the agent confirms them, and reference validation catches mistakes.

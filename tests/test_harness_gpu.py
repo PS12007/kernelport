@@ -27,9 +27,9 @@ def test_wrong_reference_fails_validation(tmp_path):
 @needs_triton
 @pytest.mark.parametrize("kernel", M1_KERNELS)
 def test_good_triton_port_passes(kernel):
-    from kernelport.zoo import verify_triton
+    from kernelport.zoo import verify_zoo_port
 
-    r = verify_triton(ZOO / kernel, ZOO / kernel / "ports" / "triton.py", "test")
+    r = verify_zoo_port(ZOO / kernel, ZOO / kernel / "ports" / "triton.py")
     assert r.status == "PASS", r.failure_report()
 
 
@@ -45,9 +45,9 @@ def test_good_triton_port_passes(kernel):
     ("softmax", "softmax_first_chunk_sum.py", "outside tolerance"),
 ])
 def test_bad_port_fails(kernel, port, expect):
-    from kernelport.zoo import verify_triton
+    from kernelport.zoo import verify_zoo_port
 
-    r = verify_triton(ZOO / kernel, BAD / port, "test")
+    r = verify_zoo_port(ZOO / kernel, BAD / port)
     assert r.status == "FAIL"
     assert expect in r.failure_report(), r.failure_report()
 
@@ -55,9 +55,9 @@ def test_bad_port_fails(kernel, port, expect):
 @needs_triton
 def test_first_chunk_bug_only_caught_by_wide_rows():
     """The bug is invisible for cols <= 1024; the odd/large cases must catch it."""
-    from kernelport.zoo import verify_triton
+    from kernelport.zoo import verify_zoo_port
 
-    r = verify_triton(ZOO / "softmax", BAD / "softmax_first_chunk_sum.py", "test")
+    r = verify_zoo_port(ZOO / "softmax", BAD / "softmax_first_chunk_sum.py")
     by_case = {(c.case, c.dtype): c.passed for c in r.cases}
     assert by_case[("pow2_64x1024", "float32")] is True
     assert by_case[("odd_3x4097", "float32")] is False
@@ -65,8 +65,8 @@ def test_first_chunk_bug_only_caught_by_wide_rows():
 
 @needs_triton
 def test_tiny_error_caught_in_fp32():
-    from kernelport.zoo import verify_triton
+    from kernelport.zoo import verify_zoo_port
 
-    r = verify_triton(ZOO / "vector_add", BAD / "vector_add_tiny_error.py", "test")
+    r = verify_zoo_port(ZOO / "vector_add", BAD / "vector_add_tiny_error.py")
     fp32 = [c.passed for c in r.cases if c.dtype == "float32" and c.case not in ("tiny_1",)]
     assert not any(fp32)

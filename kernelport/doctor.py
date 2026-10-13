@@ -176,55 +176,19 @@ def _check_cuda() -> tuple[bool, str]:
     return True, "CuPy + NVRTC on NVIDIA GPU"
 
 
-def _check_triton() -> tuple[bool, str]:
-    if not _has("triton"):
-        return False, "triton not installed (pip install kernelport[triton])"
-    if not _has("torch"):
-        return False, "torch not installed"
-    import torch
+def _registry_check(name: str) -> Callable[[], tuple[bool, str]]:
+    def check() -> tuple[bool, str]:
+        from kernelport.backends.base import get_backend
 
-    if not torch.cuda.is_available():
-        return False, "no CUDA or ROCm GPU visible to torch"
-    return True, "Triton on " + ("ROCm" if getattr(torch.version, "hip", None) else "CUDA")
+        return get_backend(name).is_available()
+    return check
 
 
-def _check_cpu() -> tuple[bool, str]:
-    if not _has("numba"):
-        return False, "numba not installed (pip install kernelport[cpu])"
-    return True, "Numba on CPU"
-
-
-def _check_metal() -> tuple[bool, str]:
-    if sys.platform != "darwin" or platform.machine() != "arm64":
-        return False, "Metal needs macOS on Apple Silicon"
-    if not _has("mlx"):
-        return False, "mlx not installed (pip install kernelport[metal])"
-    return True, "MLX metal_kernel on Apple GPU"
-
-
-def _check_webgpu() -> tuple[bool, str]:
-    if not _has("playwright"):
-        return False, "playwright not installed (pip install kernelport[webgpu]); added in M12"
-    return False, "WebGPU runner not implemented yet (M12)"
-
-
-def _check_hip() -> tuple[bool, str]:
-    if not _has("torch"):
-        return False, "torch not installed"
-    import torch
-
-    if not getattr(torch.version, "hip", None):
-        return False, "needs a ROCm build of torch on an AMD GPU"
-    return False, "HIP runner not implemented yet (M14)"
-
-
+# The original CUDA runner is not a port backend; every port backend comes from the registry.
+SMOKES: dict[str, Callable[[], None]] = {"triton": _smoke_triton, "cpu": _smoke_cpu, "metal": _smoke_metal}
 BACKENDS: list[tuple[str, Callable[[], tuple[bool, str]], Callable[[], None] | None]] = [
     ("cuda (original)", _check_cuda, _smoke_cuda),
-    ("triton", _check_triton, _smoke_triton),
-    ("cpu", _check_cpu, _smoke_cpu),
-    ("metal", _check_metal, _smoke_metal),
-    ("webgpu", _check_webgpu, None),
-    ("hip", _check_hip, None),
+    *[(n, _registry_check(n), SMOKES.get(n)) for n in ("triton", "cpu", "metal", "webgpu", "hip")],
 ]
 
 
