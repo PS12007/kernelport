@@ -260,6 +260,99 @@ def report(as_json: bool = JSON_OPT) -> None:
     _emit(tools.make_report(), as_json)
 
 
+TRY_PROMPT = 'port the CUDA kernels in this repo to Triton and verify them'
+
+
+@app.command()
+def setup(
+    uninstall: bool = typer.Option(False, "--uninstall", help="Undo everything a previous setup added."),
+    print_only: bool = typer.Option(False, "--print", help="Only print manual instructions; change nothing."),
+    agent: list[str] = typer.Option(None, "--agent", "-a", help="Only these agents: claude, codex, cursor, gemini."),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Apply without asking (still shows the changes)."),
+    home: str = typer.Option(None, "--home", hidden=True, help="Home directory override (tests)."),
+    no_cli: bool = typer.Option(False, "--no-agent-cli", hidden=True, help="Edit config files instead of `claude mcp add`."),
+) -> None:
+    """Register the kernelport MCP server and skill with your coding agents."""
+    from pathlib import Path
+
+    from rich.console import Console
+    from rich.markup import escape
+    from rich.table import Table
+
+    from kernelport.setup_agents.detect import agents as all_agents
+    from kernelport.setup_agents.detect import server_command
+    from kernelport.setup_agents.register import SetupError, apply, plan, plan_uninstall
+    from kernelport.setup_agents.register import uninstall as do_uninstall
+
+    con = Console()
+    home_p = Path(home) if home else Path.home()
+
+    if uninstall:
+        changes = plan_uninstall(home_p)
+        if not changes:
+            con.print("nothing to uninstall: kernelport setup has not changed any agent config")
+            return
+        for c in changes:
+            con.print(f"- {c.agent}: {escape(c.preview)} ({escape(str(c.path))})")
+        if not yes and not typer.confirm("Undo these changes?", default=False):
+            raise typer.Exit(1)
+        dest = do_uninstall(home_p)
+        con.print(f"[green]done.[/] Current files were backed up to {escape(str(dest))}. Restart your agents.")
+        return
+
+    found = all_agents(home_p, check_path=not home)
+    chosen = [a for a in found if (a.key in agent if agent else a.detected)]
+    if agent:
+        unknown = set(agent) - {a.key for a in found}
+        if unknown:
+            con.print(f"[red]unknown agent(s): {', '.join(sorted(unknown))}[/]")
+            raise typer.Exit(2)
+
+    table = Table(title="coding agents")
+    for col in ("agent", "detected", "MCP config", "skill folder"):
+        table.add_column(col)
+    for a in found:
+        table.add_row(a.label, "yes" if a.detected else "no", escape(str(a.config_path)), escape(str(a.skill_dir)))
+    con.print(table)
+
+    command = server_command()
+    if print_only:
+        con.print("\n[bold]Manual setup[/] (nothing was changed):")
+        con.print(f"MCP server command: {escape(' '.join(command))}")
+        for c in plan(found, command, use_cli=False):
+            con.print(f"\n[bold]{c.agent}[/] {c.kind}: {escape(str(c.path))}\n{escape(c.preview)}")
+        return
+    if not chosen:
+        con.print("No supported agents detected. Use --agent to pick one, or --print for manual steps.")
+        raise typer.Exit(1)
+
+    try:
+        changes = plan(chosen, command, use_cli=not no_cli)
+    except SetupError as exc:
+        con.print(f"[red]{escape(str(exc))}[/]")
+        raise typer.Exit(1)
+    con.print("\n[bold]Planned changes[/] (every touched file is backed up first):")
+    for c in changes:
+        con.print(f"\n[bold]{c.agent}[/] {c.kind} [{c.action}] {escape(str(c.path))}"
+                  + (" via the agent's own CLI" if c.method == "cli" else ""))
+        if c.action != "unchanged":
+            con.print(escape(c.preview))
+    if all(c.action == "unchanged" for c in changes):
+        con.print("\nEverything is already set up.")
+        return
+    if not yes and not typer.confirm("\nApply these changes?", default=False):
+        con.print("No changes made.")
+        raise typer.Exit(1)
+    try:
+        dest = apply(changes, home_p)
+    except SetupError as exc:
+        con.print(f"[red]{escape(str(exc))}[/]")
+        raise typer.Exit(1)
+    con.print(f"\n[green]Done.[/] Backups: {escape(str(dest))}")
+    con.print(f'Restart your agent, then try: "{TRY_PROMPT}"')
+    con.print("Undo with: kernelport setup --uninstall")
+
+
 @app.command()
 def mcp() -> None:
     """Start the MCP server on stdio (used by agent configs)."""

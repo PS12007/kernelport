@@ -68,8 +68,34 @@
   cases while the `input_precision="ieee"` port passes 16/16. Skill-consistency tests (every tool and
   param kind documented). 168 tests pass.
 
-## Next
-- M8 `kernelport setup` (Claude Code first; backup, approval, uninstall, --print), then Codex, Cursor, Gemini CLI.
+- **M8 Setup** (2026-10-13): `kernelport setup [--uninstall] [--print] [--agent X] [--yes]` for Claude Code,
+  Codex, Cursor, Gemini CLI (`kernelport/setup_agents/`). Locations from each agent's official docs
+  (see detect.py docstring). Shows exact changes, asks approval, backs up every touched file to
+  ~/.kernelport/backups/<ts>/, records install state in ~/.kernelport/setup_state.json. Claude Code uses
+  `claude mcp add --scope user` when the CLI is on PATH (it rewrites ~/.claude.json itself), JSON edit
+  otherwise. Codex TOML gets a marker-delimited block validated with tomllib. Cursor entry sets
+  KERNELPORT_ROOT=${workspaceFolder}. Uninstall removes only what was added, restores replaced entries and
+  skill dirs, and restores the original file byte-for-byte when nothing else changed. Server command =
+  this interpreter `-m kernelport mcp` (or `uvx kernelport mcp` from an ephemeral uvx/pipx env).
+  13 setup tests (fake home dir). 181 tests pass. On this machine only Claude Code is detected.
+  NOT yet run against the real ~/.claude.json: that needs the owner's go-ahead (M9 step 1).
+
+## Next (pick up here)
+- **M9 DOGFOOD** — needs the owner's approval first because it edits real agent config:
+  1. `.venv\Scripts\kernelport.exe setup --agent claude` (shows changes, asks y/n; undo with `--uninstall`).
+  2. Copy the zoo WITHOUT ports/ into a scratch repo (`git init` it), open a fresh Claude Code session there,
+     ask "port the CUDA kernels in this repo to Triton and verify them".
+  3. Record pass rate, attempts per kernel (`.kernelport/kernels/*/ports/triton/attempts.jsonl`), and where
+     the skill was unclear; improve SKILL.md / tools.
+- Then M10 report, M11 cpu (Numba), M12 webgpu (ask before installing Playwright Chromium, ~150 MB),
+  M13 metal (Mac), M14 AMD/HIP, M15 optional agent loop, M16 README/docs.
+
+## How to resume
+- Env: `.venv` (Python 3.12, torch 2.11.0+cu128, triton-windows 3.7.1, cupy-cuda12x 14.2). `kernelport doctor`.
+- Tests: `.venv\Scripts\python.exe -m pytest -q` (~3 min, GPU tests skip without CUDA).
+- Repo: https://github.com/PS12007/kernelport (public), commit after each milestone, update this file.
+- Gotcha for automated edits on this Windows box: bash heredocs mangle backslash escapes (\n, \b) inside
+  Python source. Write files with the editor tool or a script file instead.
 
 ## Known issues / notes
 - Requires mcp>=2.0 (FastMCP was renamed MCPServer in 2.x; we use the 2.x API only).
