@@ -48,10 +48,23 @@
   becomes UNVERIFIED if the port or frozen reference changed since. Files are written byte-exact so hashes
   match on Windows. 29 workspace tests (1 skipped: symlinks need admin on Windows).
 
+- **M6 MCP server + CLI** (2026-10-13): `kernelport/tools.py` implements the 11 tools once
+  (kernelport_doctor, scan_kernels, read_kernel, read_skill, write_reference, validate_reference,
+  write_port, verify_port, bench_port, list_status, make_report); `kernelport/mcp_server.py` exposes them
+  over stdio with the official MCP Python SDK (2.x `MCPServer`; its stdio transport diverts fd 1 to
+  stderr so GPU-library prints cannot corrupt the protocol). The workspace root is never a tool argument.
+  Every tool has a CLI command (scan, read, skill, write-reference, validate, write-port, verify, bench,
+  status, report, mcp). Enforced in tools: verify refuses unfrozen/tampered references, bench refuses
+  unless the current code PASSED on this hardware, no tool takes tolerances, attempts logged, repair
+  budget reported. Tests call every tool directly, run the full workflow on the GPU, and talk to the real
+  server over stdio. 161 tests pass.
+
 ## Next
-- M6 MCP server exposing all tools + matching CLI commands; tests calling each tool directly.
+- M7 Skills: SKILL.md workflow + Triton guide + common bugs.
 
 ## Known issues / notes
+- Requires mcp>=2.0 (FastMCP was renamed MCPServer in 2.x; we use the 2.x API only).
+- make_report is minimal until M10.
 - The zoo is not shipped in the wheel; `kernelport zoo` needs a repo checkout (or cwd containing zoo/).
 - Analyzer is lexical, not a C++ front end: macros that generate kernels, kernels behind #if branches, and
   pointer kinds through complex aliasing (structs of pointers, pointer arithmetic in loops) may be wrong.

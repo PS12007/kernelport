@@ -24,3 +24,5 @@ def _has(mod: str) -> bool:
 needs_cuda = pytest.mark.skipif(not (_cuda_ok() and _has("cupy")), reason="needs NVIDIA GPU + cupy")
 needs_triton = pytest.mark.skipif(not (_cuda_ok() and _has("triton")), reason="needs GPU + triton")
 needs_torch = pytest.mark.skipif(not _has("torch"), reason="needs torch (kernelport[ref])")
+
+BAD_PORTS = Path(__file__).resolve().parent / "bad_ports"
