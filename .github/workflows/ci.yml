@@ -60,6 +60,37 @@ jobs:
       - name: Metal zoo
         run: kernelport zoo --backend metal --no-bench
 
+  webgpu:
+    # WGSL ports through wgpu-native: Mesa lavapipe (software Vulkan) on Linux, Metal on macOS.
+    # Informational until both adapters have a green run.
+    name: webgpu zoo (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Vulkan (lavapipe)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -q && sudo apt-get install -y -q mesa-vulkan-drivers
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[webgpu,dev]"
+      - name: Adapter
+        run: python -c "import wgpu; a = wgpu.gpu.request_adapter_sync(); print(a.info); print(sorted(a.features))"
+      - name: WebGPU backend tests
+        run: python -m pytest -q -rs tests/test_webgpu_backend.py
+      - name: WebGPU zoo
+        run: kernelport zoo --backend webgpu --no-bench
+
   package:
     name: build sdist + wheel
     runs-on: ubuntu-latest
