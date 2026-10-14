@@ -1,0 +1,12 @@
+{
+  "case": "gpt2_8192x1024",
+  "dtype": "float32",
+  "port_ms": 0.5264999927021563,
+  "method": "wall_clock",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (WebGPU/Vulkan)",
+  "comparable": false,
+  "note": "wall-clock time including WebGPU submission; not comparable to native kernel timings",
+  "original_ms": 0.20014400035142899,
+  "speedup": 0.38014055674384684,
+  "code_hash": "a7ec5afed87339d6fe070f809566f8f7a800c690660320208ae6b1a6f2139e5e"
+}

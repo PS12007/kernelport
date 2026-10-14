@@ -1,0 +1,1 @@
+{"attempt": 1, "timestamp": "2026-10-14T20:14:04+00:00", "code_hash": "d3cea50d19dad519cd7c59704e2e8d32d1ccd6959702fde8d1f2d6002e8dc4b1", "reference_hash": "0e5e85c190ff183fd4e057f52ffd5212d1367a245339a81486eecd20a94b93d0", "status": "PASS", "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (WebGPU/Vulkan)", "cases_passed": 6, "cases_total": 6, "reason": ""}

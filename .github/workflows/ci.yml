@@ -95,6 +95,11 @@ jobs:
         run: python -m pytest -q -rs tests/test_webgpu_backend.py
       - name: WebGPU zoo
         run: kernelport zoo --backend webgpu --no-bench
+      - name: llm.c example (WGSL ports vs references frozen on NVIDIA)
+        working-directory: examples/llm.c
+        run: |
+          kernelport verify --backend webgpu
+          kernelport status
 
   package:
     name: build sdist + wheel
