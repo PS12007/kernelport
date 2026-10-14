@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1",
+  "reference_hash": "ebf49b8f1f6c43a72f2ba856e73ad2cfe34cc945bcf06114037bb4958823b229",
+  "spec_hash": "23c39a086bef62ac0e42528a4233f1aa79c955dc3f75f670cabb4b0cf392f490",
+  "source_hash": "b1825fd7b498f28851df5c5bbf380877b32a1ca627234278c627974981e5a660",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T20:32:28+00:00",
+  "cases_passed": 6
+}

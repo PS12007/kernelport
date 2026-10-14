@@ -1,0 +1,189 @@
+{
+  "kernel": "crossentropy_softmax_backward_kernel1",
+  "backend": "triton",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "0ee5350fc79fcafd91895c0cdf373991df52e1ff5dd88cf26f5b045d03e84be0",
+  "reference_hash": "ebf49b8f1f6c43a72f2ba856e73ad2cfe34cc945bcf06114037bb4958823b229",
+  "spec_hash": "41f7ba6f51b748e545e8f269cd4bc6cbce298bd4a2655a10cac8ac81964bd21c",
+  "tolerances": {
+    "float32": {
+      "rtol": 1.3e-06,
+      "atol": 1e-05,
+      "reason": "torch.testing default for float32"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x1",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "2f43da725376ad472103043947c05b20ed8721bd33ab7fb8a2ef432eefb6e54d",
+      "outputs": [
+        {
+          "name": "dlogits",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "tiny_1x1x7",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "519cb56a5b39abdfafffe40b10acdcbb598325e8d6623178ba265b872442618e",
+      "outputs": [
+        {
+          "name": "dlogits",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_3x5x1023",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "4449687df5c5966a3667eca4a2312128052f4afe92f2cfc4fa7d6be013dd99eb",
+      "outputs": [
+        {
+          "name": "dlogits",
+          "passed": true,
+          "shape": [
+            3,
+            5,
+            1023
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 15345,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_2x7x4097",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "fa84dc305e193a9056f75e0f48cbf463e61983c526dbb1d0ff015658f60e6110",
+      "outputs": [
+        {
+          "name": "dlogits",
+          "passed": true,
+          "shape": [
+            2,
+            7,
+            4097
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.2351741790771484e-08,
+          "max_rel_err": 2.0009758092029546e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 57358,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "pow2_4x64x1024",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "1f1acc63370f6eed34a195f3611a19e32c16e67e09240ac4ca88471626aa2dee",
+      "outputs": [
+        {
+          "name": "dlogits",
+          "passed": true,
+          "shape": [
+            4,
+            64,
+            1024
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 6.103515625e-05,
+          "max_rel_err": 1.507702190873464e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 262144,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "large_4x64x50257",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "358a2169946685bfe8cccc4e0bd534e2ddbfbec1a1b6ec9a6c00fe6069205f6c",
+      "outputs": [
+        {
+          "name": "dlogits",
+          "passed": true,
+          "shape": [
+            4,
+            64,
+            50257
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 1.5384483517613805e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 12865792,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T20:32:29+00:00",
+  "schema_version": 1
+}

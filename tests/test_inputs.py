@@ -54,3 +54,23 @@ def test_outputs_prefilled_with_nan_and_edges_present():
 
 def test_different_cases_differ():
     assert _case("relu", "odd_1000", "float32").input_hash != _case("relu", "odd_1023", "float32").input_hash
+
+
+def test_float_scalars_reach_everyone_rounded_to_their_dtype():
+    """0.999 declared float32 is what the kernel gets: 0.99900001287..., not the Python float."""
+    import numpy as np
+
+    from kernelport.harness.inputs import make_case
+    from kernelport.harness.spec import LaunchSpec
+
+    spec = LaunchSpec.from_dict({
+        "name": "k", "source": "k.cu", "entry": "k", "dtypes": ["float32"],
+        "params": [{"name": "x", "kind": "output", "dtype": "float32", "shape": ["n"]},
+                   {"name": "beta", "kind": "scalar", "dtype": "float32", "value": "beta"},
+                   {"name": "n", "kind": "scalar", "dtype": "int32", "value": "n"}],
+        "launch": {"grid": ["1"], "block": [32]},
+        "cases": [{"name": "c", "dims": {"n": 4, "beta": 0.999}}],
+    })
+    data = make_case(spec, spec.cases[0], "float32")
+    assert data.scalars["beta"] == float(np.float32(0.999)) != 0.999
+    assert data.scalars["n"] == 4 and isinstance(data.scalars["n"], int)

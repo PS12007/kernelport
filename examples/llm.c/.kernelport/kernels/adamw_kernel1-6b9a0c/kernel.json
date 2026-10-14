@@ -1,0 +1,171 @@
+{
+  "id": "dev/cuda/adamw.cu::adamw_kernel1",
+  "name": "adamw_kernel1",
+  "file": "dev/cuda/adamw.cu",
+  "line": 66,
+  "end_line": 77,
+  "params": [
+    {
+      "name": "params_memory",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "grads_memory",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "m_memory",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "v_memory",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "num_parameters",
+      "type": "long",
+      "base_type": "long",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int64",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "learning_rate",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "beta1",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "beta2",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "beta1_correction",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "beta2_correction",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "eps",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "weight_decay",
+      "type": "float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [],
+  "launches": [
+    {
+      "file": "dev/cuda/adamw.cu",
+      "line": 109,
+      "grid": "num_blocks",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "params_memory",
+        "grads_memory",
+        "m_memory",
+        "v_memory",
+        "num_parameters",
+        "learning_rate",
+        "beta1",
+        "beta2",
+        "beta1_correction",
+        "beta2_correction",
+        "eps",
+        "weight_decay"
+      ]
+    }
+  ],
+  "source_hash": "af8ee0d96bba1e69a36d77f4d7b54a20865b904ec1cce66a39411d3008cc66a0"
+}

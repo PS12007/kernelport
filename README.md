@@ -55,13 +55,15 @@ Then, in your repo, ask your agent:
 
 ## Real code: llm.c's CUDA kernels on a Mac
 
-[`examples/llm.c`](https://github.com/PS12007/kernelport/tree/main/examples/llm.c) takes five kernels from Karpathy's
+[`examples/llm.c`](https://github.com/PS12007/kernelport/tree/main/examples/llm.c) takes nine kernels from Karpathy's
 [llm.c](https://github.com/karpathy/llm.c) `dev/cuda/` (unmodified files, host code and all):
-layernorm, GELU, residual, encoder and online softmax, including bf16 and 128-bit packed loads.
-References were validated against the original CUDA kernels and frozen on an RTX 5060; the
-Triton ports pass there (0.9-1.4x the original), and the Metal ports pass on Apple Silicon in CI
-against those same frozen references. Validation also found an undocumented precondition in
-llm.c: `softmax_forward_online_kernel8` leaves rows unwritten when C < block size.
+layernorm, GELU, residual, encoder, online softmax, AdamW and cross-entropy, including bf16 and
+128-bit packed loads. References were validated against the original CUDA kernels and frozen on
+an RTX 5060, and all nine Triton ports pass there. The Metal ports pass on Apple Silicon in CI
+against those same frozen references. Four of the nine were ported by a fresh coding agent
+given only the one-line request and kernelport's guide; each of its ports passed on the first
+verification. Validation also found an undocumented precondition in llm.c:
+`softmax_forward_online_kernel8` leaves rows unwritten when C < block size.
 
 ## Backends
 

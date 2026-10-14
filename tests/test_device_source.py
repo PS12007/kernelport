@@ -94,7 +94,7 @@ def test_llmc_originals_validate_from_unmodified_files(tmp_path):
     ws = Workspace(repo)
     ids = ws.kernel_ids()
     frozen = [k for k in ids if ws.is_frozen(k)]
-    assert len(frozen) == 5
+    assert len(frozen) == 9
     for kid in frozen:
         d = ws.get(kid).dir
         # Validate the frozen copy again: a passing re-validation of the same reference.

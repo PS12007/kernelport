@@ -1,0 +1,156 @@
+{
+  "kernel": "crossentropy_forward_kernel1",
+  "backend": "triton",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "3244502e081e4843e6f089d4a68d5fcaba4d6a2da12fde35dbbe1e35c5f1cf96",
+  "reference_hash": "8fdc2b6457ee62e4b6a59042f08e2837c1b60e39d5d4e33447c81e38dccbaa34",
+  "spec_hash": "e27ad98c95f2f883e8cbdd37352959b031e940cd29a64d5b85243bea3cf43b7f",
+  "tolerances": {
+    "float32": {
+      "rtol": 1.3e-06,
+      "atol": 1e-05,
+      "reason": "torch.testing default for float32"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x1",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "231f59b876387187922dc7c20721d8b6866f792b425e2ddfc58c555e2152ccfd",
+      "outputs": [
+        {
+          "name": "losses",
+          "passed": true,
+          "shape": [
+            1,
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "tiny_1x7x5",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "f0ddc784496c65ba1ee5dcd54a772bfaf4105d8560d969b0bdbc8e954ab3b1f2",
+      "outputs": [
+        {
+          "name": "losses",
+          "passed": true,
+          "shape": [
+            1,
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.9802322387695312e-08,
+          "max_rel_err": 8.136820970084814e-08,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_3x333x1023",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "e472013f5a397d651956a4432a97381cfbb4f43a2c316a8e5aa62dbf9122b1c3",
+      "outputs": [
+        {
+          "name": "losses",
+          "passed": true,
+          "shape": [
+            3,
+            333
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 1.1800366590188491e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 999,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "pow2_4x256x1024",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "e49dd76e76e2e4cfc7f8819b17b5e93dd1d248e8e62dd606bda11b6916c78156",
+      "outputs": [
+        {
+          "name": "losses",
+          "passed": true,
+          "shape": [
+            4,
+            256
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.76837158203125e-07,
+          "max_rel_err": 1.1907581449940945e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1024,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "large_4x256x50257",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "e89394f90663c046cead5c75474045b4e3653be00526bc8d0417003f94de5874",
+      "outputs": [
+        {
+          "name": "losses",
+          "passed": true,
+          "shape": [
+            4,
+            256
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.76837158203125e-07,
+          "max_rel_err": 1.187144131287694e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1024,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T20:32:26+00:00",
+  "schema_version": 1
+}

@@ -93,12 +93,31 @@ infer a value. Fill every TODO; `write_reference` rejects a spec with TODOs.
 - **entry**: kernel name; for templates use `{T}` for the type, e.g. `"rmsnorm<{T}, 256>"`.
   Only list `dtypes` the original kernel actually supports (bfloat16 needs `__nv_bfloat16`
   instantiation to make sense).
-- **shape / value / grid / block / shared_mem**: integer expressions over the case `dims`:
+- **source**: informational in a repo; kernelport compiles the file the kernel was
+  scanned from (`file` in `read_kernel`), with host code stripped, so `main()`, cuBLAS
+  calls and `#include <stdio.h>` in that file are fine.
+- **shape / value / grid / block / shared_mem**: expressions over the case `dims`:
   `+ - * / // % **`, `cdiv(a, b)`, `min`, `max`, `next_pow2`. `grid`/`block` must reproduce
-  exactly how the host code launches the kernel (see `launches` from `read_kernel`).
+  exactly how the host code launches the kernel (see `launches` from `read_kernel`; it
+  shows the expressions, so read the host code for the values). If the host picks the
+  block size at run time (e.g. benchmarks a list of sizes), choose one it uses, 256 if
+  present, and keep grid consistent with it.
+- **dims** may be floats for float scalars: `{"n": 1000, "lr": 0.001, "eps": 1e-8}` with
+  `{"name": "lr", "kind": "scalar", "dtype": "float32", "value": "lr"}`. Every reader of
+  the case (original, reference, ports) gets the value rounded to the param's dtype, the
+  way the kernel receives it (0.999 as float32 is 0.99900001...).
 - **cases**: always include tiny (1 to 7 elements), odd sizes (1000, 1023, 4097),
   a power of two, and one large case. Use sizes that hit every code path (e.g. a row
-  longer than one block, a dimension not divisible by the tile size).
+  longer than one block, a dimension not divisible by the tile size). Keep every case
+  inside the kernel's own limits: 32-bit `int` index math (`b*T*V` overflows past
+  2^31), vectorised loads that need sizes divisible by 4 or 8, a block size that must
+  not exceed some dimension. The reference runs on the CPU in float64, so a large case
+  of ~50M elements is plenty. If the original fails only outside such a limit, say so
+  in your report and keep the cases inside it; never edit the original.
+- **init** must respect the kernel's input domain. The suggestion from `read_kernel` is
+  `normal` + `edges` everywhere; change it where that is invalid: variances and second
+  moments `>= 0` (`uniform`, `low: 0`), probabilities in (0, 1] before a `log`, indices
+  with `randint` in range.
 - **init** per input param: `dist` = `normal` (`mean`, `std`), `uniform` (`low`, `high`),
   `randint` (`low`, `high` exclusive, for index arrays: keep indices in range!),
   `zeros`, `ones`, `arange`. `edges: true` puts 0, -0, ±1, ±big, ±1/big first
@@ -122,7 +141,8 @@ def reference(x, rows, cols):          # names = launch.json param names
 - Arguments: any subset of the `input`/`inout`/`scalar` params, by name.
 - Float inputs arrive as **float64 CPU tensors** (integers keep their dtype). Write
   plain math; do not cast to the kernel dtype; kernelport rounds your result to the
-  output dtype before comparing.
+  output dtype before comparing. Scalars arrive as Python numbers, already rounded to
+  their declared dtype.
 - Return one tensor (single output) or a dict `{output_name: tensor}`. For `inout`
   params return the **final** value (e.g. `{"y": a * x + y}`).
 - Model what the kernel computes, including its quirks (e.g. biased vs unbiased
@@ -162,7 +182,14 @@ TUNE = {"BLOCK": [256, 512, 1024, 2048], "NUM_WARPS": [4, 8]}
 `write_port`, `verify_port` (the port must PASS as written), then `tune_port(kernel_id, backend)`.
 Every variant is verified on every case before it is timed; a variant that FAILs is
 just reported, it does not use your repair budget. If one is at least 3% faster, it
-replaces the port and is verified again. Report the gain it returns, not your own estimate.
+replaces the port, but only if each of its 5 timing rounds also beat each round of the
+current port; otherwise the summary says the difference was within timing noise and the
+port is kept. Report the result it returns, not your own estimate.
+
+`bench_port` times port and original in 3 alternating runs and reports the median with
+the range of the runs. On laptops and shared GPUs the runs can differ a lot; when the
+summary says the runs differed by more than 20%, report the speedup as approximate (with
+the range), or run `bench_port` again on a quieter machine.
 
 ## Step 9: what to tell the user
 

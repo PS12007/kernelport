@@ -100,7 +100,7 @@ def suggest_spec(kernel: KernelInfo) -> dict:
 
     return {
         "name": kernel.name,
-        "source": kernel.file.rsplit("/", 1)[-1],
+        "source": kernel.file,
         "entry": _entry_for(kernel),
         "dtypes": _dtypes_for(kernel),
         "params": params,

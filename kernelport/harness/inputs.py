@@ -150,6 +150,19 @@ def tensor_bytes(t: torch.Tensor) -> bytes:
     return t.view(torch.uint8).numpy().tobytes()
 
 
+def _as_scalar_dtype(value, dtype: str):
+    """The value the kernel actually receives: 0.999 as a float32 param is 0.99900001...
+
+    References, originals and ports all get this rounded value, so a reference never
+    disagrees with the kernel just because it used the unrounded Python float.
+    """
+    if dtype in ("float32", "float16"):
+        return float(np.dtype(dtype).type(value))
+    if dtype in ("int32", "int64", "uint32", "int8", "uint8", "int16"):
+        return int(value)
+    return value
+
+
 def make_case(spec: LaunchSpec, case: CaseSpec, dtype: str) -> CaseData:
     """Build CPU tensors for one case/dtype. Outputs are pre-filled with a sentinel."""
     tensors: dict[str, torch.Tensor] = {}
@@ -157,7 +170,7 @@ def make_case(spec: LaunchSpec, case: CaseSpec, dtype: str) -> CaseData:
     h = hashlib.sha256()
     for p in spec.params:
         if not p.is_tensor:
-            scalars[p.name] = p.resolved_value(case.dims)
+            scalars[p.name] = _as_scalar_dtype(p.resolved_value(case.dims), p.dtype)
             continue
         shape = p.resolved_shape(case.dims)
         pdtype = p.resolved_dtype(dtype)

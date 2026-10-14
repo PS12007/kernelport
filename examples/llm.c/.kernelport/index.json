@@ -1,4 +1,8 @@
 {
+  "dev/cuda/adamw.cu::adamw_kernel1": "adamw_kernel1-6b9a0c",
+  "dev/cuda/adamw.cu::adamw_kernel2": "adamw_kernel2-d4071f",
+  "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1": "crossentropy_forward_kernel1-0f4382",
+  "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1": "crossentropy_softmax_backward_ke-5a0892",
   "dev/cuda/encoder_forward.cu::encoder_forward_kernel1": "encoder_forward_kernel1-1864a1",
   "dev/cuda/encoder_forward.cu::encoder_forward_kernel2": "encoder_forward_kernel2-8ee6db",
   "dev/cuda/encoder_forward.cu::encoder_forward_kernel3": "encoder_forward_kernel3-83fda5",

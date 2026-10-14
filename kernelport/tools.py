@@ -290,9 +290,15 @@ def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: s
     ws.safe_path(*path.relative_to(ws.dir).parts)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(json.dumps({**timing, "code_hash": sha256_file(port)}, indent=2).encode())
-    s = f"{backend} {timing['port_ms']:.4f} ms on {hw} ({timing['case']}, {dtype})"
+    lo, hi = timing["port_ms_range"]
+    s = (f"{backend} {timing['port_ms']:.4f} ms (runs {lo:.4f}-{hi:.4f}) on {hw} "
+         f"({timing['case']}, {dtype}, median of {timing['rounds']} runs)")
     if timing["original_ms"] is not None:
-        s += f"; original CUDA {timing['original_ms']:.4f} ms; speedup {timing['speedup']:.2f}x"
+        olo, ohi = timing["original_ms_range"]
+        s += (f"; original CUDA {timing['original_ms']:.4f} ms (runs {olo:.4f}-{ohi:.4f}); "
+              f"speedup {timing['speedup']:.2f}x")
+    if timing["noisy"]:
+        s += ". Runs differed by more than 20%: the GPU's clocks or load changed; treat the speedup as approximate"
     if not timing["comparable"]:
         s += f". Not comparable to native GPU numbers: {timing['note']}"
     return {"ok": True, **timing, "summary": s}
@@ -382,9 +388,17 @@ def tune_port(kernel_id: str, backend: str, dtype: str | None = None, root: str 
     # faster than every round of the current configuration.
     if best is base or gain < 1.03 or max(best["rounds"]) >= min(base["rounds"]):
         out["changed"] = False
-        out["summary"] = (f"kept the current port ({base['port_ms']:.4f} ms): no passing variant was clearly "
-                          f"faster (best {best['params']} at {best['port_ms']:.4f} ms; "
-                          f"{len(passing)}/{len(rows)} variants passed)")
+        if best is base:
+            why = "the current configuration was the fastest"
+        elif gain < 1.03:
+            why = f"the best variant {best['params']} was only {100 * (gain - 1):.0f}% faster (3% needed)"
+        else:
+            why = (f"the best variant {best['params']} had a {100 * (gain - 1):.0f}% faster median, but its "
+                   f"{TUNE_ROUNDS} timing rounds ({min(best['rounds']):.4f}-{max(best['rounds']):.4f} ms) "
+                   f"overlapped the current port's ({min(base['rounds']):.4f}-{max(base['rounds']):.4f} ms), "
+                   "so the difference is within timing noise here")
+        out["summary"] = (f"kept the current port ({base['port_ms']:.4f} ms): {why}; "
+                          f"{len(passing)}/{len(rows)} variants passed")
         return out
     ws.write_port(kernel_id, backend, best["code"])
     ver = verify_port(kernel_id, backend, root=str(ws.root))

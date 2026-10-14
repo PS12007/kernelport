@@ -17,6 +17,8 @@ from kernelport.backends.base import get_backend
 from kernelport.harness.results import RunResult
 from kernelport.harness.spec import LaunchSpec
 
+BENCH_ROUNDS = 3  # alternating port/original timing rounds in bench_port
+
 
 @dataclass
 class ZooEntry:
@@ -103,24 +105,40 @@ def time_port(spec: LaunchSpec, port: Path, backend: str, dtype: str = "float32"
 def bench_port(spec: LaunchSpec, source: Path, port: Path, backend: str, dtype: str = "float32") -> dict:
     """Time the original CUDA kernel and the port on the spec's bench case.
 
-    The original is timed only when CUDA is available here; otherwise only the port.
+    The original is timed only when CUDA is available here; otherwise only the port. Port and
+    original are timed in BENCH_ROUNDS alternating rounds on one input set, so clock changes hit
+    both alike; each reported time is the median of the round medians, with the min-max range.
     """
+    import statistics
+
     from kernelport.bench.timer import time_cuda
     from kernelport.harness import run_cuda
     from kernelport.harness.inputs import make_case
 
     be = get_backend(backend)
-    t_port, case = time_port(spec, port, backend, dtype)
+    case = spec.get_case(spec.bench_case) if spec.bench_case else spec.cases[-1]
     data = make_case(spec, case, dtype)
-    out = {"case": case.name, "dtype": dtype, "port_ms": t_port.median_ms, "method": t_port.method,
+    orig_launch = run_cuda.prepare(source, spec, data)[0] if run_cuda.is_available()[0] else None
+    port_rounds, orig_rounds, method = [], [], None
+    for _ in range(BENCH_ROUNDS):
+        t_port, _ = time_port(spec, port, backend, dtype, data=data)
+        port_rounds.append(t_port.median_ms)
+        method = t_port.method
+        if orig_launch is not None:
+            orig_rounds.append(time_cuda(orig_launch).median_ms)
+    port_ms = statistics.median(port_rounds)
+    out = {"case": case.name, "dtype": dtype, "port_ms": port_ms, "method": method,
+           "port_ms_range": [min(port_rounds), max(port_rounds)], "rounds": BENCH_ROUNDS,
            "hardware": be.hardware_name(), "comparable": be.config.timing_comparable,
            "note": be.config.timing_note, "original_ms": None, "speedup": None}
-    if run_cuda.is_available()[0]:
-        orig_launch, _ = run_cuda.prepare(source, spec, data)
-        t_orig = time_cuda(orig_launch)
-        out["original_ms"] = t_orig.median_ms
-        out["speedup"] = t_orig.median_ms / t_port.median_ms
+    if orig_rounds:
+        out["original_ms"] = statistics.median(orig_rounds)
+        out["original_ms_range"] = [min(orig_rounds), max(orig_rounds)]
+        out["speedup"] = out["original_ms"] / port_ms
+    spreads = [hi / lo for lo, hi in (out["port_ms_range"], out.get("original_ms_range", [1, 1])) if lo > 0]
+    out["noisy"] = any(s > 1.2 for s in spreads)
     return out
+
 
 
 def run_zoo(zoo: Path, kernels: list[str] | None = None, backends: tuple[str, ...] = ("triton",),

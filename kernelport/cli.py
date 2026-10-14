@@ -13,11 +13,39 @@ app = typer.Typer(help="Port CUDA kernels to other backends and prove they are c
 @app.callback()
 def main() -> None:
     """kernelport: your agent writes the port, kernelport runs it and proves it."""
+    _safe_streams()
+
+
+def _safe_streams() -> None:
+    """Never crash on characters like → or ± (Windows cp1252 consoles).
+
+    Piped output (agents, CI) becomes UTF-8; a real console keeps its encoding and shows
+    "?" for what it cannot display.
+    """
+    import sys
+
+    for stream in (sys.stdout, sys.stderr):
+        enc = (getattr(stream, "encoding", None) or "").lower().replace("-", "")
+        if enc == "utf8" or not hasattr(stream, "reconfigure"):
+            continue
+        if stream.isatty():
+            stream.reconfigure(errors="replace")
+        else:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
+def _console():
+    """Rich console; piped output gets 160 columns instead of Rich's default 80."""
+    import sys
+
+    from rich.console import Console
+
+    return Console() if sys.stdout.isatty() else Console(width=160)
 
 
 @app.command()
 def doctor(as_json: bool = typer.Option(False, "--json", help="Print JSON instead of a table.")) -> None:
-    """Show environment info and smoke-test every available backend."""
+    """Show environment info and smoke-test every available backend (MCP: kernelport_doctor)."""
     from kernelport.doctor import print_report, run_doctor
 
     report = run_doctor()
@@ -37,13 +65,12 @@ def zoo(
     """Validate zoo originals, verify stored ports, and benchmark passing ports."""
     from pathlib import Path
 
-    from rich.console import Console
     from rich.markup import escape
     from rich.table import Table
 
     from kernelport.zoo import find_zoo, run_zoo
 
-    con = Console()
+    con = _console()
     entries = run_zoo(find_zoo(), kernel or None, (backend,), bench=not no_bench,
                       out_dir=Path(".kernelport") / "zoo")
     colors = {"PASS": "green", "FAIL": "red", "UNVERIFIED": "yellow", "SKIPPED": "dim"}
@@ -79,13 +106,12 @@ def zoo(
 
 def _emit(result: dict, as_json: bool, extra_keys: tuple[str, ...] = ("report",)) -> None:
     """Print a tool result: JSON, or summary plus any report text."""
-    from rich.console import Console
     from rich.markup import escape
 
     if as_json:
         print(json.dumps(result, indent=2, default=str))
     else:
-        con = Console()
+        con = _console()
         color = "green" if result.get("ok") else "red"
         con.print(f"[{color}]{escape(result.get('summary', ''))}[/]")
         for k in extra_keys:
@@ -101,7 +127,6 @@ JSON_OPT = typer.Option(False, "--json", help="Print the full JSON result.")
 @app.command()
 def scan(path: str = typer.Argument(".", help="File or directory inside this repo."), as_json: bool = JSON_OPT) -> None:
     """Find CUDA kernels and register them in .kernelport/ (MCP: scan_kernels)."""
-    from rich.console import Console
     from rich.markup import escape
     from rich.table import Table
 
@@ -112,11 +137,12 @@ def scan(path: str = typer.Argument(".", help="File or directory inside this rep
         _emit(res, as_json)
         return
     table = Table(title=res["summary"])
-    for col in ("kernel id", "line", "params", "features"):
+    table.add_column("kernel id", no_wrap=True)
+    for col in ("line", "params", "features"):
         table.add_column(col)
     for k in res["kernels"]:
         table.add_row(escape(k["kernel_id"]), str(k["line"]), escape(", ".join(k["params"])), ", ".join(k["features"]))
-    Console().print(table)
+    _console().print(table)
 
 
 @app.command()
@@ -161,7 +187,6 @@ def validate(kernel_id: str = typer.Argument(None),
                                        help="Every kernel whose candidate reference is not frozen yet."),
              as_json: bool = JSON_OPT) -> None:
     """Run the original CUDA kernel against the reference; freeze on PASS (MCP: validate_reference)."""
-    from rich.console import Console
     from rich.markup import escape
 
     from kernelport import tools
@@ -183,7 +208,7 @@ def validate(kernel_id: str = typer.Argument(None),
     if as_json:
         print(json.dumps(results, indent=2, default=str))
     else:
-        con = Console()
+        con = _console()
         if not ids:
             con.print("nothing to validate: every candidate reference is already frozen")
         for r in results:
@@ -224,7 +249,6 @@ def verify(backend: str = typer.Option(None, help="Only this backend."),
            kernel: str = typer.Option(None, help="Only this kernel id."),
            as_json: bool = JSON_OPT) -> None:
     """Verify saved ports in .kernelport/ on this machine (MCP: verify_port)."""
-    from rich.console import Console
     from rich.markup import escape
 
     from kernelport import tools
@@ -234,7 +258,7 @@ def verify(backend: str = typer.Option(None, help="Only this backend."),
     if as_json:
         print(json.dumps(results, indent=2, default=str))
     else:
-        con = Console()
+        con = _console()
         if not pairs:
             con.print("no saved ports to verify")
         for r in results:
@@ -252,7 +276,6 @@ def bench(backend: str = typer.Option(None, help="Only this backend."),
           dtype: str = typer.Option(None, help="Default: float32, or the spec's first dtype."),
           as_json: bool = JSON_OPT) -> None:
     """Benchmark saved ports that passed on this machine (MCP: bench_port)."""
-    from rich.console import Console
     from rich.markup import escape
 
     from kernelport import tools
@@ -263,7 +286,7 @@ def bench(backend: str = typer.Option(None, help="Only this backend."),
         print(json.dumps(results, indent=2, default=str))
         return
     for r in results:
-        Console().print(f"{escape(r['kernel_id'])} / {r['backend']}: {escape(r['summary'])}")
+        _console().print(f"{escape(r['kernel_id'])} / {r['backend']}: {escape(r['summary'])}")
 
 
 @app.command()
@@ -271,7 +294,6 @@ def tune(kernel_id: str, backend: str,
          dtype: str = typer.Option(None, help="Default: float32, or the spec's first dtype."),
          as_json: bool = JSON_OPT) -> None:
     """Try the port's TUNE combinations, keep the fastest that passes (MCP: tune_port)."""
-    from rich.console import Console
     from rich.markup import escape
     from rich.table import Table
 
@@ -286,7 +308,7 @@ def tune(kernel_id: str, backend: str,
             table.add_row(escape(json.dumps(r["params"])), r["status"], f"{r['cases_passed']}/{r['cases_total']}",
                           f"{r['port_ms']:.4f}" if r["port_ms"] is not None else "-",
                           "current" if r["current"] else ("best" if r["params"] == result.get("best") else ""))
-        Console().print(table)
+        _console().print(table)
     _emit(result, as_json)
 
 
@@ -296,7 +318,6 @@ def status(show_all: bool = typer.Option(False, "--all", help="Also list kernels
     """Kernel x backend x hardware status table (MCP: list_status)."""
     import sys
 
-    from rich.console import Console
     from rich.markup import escape
     from rich.table import Table
 
@@ -320,7 +341,7 @@ def status(show_all: bool = typer.Option(False, "--all", help="Also list kernels
         table.add_row(escape(r["kernel"].split("::")[-1]), r["reference"], r["backend"], escape(r["hardware"]),
                       f"[{colors[r['status']]}]{r['status']}[/]", r["cases"], escape(r["reason"]))
     # Piped output (agents, CI logs) gets a readable width instead of Rich's 80 columns.
-    con = Console() if sys.stdout.isatty() else Console(width=160)
+    con = _console()
     con.print(table)
     if idle and not show_all:
         con.print(f"[dim]{len(idle)} more kernels have no reference or port yet (--all lists them)[/]")
@@ -354,7 +375,6 @@ def setup(
     """Register the kernelport MCP server and skill with your coding agents."""
     from pathlib import Path
 
-    from rich.console import Console
     from rich.markup import escape
     from rich.table import Table
 
@@ -363,7 +383,7 @@ def setup(
     from kernelport.setup_agents.register import SetupError, apply, plan, plan_uninstall
     from kernelport.setup_agents.register import uninstall as do_uninstall
 
-    con = Console()
+    con = _console()
     home_p = Path(home) if home else Path.home()
 
     if uninstall:
@@ -446,13 +466,12 @@ def agent(
     For people without a coding agent. Needs `pip install kernelport[agent]` and ANTHROPIC_API_KEY
     (or an `ant auth login` profile). Every run is billed to that account.
     """
-    from rich.console import Console
     from rich.markup import escape
 
     from kernelport import agent as kp_agent
     from kernelport.workspace import find_root
 
-    con = Console()
+    con = _console()
     root = find_root()
     model = model or kp_agent.DEFAULT_MODEL
     con.print(f"repo: {escape(str(root))}\nmodel: {model} (effort {effort}), up to {max_turns} turns\n"

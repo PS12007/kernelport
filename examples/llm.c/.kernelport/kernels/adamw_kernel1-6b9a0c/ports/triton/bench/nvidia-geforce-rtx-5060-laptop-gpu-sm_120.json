@@ -1,0 +1,22 @@
+{
+  "case": "large_1048576",
+  "dtype": "float32",
+  "port_ms": 0.020880000665783882,
+  "method": "cuda_event",
+  "port_ms_range": [
+    0.019071999937295914,
+    0.03182400017976761
+  ],
+  "rounds": 3,
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "comparable": true,
+  "note": "",
+  "original_ms": 0.02707199938595295,
+  "speedup": 1.2965516533874404,
+  "original_ms_range": [
+    0.02703999914228916,
+    0.027343999594449997
+  ],
+  "noisy": true,
+  "code_hash": "df7f9de68f10feb7e52148288a6cdb37a86b654a8ca01d301e532313a05f174e"
+}

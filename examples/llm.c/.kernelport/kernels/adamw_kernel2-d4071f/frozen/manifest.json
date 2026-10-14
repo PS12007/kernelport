@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/adamw.cu::adamw_kernel2",
+  "reference_hash": "4dafd02281068f1e8a127e4db83c43c56718e52701f3921e4ca70a5007d94225",
+  "spec_hash": "f8039b7b70896d4cd6d6284b18ee25a8cbe977a88dc0ca3e1b229d59fd271f8c",
+  "source_hash": "93efbc8828167136721311388a9cf612954bfe8ec9827b75a67ef0152a3834eb",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T20:32:23+00:00",
+  "cases_passed": 6
+}

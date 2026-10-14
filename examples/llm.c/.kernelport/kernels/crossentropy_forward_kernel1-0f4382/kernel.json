@@ -1,0 +1,99 @@
+{
+  "id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+  "name": "crossentropy_forward_kernel1",
+  "file": "dev/cuda/crossentropy_forward.cu",
+  "line": 38,
+  "end_line": 49,
+  "params": [
+    {
+      "name": "losses",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "probs",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "targets",
+      "type": "const int*",
+      "base_type": "int",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "B",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "T",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "V",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [],
+  "launches": [
+    {
+      "file": "dev/cuda/crossentropy_forward.cu",
+      "line": 60,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "losses",
+        "probs",
+        "targets",
+        "B",
+        "T",
+        "V"
+      ]
+    }
+  ],
+  "source_hash": "ee4d4953d31ae425a1124d78c74cff15f7e4c690b4fef3635f250aa915fc43b2"
+}

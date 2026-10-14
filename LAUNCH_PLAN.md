@@ -36,7 +36,8 @@ What's left is mostly real-world proof and polish, not features.
 1. ~~**Verify Metal on an Apple Silicon Mac.**~~ **Done 2026-10-14.** GitHub's macOS arm64 runners
    have a real Metal device; all 12 zoo ports pass every case and CI re-checks them on every push.
    (Still worth one run on a physical Mac for timings, which a virtualized runner cannot give.)
-2. **Fresh-agent dogfood.** So far a person (who already knew the kernels) drove the tools.
+2. ~~**Fresh-agent dogfood.**~~ **Done 2026-10-14:** 4/4 kernels PASS on the first verify; its feedback
+   is fixed (see PROGRESS.md). Still worth repeating with Codex / Cursor. So far a person (who already knew the kernels) drove the tools.
    Give a clean Claude Code or Codex session only "port the CUDA kernels in this repo to
    Triton and verify them" and record pass rate, attempts, and where the skill was unclear.
 3. **Easy install.**
@@ -101,7 +102,7 @@ being pushed.
 ## Suggested order
 
 1. ~~CI + PyPI packaging~~ (CI done; PyPI waits on the trusted-publisher setup)
-2. Fresh-agent dogfood run
+2. ~~Fresh-agent dogfood run~~ (done)
 3. ~~Mac verification run~~ (done in CI)
 4. ~~Port one well-known CUDA-only project end to end~~ (llm.c, done)
 5. Demo GIF and README polish

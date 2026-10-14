@@ -209,9 +209,21 @@
     clocked down while big cases were regenerated) and deletes variant files; `kernelport status` is
     readable when piped (160 cols, short names, idle kernels folded, `--all`).
 
+  - **Fresh-agent dogfood** (2026-10-14): a general-purpose agent with no context got only "port the CUDA
+    kernels in this repo to Triton and verify them", the kernelport CLI and its skill text, on a fresh repo
+    with 4 untouched llm.c kernels (adamw x2, crossentropy forward, fused crossentropy/softmax backward).
+    Result: 4/4 references validated (one after a fix), 4/4 Triton ports PASS on the first verify, 0 repair
+    budget used. Its friction list drove these fixes: float scalars are rounded to their declared dtype for
+    everyone (its adamw reference failed on unrounded 0.999); SKILL.md documents float dims, safe `init`
+    domains, runtime block sizes, int-overflow/size limits, what `source` means; the CLI no longer crashes
+    on cp1252 consoles (piped output is UTF-8) and tables use 160 cols when piped; `tune` says why it kept
+    a port; `bench` runs 3 alternating rounds and prints ranges plus a >20% noise warning; doctor help names
+    its MCP tool. Its 4 kernels were replayed (files unchanged) into examples/llm.c (now 9 kernels).
+  - llm.c softmax bug: a fix was tested (remove the early return, guard the -inf merge: 10/10 C values
+    PASS); issue text drafted for the owner, not posted.
+
 ## Next (pick up here)
 - HIP on an AMD/ROCm box (`kernelport zoo --backend hip`); nothing else in CI can cover it.
-- Fresh-agent dogfood (needs a clean agent session; no API spend from here).
 - PyPI: configure the trusted publisher on pypi.org, then tag `v0.1.0` (owner action).
 - Demo GIF; README polish. More real code: a multi-file project, macro-generated kernels.
 - Optional: browser (Playwright) check for WGSL ports; live `kernelport agent` smoke test (costs credits).

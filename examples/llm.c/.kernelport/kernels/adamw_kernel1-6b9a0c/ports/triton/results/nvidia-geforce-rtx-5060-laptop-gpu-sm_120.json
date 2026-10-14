@@ -1,0 +1,381 @@
+{
+  "kernel": "adamw_kernel1",
+  "backend": "triton",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "df7f9de68f10feb7e52148288a6cdb37a86b654a8ca01d301e532313a05f174e",
+  "reference_hash": "4dafd02281068f1e8a127e4db83c43c56718e52701f3921e4ca70a5007d94225",
+  "spec_hash": "6e24c9c51682682d1039a76d7858b823badefd1e7cd31e7448fda51f40cfbb9b",
+  "tolerances": {
+    "float32": {
+      "rtol": 1.3e-06,
+      "atol": 1e-05,
+      "reason": "torch.testing default for float32"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_7",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "1e1700bc1f73681da886a4c939b928318ab3f9c4c50d67b85a3141b60af0ee51",
+      "outputs": [
+        {
+          "name": "params_memory",
+          "passed": true,
+          "shape": [
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m_memory",
+          "passed": true,
+          "shape": [
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "v_memory",
+          "passed": true,
+          "shape": [
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "one_1",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "d1c485832c2e4c4b490f71929bcdf391c7f07e3271ba0a85167d4dfb5b8e5140",
+      "outputs": [
+        {
+          "name": "params_memory",
+          "passed": true,
+          "shape": [
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m_memory",
+          "passed": true,
+          "shape": [
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "v_memory",
+          "passed": true,
+          "shape": [
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_1023",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "82adcae810e490b37c5f46fb43c8e02879c7f7677b249ae1e49e95b1c24e7a61",
+      "outputs": [
+        {
+          "name": "params_memory",
+          "passed": true,
+          "shape": [
+            1023
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1023,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m_memory",
+          "passed": true,
+          "shape": [
+            1023
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 8.061626657112146e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1023,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "v_memory",
+          "passed": true,
+          "shape": [
+            1023
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 5.960464477539063e-08,
+          "max_rel_err": 1.1901787874672746e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1023,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_4097",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "37365da0ac735a6f97f3626c76cc89426a52889a2916df68d4d53cec87bedffe",
+      "outputs": [
+        {
+          "name": "params_memory",
+          "passed": true,
+          "shape": [
+            4097
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 1.395988530015353e-05,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4097,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m_memory",
+          "passed": true,
+          "shape": [
+            4097
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 0.0001573782473410334,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4097,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "v_memory",
+          "passed": true,
+          "shape": [
+            4097
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.1883503166418836e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4097,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "pow2_65536",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "091f8b6d85bdd47b4c3c68e77e5c1e64879ecc6f6e058b01d4c836fd1dc60b0e",
+      "outputs": [
+        {
+          "name": "params_memory",
+          "passed": true,
+          "shape": [
+            65536
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 2.0615041517662866e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 65536,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m_memory",
+          "passed": true,
+          "shape": [
+            65536
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 0.00019201593127278556,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 65536,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "v_memory",
+          "passed": true,
+          "shape": [
+            65536
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.191927930316079e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 65536,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "large_1048576",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "2dfe9f4e89ec3f23ead30d5db6edafef7153afafe37b154c7eb2cabae835db52",
+      "outputs": [
+        {
+          "name": "params_memory",
+          "passed": true,
+          "shape": [
+            1048576
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 4.330380884623646e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1048576,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m_memory",
+          "passed": true,
+          "shape": [
+            1048576
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 0.001107954926322213,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1048576,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "v_memory",
+          "passed": true,
+          "shape": [
+            1048576
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.1920880638367926e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1048576,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T20:32:22+00:00",
+  "schema_version": 1
+}

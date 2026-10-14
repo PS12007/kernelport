@@ -143,7 +143,7 @@ def test_tune_ignores_noisy_win(cpu_ws, monkeypatch):
     before = cpu_ws.port_path("relu", "cpu").read_text()
     res = tools.tune_port("relu", "cpu", root=str(cpu_ws.root))
     assert res["ok"] and not res["changed"]
-    assert "no passing variant was clearly faster" in res["summary"]
+    assert "overlapped the current port" in res["summary"] and "within timing noise" in res["summary"]
     assert cpu_ws.port_path("relu", "cpu").read_text() == before
 
 

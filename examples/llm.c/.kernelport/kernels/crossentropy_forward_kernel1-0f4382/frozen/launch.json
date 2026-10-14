@@ -1,0 +1,120 @@
+{
+  "name": "crossentropy_forward_kernel1",
+  "source": "crossentropy_forward.cu",
+  "entry": "crossentropy_forward_kernel1",
+  "dtypes": [
+    "float32"
+  ],
+  "params": [
+    {
+      "name": "losses",
+      "kind": "output",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T"
+      ]
+    },
+    {
+      "name": "probs",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "V"
+      ]
+    },
+    {
+      "name": "targets",
+      "kind": "input",
+      "dtype": "int32",
+      "shape": [
+        "B",
+        "T"
+      ]
+    },
+    {
+      "name": "B",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "B"
+    },
+    {
+      "name": "T",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "T"
+    },
+    {
+      "name": "V",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "V"
+    }
+  ],
+  "launch": {
+    "grid": [
+      "cdiv(B * T, 256)"
+    ],
+    "block": [
+      256
+    ],
+    "shared_mem": 0
+  },
+  "cases": [
+    {
+      "name": "tiny_1x1x1",
+      "dims": {
+        "B": 1,
+        "T": 1,
+        "V": 1
+      }
+    },
+    {
+      "name": "tiny_1x7x5",
+      "dims": {
+        "B": 1,
+        "T": 7,
+        "V": 5
+      }
+    },
+    {
+      "name": "odd_3x333x1023",
+      "dims": {
+        "B": 3,
+        "T": 333,
+        "V": 1023
+      }
+    },
+    {
+      "name": "pow2_4x256x1024",
+      "dims": {
+        "B": 4,
+        "T": 256,
+        "V": 1024
+      }
+    },
+    {
+      "name": "large_4x256x50257",
+      "dims": {
+        "B": 4,
+        "T": 256,
+        "V": 50257
+      }
+    }
+  ],
+  "init": {
+    "probs": {
+      "dist": "uniform",
+      "low": 0.001,
+      "high": 1.0
+    },
+    "targets": {
+      "dist": "randint",
+      "low": 0,
+      "high": "V"
+    }
+  },
+  "bench_case": "large_4x256x50257"
+}

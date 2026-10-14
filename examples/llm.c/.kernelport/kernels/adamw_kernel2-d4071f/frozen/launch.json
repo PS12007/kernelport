@@ -1,0 +1,199 @@
+{
+  "name": "adamw_kernel2",
+  "source": "adamw.cu",
+  "entry": "adamw_kernel2",
+  "dtypes": [
+    "float32"
+  ],
+  "params": [
+    {
+      "name": "params_memory",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "num_parameters"
+      ]
+    },
+    {
+      "name": "grads_memory",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "num_parameters"
+      ]
+    },
+    {
+      "name": "m_memory",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "num_parameters"
+      ]
+    },
+    {
+      "name": "v_memory",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "num_parameters"
+      ]
+    },
+    {
+      "name": "num_parameters",
+      "kind": "scalar",
+      "dtype": "int64",
+      "value": "num_parameters"
+    },
+    {
+      "name": "learning_rate",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "learning_rate"
+    },
+    {
+      "name": "beta1",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "beta1"
+    },
+    {
+      "name": "beta2",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "beta2"
+    },
+    {
+      "name": "beta1_correction",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "beta1_correction"
+    },
+    {
+      "name": "beta2_correction",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "beta2_correction"
+    },
+    {
+      "name": "eps",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "eps"
+    },
+    {
+      "name": "weight_decay",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "weight_decay"
+    }
+  ],
+  "launch": {
+    "grid": [
+      "cdiv(num_parameters, 512)"
+    ],
+    "block": [
+      512
+    ],
+    "shared_mem": 0
+  },
+  "cases": [
+    {
+      "name": "tiny_7",
+      "dims": {
+        "num_parameters": 7,
+        "learning_rate": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "beta1_correction": 0.6513215599,
+        "beta2_correction": 0.0099551198,
+        "eps": 1e-08,
+        "weight_decay": 0.0
+      }
+    },
+    {
+      "name": "one_1",
+      "dims": {
+        "num_parameters": 1,
+        "learning_rate": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "beta1_correction": 0.1,
+        "beta2_correction": 0.001,
+        "eps": 1e-08,
+        "weight_decay": 0.01
+      }
+    },
+    {
+      "name": "odd_1023",
+      "dims": {
+        "num_parameters": 1023,
+        "learning_rate": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "beta1_correction": 0.6513215599,
+        "beta2_correction": 0.0099551198,
+        "eps": 1e-08,
+        "weight_decay": 0.01
+      }
+    },
+    {
+      "name": "odd_4097",
+      "dims": {
+        "num_parameters": 4097,
+        "learning_rate": 0.01,
+        "beta1": 0.8,
+        "beta2": 0.99,
+        "beta1_correction": 0.5,
+        "beta2_correction": 0.25,
+        "eps": 1e-06,
+        "weight_decay": 0.1
+      }
+    },
+    {
+      "name": "pow2_65536",
+      "dims": {
+        "num_parameters": 65536,
+        "learning_rate": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "beta1_correction": 0.6513215599,
+        "beta2_correction": 0.0099551198,
+        "eps": 1e-08,
+        "weight_decay": 0.0
+      }
+    },
+    {
+      "name": "large_1048576",
+      "dims": {
+        "num_parameters": 1048576,
+        "learning_rate": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "beta1_correction": 0.6513215599,
+        "beta2_correction": 0.0099551198,
+        "eps": 1e-08,
+        "weight_decay": 0.01
+      }
+    }
+  ],
+  "init": {
+    "params_memory": {
+      "dist": "normal",
+      "edges": true
+    },
+    "grads_memory": {
+      "dist": "normal",
+      "edges": true
+    },
+    "m_memory": {
+      "dist": "normal",
+      "edges": true
+    },
+    "v_memory": {
+      "dist": "uniform",
+      "low": 0.0,
+      "high": 1.0
+    }
+  },
+  "bench_case": "large_1048576"
+}

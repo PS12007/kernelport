@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+  "reference_hash": "8fdc2b6457ee62e4b6a59042f08e2837c1b60e39d5d4e33447c81e38dccbaa34",
+  "spec_hash": "932b779e807d34111598da942d3ae068c2027f34f05e5502f0b27b7ba71c50b3",
+  "source_hash": "bd2f6db35e07170173faa00b76d543709dcc9eca90b30c978bb98b242dfe4867",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T20:32:25+00:00",
+  "cases_passed": 5
+}

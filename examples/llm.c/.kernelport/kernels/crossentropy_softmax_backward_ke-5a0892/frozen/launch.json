@@ -1,0 +1,146 @@
+{
+  "name": "crossentropy_softmax_backward_kernel1",
+  "source": "crossentropy_softmax_backward.cu",
+  "entry": "crossentropy_softmax_backward_kernel1",
+  "dtypes": [
+    "float32"
+  ],
+  "params": [
+    {
+      "name": "dlogits",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "V"
+      ]
+    },
+    {
+      "name": "dlosses",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T"
+      ]
+    },
+    {
+      "name": "probs",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "V"
+      ]
+    },
+    {
+      "name": "targets",
+      "kind": "input",
+      "dtype": "int32",
+      "shape": [
+        "B",
+        "T"
+      ]
+    },
+    {
+      "name": "B",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "B"
+    },
+    {
+      "name": "T",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "T"
+    },
+    {
+      "name": "V",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "V"
+    }
+  ],
+  "launch": {
+    "grid": [
+      "cdiv(B * T * V, 256)"
+    ],
+    "block": [
+      256
+    ],
+    "shared_mem": 0
+  },
+  "cases": [
+    {
+      "name": "tiny_1x1x1",
+      "dims": {
+        "B": 1,
+        "T": 1,
+        "V": 1
+      }
+    },
+    {
+      "name": "tiny_1x1x7",
+      "dims": {
+        "B": 1,
+        "T": 1,
+        "V": 7
+      }
+    },
+    {
+      "name": "odd_3x5x1023",
+      "dims": {
+        "B": 3,
+        "T": 5,
+        "V": 1023
+      }
+    },
+    {
+      "name": "odd_2x7x4097",
+      "dims": {
+        "B": 2,
+        "T": 7,
+        "V": 4097
+      }
+    },
+    {
+      "name": "pow2_4x64x1024",
+      "dims": {
+        "B": 4,
+        "T": 64,
+        "V": 1024
+      }
+    },
+    {
+      "name": "large_4x64x50257",
+      "dims": {
+        "B": 4,
+        "T": 64,
+        "V": 50257
+      }
+    }
+  ],
+  "init": {
+    "dlogits": {
+      "dist": "normal",
+      "edges": true
+    },
+    "dlosses": {
+      "dist": "normal",
+      "edges": true
+    },
+    "probs": {
+      "dist": "uniform",
+      "low": 0.0,
+      "high": 1.0
+    },
+    "targets": {
+      "dist": "randint",
+      "low": 0,
+      "high": "V"
+    }
+  },
+  "bench_case": "large_4x64x50257"
+}
