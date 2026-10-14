@@ -248,10 +248,16 @@ def _passed_here(ws: Workspace, kernel_id: str, backend: str, port: Path) -> boo
                                   for r in ws.results(kernel_id, backend))
 
 
+def _default_dtype(spec, be) -> str:
+    """float32 when the spec and backend allow it, else the spec's first dtype the backend runs."""
+    runnable = [d for d in spec.dtypes if be.supports(d)]
+    return "float32" if "float32" in runnable else (runnable or spec.dtypes)[0]
+
+
 def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: str | None = None) -> dict:
     """Time original vs port on this machine. Only for ports whose current code PASSED here.
 
-    ``config`` may set {"dtype": "float16", "case": "<case name>"}; defaults: float32, the spec's bench case.
+    ``config`` may set {"dtype": "float16", "case": "<case name>"}; defaults: float32 (or the spec's first dtype this backend runs), the spec's bench case.
     """
     from kernelport.zoo import bench_port as _bench
 
@@ -276,7 +282,7 @@ def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: s
         except KeyError:
             return _err(f"unknown case {config['case']!r}")
         spec.bench_case = config["case"]
-    dtype = config.get("dtype", "float32")
+    dtype = config.get("dtype") or _default_dtype(spec, be)
     if dtype not in spec.dtypes or not be.supports(dtype):
         return _err(f"dtype {dtype} not in the spec or not supported by {backend}")
     timing = _bench(spec, ws.original_source(rec), port, backend, dtype)
@@ -292,7 +298,7 @@ def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: s
     return {"ok": True, **timing, "summary": s}
 
 
-def tune_port(kernel_id: str, backend: str, dtype: str = "float32", root: str | None = None) -> dict:
+def tune_port(kernel_id: str, backend: str, dtype: str | None = None, root: str | None = None) -> dict:
     """Try every combination in the port's TUNE dict; keep the fastest variant that PASSES every case.
 
     Only for Python ports whose current code PASSED here. Each variant is verified against the
@@ -303,7 +309,7 @@ def tune_port(kernel_id: str, backend: str, dtype: str = "float32", root: str | 
     """
     import statistics
 
-    from kernelport.tune import TUNE_ROUNDS, TuneError, render, variants
+    from kernelport.tune import TUNE_ROUNDS, TUNE_WARMUP, TuneError, render, variants
     from kernelport.zoo import time_port as _time, verify_port as _verify
 
     ws = _ws(root)
@@ -318,6 +324,7 @@ def tune_port(kernel_id: str, backend: str, dtype: str = "float32", root: str | 
         return _err(f"tuning works on Python ports; {backend} ports are {be.config.extension} files")
     if not _passed_here(ws, kernel_id, backend, port):
         return _err(f"no PASS for the current {backend} port on {hw}; run verify_port first")
+    dtype = dtype or _default_dtype(spec, be)
     if dtype not in spec.dtypes or not be.supports(dtype):
         return _err(f"dtype {dtype} not in the spec or not supported by {backend}")
     code = port.read_bytes().decode("utf-8")
@@ -341,13 +348,22 @@ def tune_port(kernel_id: str, backend: str, dtype: str = "float32", root: str | 
             row["failure"] = res.failure_report().splitlines()[0]
         rows.append(row)
     passing = [r for r in rows if r["status"] == "PASS"]
-    # Round-robin timing: clock ramp-up and thermal drift hit every variant alike.
-    for _ in range(TUNE_ROUNDS if len(passing) > 1 else 0):
-        for r in passing:
-            r["rounds"].append(_time(spec, r["path"], backend, dtype)[0].median_ms)
+    # Round-robin timing on one shared input set: clock ramp-up and thermal drift hit every
+    # variant alike, and the GPU never idles while inputs are regenerated.
+    if len(passing) > 1:
+        from kernelport.harness.inputs import make_case
+
+        case = spec.get_case(spec.bench_case) if spec.bench_case else spec.cases[-1]
+        data = make_case(spec, case, dtype)
+        for _ in range(TUNE_ROUNDS):
+            for r in passing:
+                r["rounds"].append(_time(spec, r["path"], backend, dtype, data=data,
+                                         warmup=TUNE_WARMUP)[0].median_ms)
     for r in passing:
         r["port_ms"] = statistics.median(r["rounds"]) if r["rounds"] else None
     base = next((r for r in rows if r["current"]), None)
+    for r in rows:  # variants are reproducible from TUNE; only tune.json is kept
+        r["path"].unlink(missing_ok=True)
     out_rows = [{k: v for k, v in r.items() if k not in ("code", "path")} for r in rows]
     ws.safe_path(*(tune_dir / "tune.json").relative_to(ws.dir).parts).write_bytes(
         json.dumps({"hardware": hw, "dtype": dtype, "rows": out_rows}, indent=2).encode())

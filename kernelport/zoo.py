@@ -81,17 +81,23 @@ def verify_zoo_port(kdir: Path, port: Path, backend: str = "triton") -> RunResul
     return verify_port(LaunchSpec.load(kdir / "launch.json"), kdir / "reference.py", port, backend)
 
 
-def time_port(spec: LaunchSpec, port: Path, backend: str, dtype: str = "float32"):
-    """(Timing, case) of the port alone on the spec's bench case."""
-    from kernelport.bench.timer import time_cuda, time_wall
+def time_port(spec: LaunchSpec, port: Path, backend: str, dtype: str = "float32", data=None,
+              warmup: int | None = None):
+    """(Timing, case) of the port alone on the spec's bench case.
+
+    Pass ``data`` (a make_case result) to reuse one input set across many calls, as tuning does:
+    regenerating a large case takes long enough on the CPU for the GPU to clock down.
+    """
+    from kernelport.bench.timer import DEFAULT_WARMUP, time_cuda, time_wall
     from kernelport.harness.inputs import make_case
 
     be = get_backend(backend)
     case = spec.get_case(spec.bench_case) if spec.bench_case else spec.cases[-1]
-    prepared = be.prepare(port, spec, make_case(spec, case, dtype))
+    prepared = be.prepare(port, spec, data if data is not None else make_case(spec, case, dtype))
+    warmup = DEFAULT_WARMUP if warmup is None else warmup
     if prepared.timer == "cuda_event":
-        return time_cuda(prepared.launch), case
-    return time_wall(prepared.launch, prepared.sync), case
+        return time_cuda(prepared.launch, warmup=warmup), case
+    return time_wall(prepared.launch, prepared.sync, warmup=warmup), case
 
 
 def bench_port(spec: LaunchSpec, source: Path, port: Path, backend: str, dtype: str = "float32") -> dict:

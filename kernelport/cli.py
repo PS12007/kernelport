@@ -249,7 +249,8 @@ def verify(backend: str = typer.Option(None, help="Only this backend."),
 @app.command()
 def bench(backend: str = typer.Option(None, help="Only this backend."),
           kernel: str = typer.Option(None, help="Only this kernel id."),
-          dtype: str = typer.Option("float32"), as_json: bool = JSON_OPT) -> None:
+          dtype: str = typer.Option(None, help="Default: float32, or the spec's first dtype."),
+          as_json: bool = JSON_OPT) -> None:
     """Benchmark saved ports that passed on this machine (MCP: bench_port)."""
     from rich.console import Console
     from rich.markup import escape
@@ -266,7 +267,9 @@ def bench(backend: str = typer.Option(None, help="Only this backend."),
 
 
 @app.command()
-def tune(kernel_id: str, backend: str, dtype: str = typer.Option("float32"), as_json: bool = JSON_OPT) -> None:
+def tune(kernel_id: str, backend: str,
+         dtype: str = typer.Option(None, help="Default: float32, or the spec's first dtype."),
+         as_json: bool = JSON_OPT) -> None:
     """Try the port's TUNE combinations, keep the fastest that passes (MCP: tune_port)."""
     from rich.console import Console
     from rich.markup import escape
@@ -276,7 +279,7 @@ def tune(kernel_id: str, backend: str, dtype: str = typer.Option("float32"), as_
 
     result = tools.tune_port(kernel_id, backend, dtype)
     if not as_json and result.get("rows"):
-        table = Table(title=f"tune {kernel_id} / {backend} ({dtype})")
+        table = Table(title=f"tune {kernel_id} / {backend} ({result.get('dtype') or dtype})")
         for col in ("params", "status", "cases", "port ms", ""):
             table.add_column(col)
         for r in result["rows"]:
@@ -288,8 +291,11 @@ def tune(kernel_id: str, backend: str, dtype: str = typer.Option("float32"), as_
 
 
 @app.command()
-def status(as_json: bool = JSON_OPT) -> None:
+def status(show_all: bool = typer.Option(False, "--all", help="Also list kernels with no reference or port."),
+           as_json: bool = JSON_OPT) -> None:
     """Kernel x backend x hardware status table (MCP: list_status)."""
+    import sys
+
     from rich.console import Console
     from rich.markup import escape
     from rich.table import Table
@@ -300,14 +306,24 @@ def status(as_json: bool = JSON_OPT) -> None:
     if as_json:
         print(json.dumps(res, indent=2))
         return
+    rows = res["rows"]
+    idle = [r for r in rows if r["backend"] == "-" and r["reference"] != "frozen"]
+    if not show_all:
+        rows = [r for r in rows if r not in idle]
     colors = {"PASS": "green", "FAIL": "red", "UNVERIFIED": "yellow", "SKIPPED": "dim"}
     table = Table(title=res["summary"])
-    for col in ("kernel", "reference", "backend", "hardware", "status", "cases", "reason"):
+    table.add_column("kernel", no_wrap=True)
+    for col in ("reference", "backend", "hardware", "status", "cases"):
         table.add_column(col)
-    for r in res["rows"]:
-        table.add_row(escape(r["kernel"]), r["reference"], r["backend"], escape(r["hardware"]),
+    table.add_column("reason", overflow="fold")
+    for r in rows:
+        table.add_row(escape(r["kernel"].split("::")[-1]), r["reference"], r["backend"], escape(r["hardware"]),
                       f"[{colors[r['status']]}]{r['status']}[/]", r["cases"], escape(r["reason"]))
-    Console().print(table)
+    # Piped output (agents, CI logs) gets a readable width instead of Rich's 80 columns.
+    con = Console() if sys.stdout.isatty() else Console(width=160)
+    con.print(table)
+    if idle and not show_all:
+        con.print(f"[dim]{len(idle)} more kernels have no reference or port yet (--all lists them)[/]")
 
 
 @app.command()

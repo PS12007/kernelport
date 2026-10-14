@@ -15,6 +15,7 @@ from typing import Callable
 
 DEFAULT_WARMUP = 10
 DEFAULT_ITERS = 50
+GPU_HOLD_CYCLES = 50_000_000  # ~20-40 ms of GPU time: covers queueing 50 launches from Python
 
 
 @dataclass
@@ -42,6 +43,12 @@ def time_cuda(launch: Callable[[], None], warmup: int = DEFAULT_WARMUP,
     torch.cuda.synchronize()
     starts = [torch.cuda.Event(enable_timing=True) for _ in range(iters)]
     ends = [torch.cuda.Event(enable_timing=True) for _ in range(iters)]
+    # Keep the GPU busy while the CPU queues every timed launch. Otherwise a short kernel
+    # waits for the next Python launch (tens of microseconds for Triton) and the events
+    # measure CPU launch overhead instead of the kernel.
+    sleep = getattr(torch.cuda, "_sleep", None)
+    if sleep is not None:
+        sleep(GPU_HOLD_CYCLES)
     for s, e in zip(starts, ends):
         s.record()
         launch()

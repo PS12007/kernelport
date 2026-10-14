@@ -108,7 +108,7 @@ def _fake_timer(monkeypatch, ms_for):
 
     calls = []
 
-    def fake(spec, port, backend, dtype="float32"):
+    def fake(spec, port, backend, dtype="float32", **kw):
         chunk = 2 if "CHUNK = 2" in port.read_text() else 1
         calls.append(chunk)
         ms = ms_for(chunk, len(calls))
@@ -199,6 +199,7 @@ def test_tune_port_end_to_end(tmp_path):
     # Whatever happened, the stored port still PASSES as it is now.
     assert tools.list_status(root=root)["rows"][0]["status"] == "PASS"
     assert (port.parent / "tune" / "tune.json").is_file()
+    assert not list((port.parent / "tune").glob("v*.py"))  # variant files cleaned up
 
     hip = tools.tune_port("softmax", "hip", root=root)
     assert not hip["ok"]

@@ -59,17 +59,24 @@ def _compile(source: str, entries: tuple[str, ...], include_dir: str,
 
 
 def get_kernel(source_path: Path, spec: LaunchSpec, dtype: str, *, type_names: dict[str, str] | None = None,
-               prelude: str = NVRTC_PRELUDE, options: tuple[str, ...] = NVRTC_OPTIONS):
+               prelude: str = NVRTC_PRELUDE, options: tuple[str, ...] = NVRTC_OPTIONS,
+               device_only: bool = True):
     """Compiled CuPy function for this spec's entry at ``dtype``.
 
     ``type_names`` maps dtypes to the C++ names substituted for ``{T}`` in the entry
     (CUDA names by default; the hip backend passes HIP names). CuPy compiles with
-    NVRTC on NVIDIA and hipRTC on ROCm.
+    NVRTC on NVIDIA and hipRTC on ROCm. With ``device_only`` (the default, for original
+    CUDA files) host code is sliced away first, see ``device_source``.
     """
+    from kernelport.harness.device_source import device_source
+
     def entry(t: str) -> str:
         return spec.entry.replace("{T}", type_names[t]) if type_names else spec.entry_for(t)
 
-    source = Path(source_path).read_text(encoding="utf-8")
+    if device_only:
+        source = device_source(Path(source_path))
+    else:
+        source = Path(source_path).read_text(encoding="utf-8")
     entries = tuple(sorted({entry(t) for t in spec.dtypes}))
     funcs = _compile(source, entries, str(Path(source_path).resolve().parent), prelude, options)
     return funcs[entry(dtype)]

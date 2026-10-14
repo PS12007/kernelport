@@ -20,6 +20,7 @@ import itertools
 
 MAX_VARIANTS = 32
 TUNE_ROUNDS = 5  # interleaved timing rounds per passing variant
+TUNE_WARMUP = 25  # launches before each timing, so the GPU is at full clock
 _SCALARS = (bool, int, float, str)
 
 

@@ -69,7 +69,7 @@ def build_server() -> MCPServer:
         return tools.bench_port(kernel_id, backend, config)
 
     @server.tool()
-    def tune_port(kernel_id: str, backend: str, dtype: str = "float32") -> dict[str, Any]:
+    def tune_port(kernel_id: str, backend: str, dtype: str | None = None) -> dict[str, Any]:
         """After PASS: try every combination in the port's TUNE dict, verify each, keep the fastest passing one."""
         return tools.tune_port(kernel_id, backend, dtype)
 

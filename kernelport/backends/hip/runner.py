@@ -35,7 +35,7 @@ HIPRTC_OPTIONS = ("-std=c++17",)
 def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     """Compile (cached) and bind the port to one case on the GPU."""
     kern = run_cuda.get_kernel(path, spec, data.dtype, type_names=HIP_TYPE_NAMES,
-                               prelude=HIPRTC_PRELUDE, options=HIPRTC_OPTIONS)
+                               prelude=HIPRTC_PRELUDE, options=HIPRTC_OPTIONS, device_only=False)
     dev = {k: v.to("cuda") for k, v in data.tensors.items()}  # torch's ROCm build keeps the "cuda" name
     grid, block, shmem = spec.grid_block(data.dims)
     args = tuple(run_cuda.kernel_args(spec, data, dev))
