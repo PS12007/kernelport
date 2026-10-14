@@ -13,6 +13,10 @@ only ever reported as **PASS** if its current code ran on real hardware and matc
 > Metal is verified on Apple Silicon in CI; the HIP runner and zoo ports are written but not yet
 > verified on an AMD GPU. See [PROGRESS.md](https://github.com/PS12007/kernelport/blob/main/PROGRESS.md).
 
+![kernelport status for nine llm.c kernels: Triton, Metal and WebGPU ports, each verified against a reference frozen on NVIDIA](https://raw.githubusercontent.com/PS12007/kernelport/main/docs/img/llmc-status.svg)
+
+*Real code, real hardware: [examples/llm.c](https://github.com/PS12007/kernelport/tree/main/examples/llm.c).*
+
 ## How it works
 
 ```

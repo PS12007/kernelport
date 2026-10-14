@@ -10,6 +10,8 @@ verified with kernelport. The CUDA files here are **unmodified** copies of llm.c
 the analyzer snapshot of all 27 kernels, the references and input specs for nine of them (frozen
 after validation against the original CUDA kernels), the ports, and the results.
 
+![status](../../docs/img/llmc-status.svg)
+
 | kernel | what it uses | reference vs original CUDA | Triton (RTX 5060 Laptop) | Metal (Apple M1, CI) |
 |---|---|---|---|---|
 | `layernorm_forward_kernel3` | cooperative groups, warp reduce, 3 outputs | PASS 6/6 | PASS 6/6, 1.00x | PASS 6/6 |

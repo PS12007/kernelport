@@ -1,0 +1,125 @@
+{
+  "kernel": "residual_forward_kernel1",
+  "backend": "metal",
+  "status": "PASS",
+  "hardware": "Apple M1 (Virtual) (Metal)",
+  "reason": "",
+  "code_hash": "108d49754394c8f1fd454648da3439b0952de4fcd52bec9b31d5b75c6aa58f85",
+  "reference_hash": "10223deea85c02ef18b2408a884968b49cfeeaf3443e0f10819d431601339e8d",
+  "spec_hash": "e823e4e6a9612a7bbb2b296b0d28eccd33b5c6f50394ad9b39cf1c13e9d8318f",
+  "tolerances": {
+    "bfloat16": {
+      "rtol": 0.016,
+      "atol": 1e-05,
+      "reason": "torch.testing default for bfloat16 (~2 ulp)"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "e4ddfc030d68ed42cb98fadf6d833f57a373048085336fe1d061a08c65593c97",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            1
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "tiny_7",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "939ffa14e84d61b768a08c01d95a3b978a36f9bf0caee2041a0391cd756786a8",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            7
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_4097",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "fe5911886af201f56ebed73b01059e5b322b685f7abe80e3658208db424928bd",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            4097
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4097,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "gpt2_8x1024x768",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "2458d3b009f5ac25303696735d0328973ffe062111a549891fbddf6a37732028",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            6291456
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 6291456,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T20:47:23+00:00",
+  "schema_version": 1
+}
