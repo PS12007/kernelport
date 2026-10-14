@@ -213,7 +213,7 @@
 - HIP on an AMD/ROCm box (`kernelport zoo --backend hip`); nothing else in CI can cover it.
 - Fresh-agent dogfood (needs a clean agent session; no API spend from here).
 - PyPI: configure the trusted publisher on pypi.org, then tag `v0.1.0` (owner action).
-- Port one well-known CUDA-only project end to end; demo GIF; README polish.
+- Demo GIF; README polish. More real code: a multi-file project, macro-generated kernels.
 - Optional: browser (Playwright) check for WGSL ports; live `kernelport agent` smoke test (costs credits).
 
 ## How to resume
