@@ -8,7 +8,7 @@ import sys
 from conftest import ROOT
 
 EXPECTED_TOOLS = {"kernelport_doctor", "scan_kernels", "read_kernel", "read_skill", "write_reference",
-                  "validate_reference", "write_port", "verify_port", "bench_port", "list_status", "make_report"}
+                  "validate_reference", "write_port", "verify_port", "bench_port", "tune_port", "list_status", "make_report"}
 
 
 async def _session(repo, fn):

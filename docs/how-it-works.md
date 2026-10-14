@@ -69,6 +69,19 @@ agent's context.
 the original with device events (median of 50 launches after 10 warm-ups). CPU timings are
 wall-clock and labelled not comparable.
 
+## 7. Tuning only keeps verified, clearly faster code
+
+`tune_port` (optional) works on Python ports that declare module-level constants and a literal
+`TUNE` dict of values to try (at most 32 combinations). Each combination is rendered as a
+variant file under `ports/<backend>/tune/` and **verified on every case first**, because a
+block size can change results, not just speed. Passing variants are then timed in 5 interleaved
+rounds, so GPU clock ramp-up and thermal drift affect them equally. A variant replaces the port
+only if its median is at least 3% faster **and** each of its rounds beat each round of the
+current configuration; the new port is then verified again so the stored PASS matches the new
+code. Without the interleaving, a laptop GPU's clock ramp made a memory-bound softmax look
+1.22x faster with a different block size; interleaved, every variant came within 2%, and the
+port was left alone.
+
 ## The workspace
 
 ```

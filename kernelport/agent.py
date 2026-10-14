@@ -2,7 +2,7 @@
 
 For people who do not use a coding agent. It needs `pip install kernelport[agent]` and the
 user's own Anthropic credentials (ANTHROPIC_API_KEY, or an `ant auth login` profile); every
-run is billed to that account. The agent can only act through the 11 kernelport tools, so
+run is billed to that account. The agent can only act through the 12 kernelport tools, so
 all writes stay inside the repo's .kernelport/ workspace and it cannot run shell commands.
 
 The loop is written by hand (not the SDK's beta tool runner) so the turn budget, the tool

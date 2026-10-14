@@ -81,23 +81,31 @@ def verify_zoo_port(kdir: Path, port: Path, backend: str = "triton") -> RunResul
     return verify_port(LaunchSpec.load(kdir / "launch.json"), kdir / "reference.py", port, backend)
 
 
+def time_port(spec: LaunchSpec, port: Path, backend: str, dtype: str = "float32"):
+    """(Timing, case) of the port alone on the spec's bench case."""
+    from kernelport.bench.timer import time_cuda, time_wall
+    from kernelport.harness.inputs import make_case
+
+    be = get_backend(backend)
+    case = spec.get_case(spec.bench_case) if spec.bench_case else spec.cases[-1]
+    prepared = be.prepare(port, spec, make_case(spec, case, dtype))
+    if prepared.timer == "cuda_event":
+        return time_cuda(prepared.launch), case
+    return time_wall(prepared.launch, prepared.sync), case
+
+
 def bench_port(spec: LaunchSpec, source: Path, port: Path, backend: str, dtype: str = "float32") -> dict:
     """Time the original CUDA kernel and the port on the spec's bench case.
 
     The original is timed only when CUDA is available here; otherwise only the port.
     """
-    from kernelport.bench.timer import time_cuda, time_wall
+    from kernelport.bench.timer import time_cuda
     from kernelport.harness import run_cuda
     from kernelport.harness.inputs import make_case
 
     be = get_backend(backend)
-    case = spec.get_case(spec.bench_case) if spec.bench_case else spec.cases[-1]
+    t_port, case = time_port(spec, port, backend, dtype)
     data = make_case(spec, case, dtype)
-    prepared = be.prepare(port, spec, data)
-    if prepared.timer == "cuda_event":
-        t_port = time_cuda(prepared.launch)
-    else:
-        t_port = time_wall(prepared.launch, prepared.sync)
     out = {"case": case.name, "dtype": dtype, "port_ms": t_port.median_ms, "method": t_port.method,
            "hardware": be.hardware_name(), "comparable": be.config.timing_comparable,
            "note": be.config.timing_note, "original_ms": None, "speedup": None}

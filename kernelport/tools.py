@@ -241,6 +241,13 @@ def verify_port(kernel_id: str, backend: str, root: str | None = None) -> dict:
     return out
 
 
+def _passed_here(ws: Workspace, kernel_id: str, backend: str, port: Path) -> bool:
+    """True if the port's current code has a stored PASS on this machine's hardware."""
+    hw = get_backend(backend).hardware_name()
+    return port.is_file() and any(r.hardware == hw and r.status == "PASS" and r.code_hash == sha256_file(port)
+                                  for r in ws.results(kernel_id, backend))
+
+
 def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: str | None = None) -> dict:
     """Time original vs port on this machine. Only for ports whose current code PASSED here.
 
@@ -261,9 +268,7 @@ def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: s
         return _err(str(exc))
     be = get_backend(backend)
     hw = be.hardware_name()
-    passed = [r for r in ws.results(kernel_id, backend)
-              if r.hardware == hw and r.status == "PASS" and port.is_file() and r.code_hash == sha256_file(port)]
-    if not passed:
+    if not _passed_here(ws, kernel_id, backend, port):
         return _err(f"no PASS for the current {backend} port on {hw}; run verify_port first")
     if "case" in config:
         try:
@@ -285,6 +290,97 @@ def bench_port(kernel_id: str, backend: str, config: dict | None = None, root: s
     if not timing["comparable"]:
         s += f". Not comparable to native GPU numbers: {timing['note']}"
     return {"ok": True, **timing, "summary": s}
+
+
+def tune_port(kernel_id: str, backend: str, dtype: str = "float32", root: str | None = None) -> dict:
+    """Try every combination in the port's TUNE dict; keep the fastest variant that PASSES every case.
+
+    Only for Python ports whose current code PASSED here. Each variant is verified against the
+    frozen reference before it is timed; passing variants are then timed in interleaved rounds.
+    A variant replaces the port only if its median is at least 3% faster and every one of its
+    rounds beat every round of the current configuration; the new port is verified again so the
+    stored PASS matches the new code.
+    """
+    import statistics
+
+    from kernelport.tune import TUNE_ROUNDS, TuneError, render, variants
+    from kernelport.zoo import time_port as _time, verify_port as _verify
+
+    ws = _ws(root)
+    try:
+        spec, ref, _ = ws.frozen(kernel_id)
+        port = ws.port_path(kernel_id, backend)
+    except WorkspaceError as exc:
+        return _err(str(exc))
+    be = get_backend(backend)
+    hw = be.hardware_name()
+    if be.config.extension != ".py":
+        return _err(f"tuning works on Python ports; {backend} ports are {be.config.extension} files")
+    if not _passed_here(ws, kernel_id, backend, port):
+        return _err(f"no PASS for the current {backend} port on {hw}; run verify_port first")
+    if dtype not in spec.dtypes or not be.supports(dtype):
+        return _err(f"dtype {dtype} not in the spec or not supported by {backend}")
+    code = port.read_bytes().decode("utf-8")
+    try:
+        combos, current = variants(code)
+    except TuneError as exc:
+        return _err(str(exc))
+
+    tune_dir = port.parent / "tune"
+    rows = []
+    for i, params in enumerate(combos):
+        vcode = render(code, params)
+        vpath = ws.safe_path(*(tune_dir / f"v{i:02d}.py").relative_to(ws.dir).parts)
+        vpath.parent.mkdir(parents=True, exist_ok=True)
+        vpath.write_bytes(vcode.encode("utf-8"))
+        res = _verify(spec, ref, vpath, backend)
+        row = {"params": params, "status": res.status, "current": params == current,
+               "cases_passed": res.num_passed, "cases_total": len(res.cases), "port_ms": None,
+               "code": vcode, "path": vpath, "rounds": []}
+        if res.status == "FAIL":
+            row["failure"] = res.failure_report().splitlines()[0]
+        rows.append(row)
+    passing = [r for r in rows if r["status"] == "PASS"]
+    # Round-robin timing: clock ramp-up and thermal drift hit every variant alike.
+    for _ in range(TUNE_ROUNDS if len(passing) > 1 else 0):
+        for r in passing:
+            r["rounds"].append(_time(spec, r["path"], backend, dtype)[0].median_ms)
+    for r in passing:
+        r["port_ms"] = statistics.median(r["rounds"]) if r["rounds"] else None
+    base = next((r for r in rows if r["current"]), None)
+    out_rows = [{k: v for k, v in r.items() if k not in ("code", "path")} for r in rows]
+    ws.safe_path(*(tune_dir / "tune.json").relative_to(ws.dir).parts).write_bytes(
+        json.dumps({"hardware": hw, "dtype": dtype, "rows": out_rows}, indent=2).encode())
+    if base is None or base["status"] != "PASS":
+        return {"ok": False, "rows": out_rows,
+                "summary": "the current configuration did not pass as a variant; port left unchanged"}
+    if len(passing) == 1:
+        return {"ok": True, "rows": out_rows, "changed": False, "variants_passed": 1, "variants_total": len(rows),
+                "summary": f"kept the current port: it is the only variant that passed (of {len(rows)})"}
+    best = min(passing, key=lambda r: r["port_ms"])
+    gain = base["port_ms"] / best["port_ms"]
+    out = {"ok": True, "rows": out_rows, "hardware": hw, "dtype": dtype, "best": best["params"],
+           "best_ms": best["port_ms"], "current_ms": base["port_ms"], "gain": gain,
+           "variants_passed": len(passing), "variants_total": len(rows)}
+    # Change the port only for a clear win: >= 3% on the median AND every round of the winner
+    # faster than every round of the current configuration.
+    if best is base or gain < 1.03 or max(best["rounds"]) >= min(base["rounds"]):
+        out["changed"] = False
+        out["summary"] = (f"kept the current port ({base['port_ms']:.4f} ms): no passing variant was clearly "
+                          f"faster (best {best['params']} at {best['port_ms']:.4f} ms; "
+                          f"{len(passing)}/{len(rows)} variants passed)")
+        return out
+    ws.write_port(kernel_id, backend, best["code"])
+    ver = verify_port(kernel_id, backend, root=str(ws.root))
+    if ver["status"] != "PASS":  # pragma: no cover - same code just passed as a variant
+        ws.write_port(kernel_id, backend, code)
+        verify_port(kernel_id, backend, root=str(ws.root))
+        return _err(f"tuned variant did not pass on re-verification ({ver['summary']}); port restored")
+    out["changed"] = True
+    out["summary"] = (f"tuned: {best['params']} is {gain:.2f}x faster than {current} on {hw} "
+                      f"({best['port_ms']:.4f} vs {base['port_ms']:.4f} ms, {dtype}); port updated and "
+                      f"verified again ({len(passing)}/{len(rows)} variants passed)")
+    return out
 
 
 def list_status(root: str | None = None) -> dict:
@@ -325,5 +421,5 @@ def make_report(format: str = "html", root: str | None = None) -> dict:
 
 
 TOOLS = [kernelport_doctor, scan_kernels, read_kernel, read_skill, write_reference, validate_reference,
-         write_port, verify_port, bench_port, list_status, make_report]
+         write_port, verify_port, bench_port, tune_port, list_status, make_report]
 

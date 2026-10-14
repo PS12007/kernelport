@@ -266,6 +266,28 @@ def bench(backend: str = typer.Option(None, help="Only this backend."),
 
 
 @app.command()
+def tune(kernel_id: str, backend: str, dtype: str = typer.Option("float32"), as_json: bool = JSON_OPT) -> None:
+    """Try the port's TUNE combinations, keep the fastest that passes (MCP: tune_port)."""
+    from rich.console import Console
+    from rich.markup import escape
+    from rich.table import Table
+
+    from kernelport import tools
+
+    result = tools.tune_port(kernel_id, backend, dtype)
+    if not as_json and result.get("rows"):
+        table = Table(title=f"tune {kernel_id} / {backend} ({dtype})")
+        for col in ("params", "status", "cases", "port ms", ""):
+            table.add_column(col)
+        for r in result["rows"]:
+            table.add_row(escape(json.dumps(r["params"])), r["status"], f"{r['cases_passed']}/{r['cases_total']}",
+                          f"{r['port_ms']:.4f}" if r["port_ms"] is not None else "-",
+                          "current" if r["current"] else ("best" if r["params"] == result.get("best") else ""))
+        Console().print(table)
+    _emit(result, as_json)
+
+
+@app.command()
 def status(as_json: bool = JSON_OPT) -> None:
     """Kernel x backend x hardware status table (MCP: list_status)."""
     from rich.console import Console

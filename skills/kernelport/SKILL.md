@@ -38,6 +38,7 @@ trusted reference. **A port only counts as working when `verify_port` returns
 | 6 VERIFY | Port vs frozen reference on every case | `verify_port(kernel_id, backend)` |
 | 7 REPAIR | Explain suspected bug, fix, verify again (max 6 failures) | `write_port`, `verify_port` |
 | 8 BENCHMARK | Only after PASS | `bench_port(kernel_id, backend)` |
+| 8b TUNE (optional) | Python ports with a `TUNE` dict: verify + time each variant, keep the fastest passing one | `tune_port(kernel_id, backend)` |
 | 9 REPORT | Show the user the status table and the report path | `list_status()`, `make_report()` |
 
 Do the steps for one kernel at a time (validate it, port it, verify it) before
@@ -145,6 +146,23 @@ index is (tail of a row = masking or loop bounds; every element = formula), and
 whether actual is NaN ("unexpected NaN" usually means an element was never written
 or a 0/0). Errors are compact; an `error:` line means a crash or compile error with
 the offending line of your port.
+
+## Step 8b: tuning (optional)
+
+Only worth it for kernels where speed matters, and only after PASS. Lift the knobs
+you would tune (block size, warps, rows per program) to module-level constants and
+list values to try in a literal `TUNE` dict (at most 32 combinations):
+
+```python
+BLOCK = 1024
+NUM_WARPS = 4
+TUNE = {"BLOCK": [256, 512, 1024, 2048], "NUM_WARPS": [4, 8]}
+```
+
+`write_port`, `verify_port` (the port must PASS as written), then `tune_port(kernel_id, backend)`.
+Every variant is verified on every case before it is timed; a variant that FAILs is
+just reported, it does not use your repair budget. If one is at least 3% faster, it
+replaces the port and is verified again. Report the gain it returns, not your own estimate.
 
 ## Step 9: what to tell the user
 
