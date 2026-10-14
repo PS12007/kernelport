@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # CPU-only: analyzer, harness, reports, MCP protocol, setup, CPU (Numba) backend,
+    # and the fake-runtime contract tests for metal / hip / agent. GPU tests skip.
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install (CPU torch)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[cpu,dev]"
+      - name: kernelport doctor
+        run: kernelport doctor
+      - name: Tests
+        run: python -m pytest -q -rs
+
+  metal:
+    # GitHub's macOS arm64 runners are Apple Silicon VMs. If MLX can reach Metal there,
+    # the zoo metal ports get verified for real; otherwise the tests skip. Informational
+    # until the first green run proves the runner VM exposes a usable Metal device.
+    name: metal zoo (macos arm64, MLX)
+    runs-on: macos-14
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[metal,dev]"
+      - name: MLX device
+        run: python -c "import mlx.core as mx; print(mx.default_device(), mx.metal.is_available())"
+      - name: Metal backend tests
+        run: python -m pytest -q -rs tests/test_metal_backend.py
+      - name: Metal zoo
+        run: kernelport zoo --backend metal
+
+  package:
+    name: build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          python -m twine check dist/*
+      - name: Smoke test the wheel (core install, no torch)
+        run: |
+          python -m venv /tmp/wheel-env
+          /tmp/wheel-env/bin/pip install dist/*.whl
+          cd /tmp && /tmp/wheel-env/bin/kernelport --help
+          /tmp/wheel-env/bin/python -c "import kernelport.mcp_server, kernelport.tools"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
