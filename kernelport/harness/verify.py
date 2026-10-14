@@ -15,7 +15,7 @@ import torch
 from kernelport.harness.compare import compare_tensor
 from kernelport.harness.inputs import TORCH_DTYPES, CaseData, make_case
 from kernelport.harness.reference import file_hash, run_reference
-from kernelport.harness.results import CaseResult, RunResult
+from kernelport.harness.results import CaseNotRunnable, CaseResult, RunResult
 from kernelport.harness.spec import LaunchSpec
 from kernelport.harness.tolerances import Tolerance, tolerance_for
 
@@ -61,6 +61,7 @@ def run_cases(*, kernel: str, backend: str, hardware: str, spec: LaunchSpec,
     every output matched; if nothing remains, status is SKIPPED.
     """
     cases: list[CaseResult] = []
+    not_runnable: list[str] = []
     used_tols: dict[str, dict] = {}
     failures = 0
     todo = [(c, t) for c, t in spec.iter_cases() if supported_dtypes is None or t in supported_dtypes]
@@ -79,6 +80,9 @@ def run_cases(*, kernel: str, backend: str, hardware: str, spec: LaunchSpec,
             continue
         try:
             actual = runner(data)
+        except CaseNotRunnable as exc:
+            not_runnable.append(f"{case.name}/{dtype} ({exc})")
+            continue
         except Exception as exc:
             err = _short_error(exc)
             prev = next((c for c in cases if c.error == err or c.error.startswith(err)), None)
@@ -109,8 +113,8 @@ def run_cases(*, kernel: str, backend: str, hardware: str, spec: LaunchSpec,
             if stop_after_failures and failures >= stop_after_failures:
                 break
 
-    all_ran = len(cases) == len(todo)
-    if not todo:
+    all_ran = len(cases) + len(not_runnable) == len(todo)
+    if not cases:
         status = "SKIPPED"
     else:
         status = "PASS" if all_ran and all(c.passed for c in cases) else "FAIL"
@@ -119,6 +123,8 @@ def run_cases(*, kernel: str, backend: str, hardware: str, spec: LaunchSpec,
         notes.append(f"stopped early after {failures} failing cases")
     if skipped:
         notes.append(f"dtypes not supported by this backend, not tested: {', '.join(skipped)}")
+    if not_runnable:
+        notes.append(f"cases this device cannot run, not tested: {'; '.join(not_runnable)}")
     reason = "; ".join(notes)
     return RunResult(kernel=kernel, backend=backend, status=status, hardware=hardware,
                      reason=reason, code_hash=code_hash, reference_hash=file_hash(reference_path),

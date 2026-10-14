@@ -30,6 +30,54 @@ def test_every_zoo_kernel_has_a_webgpu_port():
     assert len(KERNELS) == 12
 
 
+def test_binding_size_checks():
+    """No GPU needed: limits are passed in."""
+    from kernelport.backends.webgpu import runner
+    from kernelport.harness.inputs import make_case
+    from kernelport.harness.results import CaseNotRunnable
+    from kernelport.harness.spec import LaunchSpec
+
+    spec = LaunchSpec.load(ZOO / "embedding_gather" / "launch.json")
+    data = make_case(spec, spec.get_case(spec.bench_case), "float32")
+    sizes = {p.name: data.tensors[p.name].numel() * data.tensors[p.name].element_size()
+             for p in spec.params if p.is_tensor}
+    biggest, total = max(sizes.values()), sum(sizes.values())
+    runner._check_binding_sizes(spec, data, biggest, None)          # fits exactly
+    runner._check_binding_sizes(spec, data, biggest, total)
+    with pytest.raises(CaseNotRunnable, match=r"needs a \d+ MiB storage binding; this adapter allows 128 MiB"):
+        runner._check_binding_sizes(spec, data, 128 * 2**20, None)
+    with pytest.raises(CaseNotRunnable, match="in total"):
+        runner._check_binding_sizes(spec, data, biggest, total - 1)
+
+
+@pytest.mark.skipif(not _has("torch"), reason="needs torch")
+def test_not_runnable_cases_are_named_never_passed():
+    import torch
+
+    from kernelport.harness.results import CaseNotRunnable
+    from kernelport.harness.spec import LaunchSpec
+    from kernelport.harness.verify import run_cases
+
+    spec = LaunchSpec.load(ZOO / "relu" / "launch.json")
+    big = spec.cases[-1].name
+
+    def runner(data, refuse=lambda name: False):
+        if refuse(data.case):
+            raise CaseNotRunnable("x needs a 512 MiB storage binding; this adapter allows 128 MiB")
+        return {"y": torch.clamp(data.tensors["x"], min=0)}
+
+    def run(refuse):
+        return run_cases(kernel="relu", backend="webgpu", hardware="test", spec=spec,
+                         reference_path=ZOO / "relu" / "reference.py", code_hash="h",
+                         runner=lambda d: runner(d, refuse), supported_dtypes=("float32",))
+
+    r = run(lambda name: name == big)
+    assert r.status == "PASS", r.failure_report()
+    assert f"cannot run, not tested: {big}/float32 (x needs a 512 MiB" in r.reason
+    assert big not in {c.case for c in r.cases}
+    assert run(lambda name: True).status == "SKIPPED"
+
+
 def test_bindings_are_generated_from_the_spec():
     """Pure string generation: no GPU needed."""
     from unittest import mock

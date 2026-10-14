@@ -39,9 +39,11 @@ import torch
 from kernelport.backends.base import Prepared, bind_kwargs
 from kernelport.harness.inputs import CaseData
 from kernelport.harness.reference import file_hash, load_module
+from kernelport.harness.results import CaseNotRunnable
 from kernelport.harness.spec import LaunchSpec
 
 MAX_WORKGROUPS = 65535
+PARAVIRTUAL_MAX_BOUND = 500 * 2**20
 _ELEM = {"float32": ("f32", np.float32), "float16": ("f16", np.float16), "int32": ("i32", np.int32),
          "uint32": ("u32", np.uint32), "int64": ("vec2<u32>", np.int64)}
 _SCALAR = {"int32": ("i32", np.int32), "int64": ("i32", np.int32), "uint32": ("u32", np.uint32),
@@ -166,6 +168,37 @@ def _padded(raw: bytes, multiple: int = 4) -> bytes:
     return raw + b"\0" * extra if extra or not raw else raw
 
 
+def binding_limits() -> tuple[int, int | None]:
+    """(largest single storage binding, largest total bound per dispatch or None) in bytes."""
+    dev = device()
+    per = min(dev.limits["max-storage-buffer-binding-size"], dev.limits["max-buffer-size"])
+    total = None
+    if "Paravirtual" in str(dev._kp_adapter_info.get("device", "")):
+        # Apple's paravirtual GPU (macOS VMs such as GitHub's macos-14 runners) reports 3.5 GiB
+        # per binding, but a dispatch binding 628 MiB in total silently does not run (outputs
+        # untouched), while 500 MiB was measured to work. Stay within what was measured.
+        per = total = min(per, PARAVIRTUAL_MAX_BOUND)
+    return per, total
+
+
+def _check_binding_sizes(spec: LaunchSpec, data: CaseData, per: int, total: int | None) -> None:
+    """Raise CaseNotRunnable if the case's tensors exceed what this adapter can bind."""
+    sizes = {}
+    for p in spec.params:
+        if p.is_tensor:
+            t = data.tensors[p.name]
+            itemsize = np.dtype(_elem_type(p, data.dtype)[1]).itemsize if t.dtype != torch.bfloat16 else 2
+            sizes[p.name] = t.numel() * itemsize
+    mib = 2**20
+    for name, n in sizes.items():
+        if n > per:
+            raise CaseNotRunnable(f"{name} needs a {n / mib:.0f} MiB storage binding; "
+                                  f"this adapter allows {per / mib:.0f} MiB")
+    if total is not None and sum(sizes.values()) > total:
+        raise CaseNotRunnable(f"the case binds {sum(sizes.values()) / mib:.0f} MiB in total; "
+                              f"this adapter runs at most {total / mib:.0f} MiB per dispatch")
+
+
 def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     """Compile the port for this case's dtype and upload the case's buffers."""
     import wgpu
@@ -179,6 +212,8 @@ def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     if unknown:
         raise KeyError(f"BINDINGS names unknown tensor params {sorted(unknown)}")
     code = enable + mod.WGSL + "\n" + bindings_source(spec, data.dtype, overrides)
+
+    _check_binding_sizes(spec, data, *binding_limits())
 
     kinds, buffers, outputs = [], [], {}
     arrays = {}

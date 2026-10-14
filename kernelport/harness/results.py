@@ -1,11 +1,13 @@
 """result.json schema: the record of one verification run.
 
 Status values:
-- PASS        every case ran on real hardware and matched the frozen reference
+- PASS        every case this hardware can run ran on it and matched the frozen reference
 - FAIL        at least one case mismatched or crashed
 - UNVERIFIED  the port exists but could not be run here (backend unavailable)
-- SKIPPED     not attempted (e.g. no port written)
+- SKIPPED     not attempted (e.g. no port written, or no case runnable here)
 
+Cases a device cannot run at all (a dtype it lacks, a buffer larger than its binding
+limit) are not tested, and each one is named in ``reason``; they never count as passed.
 Only PASS means "proven". Nothing else may be displayed as PASS.
 """
 
@@ -19,6 +21,14 @@ from typing import Any
 
 SCHEMA_VERSION = 1
 STATUSES = ("PASS", "FAIL", "UNVERIFIED", "SKIPPED")
+
+
+class CaseNotRunnable(Exception):
+    """A runner cannot run this case on this device at all (a device limit, not a port bug).
+
+    The message says which limit, e.g. "table needs a 500 MiB storage binding; this adapter
+    allows 128 MiB". Raised before anything is launched.
+    """
 
 
 @dataclass

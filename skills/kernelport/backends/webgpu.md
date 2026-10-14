@@ -117,6 +117,15 @@ like the CUDA tile.
 **Scans**: port the CUDA scan as is (Hillis-Steele in workgroup memory + a
 `var<workgroup> carry: f32`), with barriers where CUDA has `__syncthreads`.
 
+## Buffer size limits
+
+One storage binding is limited by the adapter: browsers default to 128 MiB, software
+Vulkan (llvmpipe) allows 128 MiB, discrete GPUs allow up to 2 GiB here. A case whose
+tensor is larger than the adapter's limit is not run at all: the result names it as
+"cases this device cannot run, not tested" with the sizes. That is a device limit, not
+a bug in your port, so do not change the port for it. Say in your report which cases
+were not tested and why.
+
 ## Precision notes
 
 - Compute in f32 for f16 data (`f32(x[i])`, store with `T(v)`), like CUDA's float
