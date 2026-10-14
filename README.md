@@ -9,7 +9,7 @@ Cursor, Gemini CLI) writes the ports; kernelport runs them on real hardware and 
 one against a reference that was itself validated against the original CUDA kernel. A port is
 only ever reported as **PASS** if its current code ran on real hardware and matched.
 
-> Status: early development (0.1.0.dev0). Triton, CPU and WebGPU backends work and are verified;
+> Status: early release (0.1.0). Triton, CPU and WebGPU backends work and are verified;
 > Metal is verified on Apple Silicon in CI; the HIP runner and zoo ports are written but not yet
 > verified on an AMD GPU. See [PROGRESS.md](https://github.com/PS12007/kernelport/blob/main/PROGRESS.md).
 
