@@ -150,7 +150,7 @@
   (`pip install kernelport[agent]`). NOT run against the live API (owner: no API credits); 7 tests with a
   scripted fake client cover the loop.
 
-- **M13 Metal + M14 HIP (written, NOT verified on real hardware)** (2026-10-13):
+- **M13 Metal + M14 HIP** (2026-10-13; Metal verified in CI on 2026-10-14, HIP still unverified):
   - metal: `backends/metal/runner.py` on `mx.fast.metal_kernel`. Port = Metal kernel body `SOURCE`,
     `THREADGROUP`, `grid()` in TOTAL threads; inputs = input/inout tensors then scalars as 1-element
     arrays; outputs = outputs + inouts as `<name>_out`; template T; NaN `INIT_VALUE`; `ATOMIC_OUTPUTS`;
@@ -165,14 +165,39 @@
     AMD results are unverified until someone runs `kernelport zoo --backend hip` on ROCm.
   - skills/.../metal.md and hip.md, both stating their unverified status.
 
+- **Launch prep, session 2** (2026-10-14):
+  - **CI** (`.github/workflows/ci.yml`): CPU tests on ubuntu / windows / macos (CPU torch + numba), wheel
+    build + `twine check` + core-only smoke install, and a **Metal job on `macos-14`**. GitHub's arm64
+    macOS runners expose a real Metal device ("Apple M1 (Virtual)"), so the job verifies all 12 zoo metal
+    ports for real: **12/12 PASS every case in fp32/fp16/bf16**. The job is blocking and asserts that
+    Metal is available, so it cannot silently skip. `release.yml`: tag `v*` -> build -> PyPI via trusted
+    publishing (needs one-time setup on pypi.org; name `kernelport` was free on PyPI and TestPyPI).
+  - First Mac run showed reduce_sum "FAIL 4/16 (actual 0.0)". Not a Metal bug: the fake-MLX contract tests
+    left a fake kernel in `runner._kernels`, and the real-Mac test reused it (the 4 "passing" cases
+    expected 0). Fixed with an autouse fixture plus `id(mx)` in the cache key. Diagnosed on a throwaway
+    branch (deleted).
+  - Content hashes are line-ending insensitive (`kernelport/hashing.py`): a `.kernelport/` frozen on
+    Linux/Colab and checked out on Windows with `core.autocrlf=true` used to read as "tampered".
+  - `kernelport validate --all` (`Workspace.pending_validation`) and `notebooks/freeze_references_colab.ipynb`:
+    write references anywhere, freeze them once on any NVIDIA GPU (free Colab T4), verify anywhere.
+    SKILL.md tells agents what to do on UNAVAILABLE. Installation docs cover Mac and the no-NVIDIA flow.
+  - **`tune_port`** (12th tool, `kernelport tune`): Python ports declare module-level constants and a literal
+    `TUNE` dict (<= 32 combos). Every variant is verified on every case, passing ones are timed in 5
+    interleaved rounds; the port is replaced only if the median gain >= 3% AND every winner round beats
+    every current round, then re-verified. Without interleaving, laptop-GPU clock ramp-up made softmax look
+    1.22x faster with another BLOCK; interleaved, all variants were within 2% and the port was kept.
+
 ## Next (pick up here)
-- Run `kernelport zoo --backend metal` on an Apple Silicon Mac and `--backend hip` on an AMD/ROCm box;
-  fix what fails (the runners were written blind). Optionally: browser (Playwright) check for WGSL ports,
-  live smoke test of `kernelport agent` with the owner's go-ahead (costs API credits).
+- HIP on an AMD/ROCm box (`kernelport zoo --backend hip`); nothing else in CI can cover it.
+- Fresh-agent dogfood (needs a clean agent session; no API spend from here).
+- PyPI: configure the trusted publisher on pypi.org, then tag `v0.1.0` (owner action).
+- Port one well-known CUDA-only project end to end; demo GIF; README polish.
+- Optional: browser (Playwright) check for WGSL ports; live `kernelport agent` smoke test (costs credits).
 
 ## How to resume
 - Env: `.venv` (Python 3.12, torch 2.11.0+cu128, triton-windows 3.7.1, cupy-cuda12x 14.2). `kernelport doctor`.
-- Tests: `.venv\Scripts\python.exe -m pytest -q` (~3 min, GPU tests skip without CUDA).
+- Tests: `.venv\Scripts\python.exe -m pytest -q` (~6 min, GPU tests skip without CUDA). CI runs on
+  every push to main: https://github.com/PS12007/kernelport/actions
 - Repo: https://github.com/PS12007/kernelport (public), commit after each milestone, update this file.
 - Gotcha for automated edits on this Windows box: bash heredocs mangle backslash escapes (\n, \b) inside
   Python source. Write files with the editor tool or a script file instead.

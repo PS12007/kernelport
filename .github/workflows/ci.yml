@@ -37,12 +37,11 @@ jobs:
         run: python -m pytest -q -rs
 
   metal:
-    # GitHub's macOS arm64 runners are Apple Silicon VMs. If MLX can reach Metal there,
-    # the zoo metal ports get verified for real; otherwise the tests skip. Informational
-    # until the first green run proves the runner VM exposes a usable Metal device.
+    # GitHub's macOS arm64 runners are Apple Silicon VMs ("Apple M1 (Virtual)") with a real
+    # Metal device, so every zoo metal port is verified for real on each push. The originals
+    # show UNVERIFIED here (no CUDA); the ports are checked against the stored references.
     name: metal zoo (macos arm64, MLX)
     runs-on: macos-14
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -54,11 +53,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[metal,dev]"
       - name: MLX device
-        run: python -c "import mlx.core as mx; print(mx.default_device(), mx.metal.is_available())"
+        # Fail loudly rather than letting the Mac tests skip if the runner loses its Metal device.
+        run: python -c "import mlx.core as mx; print(mx.default_device()); assert mx.metal.is_available()"
       - name: Metal backend tests
         run: python -m pytest -q -rs tests/test_metal_backend.py
       - name: Metal zoo
-        run: kernelport zoo --backend metal
+        run: kernelport zoo --backend metal --no-bench
 
   package:
     name: build sdist + wheel

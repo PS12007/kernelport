@@ -6,9 +6,9 @@ block is a Metal **threadgroup**, `__shared__` is `threadgroup`, `__syncthreads(
 `threadgroup_barrier(mem_flags::mem_threadgroup)`.
 
 Verification needs an Apple Silicon Mac with MLX. On other machines `verify_port`
-returns UNVERIFIED. **Status: the runner and the zoo ports are written but have not yet
-been verified on a Mac.** The first `kernelport zoo --backend metal` on a Mac is
-the real test.
+returns UNVERIFIED. Status: all 12 zoo metal ports PASS every case in fp32, fp16 and
+bf16 on Apple Silicon (an M1 on GitHub's macOS runners, checked in CI on every push).
+Treat the zoo ports as working examples of the patterns below.
 
 ## Port file format
 
