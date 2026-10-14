@@ -67,4 +67,6 @@ def test_metal_and_hip_guides_exist_and_state_their_status():
         assert concept in m, concept
     for concept in ("__hip_bfloat16", "warpSize", "64", "hipRTC"):
         assert concept in h, concept
-    assert "not yet" in m and "not yet" in h  # honest about unverified status
+    # Each guide states its real status: metal verified on Apple Silicon (CI), hip not yet on AMD.
+    assert "PASS every case" in m and "Apple Silicon" in m
+    assert "not yet" in h
