@@ -152,6 +152,28 @@ def test_tampered_frozen_reference_detected(ws):
     assert not ws.is_frozen("relu")
 
 
+def _to_crlf(path):
+    path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+
+
+def test_frozen_and_pass_survive_crlf_checkout(ws):
+    # Frozen on Linux/Colab, committed, checked out on Windows with core.autocrlf=true.
+    _ready(ws)
+    ws.freeze("relu", _validation(ws))
+    ws.write_port("relu", "triton", "def run(x, y, n):\n    pass\n")
+    ws.save_result("relu", "triton", _port_result(ws, "PASS", "gpu"))
+    fdir = ws.get("relu").dir / "frozen"
+    for p in [fdir / "reference.py", fdir / "launch.json", ws.port_path("relu", "triton")]:
+        _to_crlf(p)
+        assert b"\r\n" in p.read_bytes()
+    assert ws.is_frozen("relu")
+    (row,) = ws.status()
+    assert row["status"] == "PASS"
+    # A real content change is still caught.
+    (fdir / "reference.py").write_bytes((fdir / "reference.py").read_bytes() + b"# edit\r\n")
+    assert not ws.is_frozen("relu")
+
+
 def test_attempt_log_and_repair_budget(ws):
     ws.write_port("relu", "triton", "def run(x, y, n):\n    pass\n")
     for status in ["FAIL", "FAIL", "PASS", "FAIL"]:

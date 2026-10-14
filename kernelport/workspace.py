@@ -36,6 +36,7 @@ from kernelport.analyzer.models import KernelInfo
 from kernelport.backends.base import BACKEND_NAMES, get_backend
 from kernelport.harness.results import RunResult
 from kernelport.harness.spec import LaunchSpec
+from kernelport.hashing import sha256_file, sha256_text  # noqa: F401  (re-exported for tools)
 
 WORKSPACE_DIR = ".kernelport"
 MAX_CODE_BYTES = 512_000
@@ -44,16 +45,6 @@ MAX_ATTEMPTS = 6
 
 class WorkspaceError(Exception):
     """A request the workspace refuses (bad id, unsafe path, rule violation)."""
-
-
-def sha256_text(text: str) -> str:
-    """sha256 of UTF-8 text."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def sha256_file(path: Path) -> str:
-    """sha256 of a file's bytes."""
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def _now() -> str:

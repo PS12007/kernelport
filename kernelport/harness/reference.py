@@ -22,11 +22,12 @@ import torch
 
 from kernelport.harness.inputs import CaseData
 from kernelport.harness.spec import LaunchSpec
+from kernelport.hashing import sha256_file
 
 
 def file_hash(path: Path) -> str:
-    """sha256 of a file's bytes."""
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    """sha256 of a file's contents (line-ending insensitive)."""
+    return sha256_file(path)
 
 
 def load_module(path: Path, prefix: str = "kp_mod") -> ModuleType:

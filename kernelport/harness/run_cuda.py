@@ -7,7 +7,6 @@ come back as CPU tensors.
 
 from __future__ import annotations
 
-import hashlib
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -17,6 +16,7 @@ import torch
 
 from kernelport.harness.inputs import CaseData
 from kernelport.harness.spec import LaunchSpec
+from kernelport.hashing import sha256_file
 
 NVRTC_OPTIONS = ("-std=c++17",)
 
@@ -116,4 +116,4 @@ def run_original(source_path: Path, spec: LaunchSpec, data: CaseData) -> dict[st
 
 def source_hash(path: Path) -> str:
     """sha256 of the kernel source."""
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return sha256_file(path)
