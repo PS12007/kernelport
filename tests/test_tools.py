@@ -103,6 +103,26 @@ def test_wrong_reference_does_not_freeze(repo):
 
 
 @needs_cuda
+def test_cli_validate_all_freezes_pending(repo, monkeypatch):
+    from typer.testing import CliRunner
+
+    from kernelport.cli import app
+
+    tools.scan_kernels(".", root=repo)
+    for k in ("relu", "vector_add"):
+        tools.write_reference(k, _ref(k), spec=_spec(k), root=repo)
+    monkeypatch.setenv("KERNELPORT_ROOT", repo)
+    runner = CliRunner()
+    r = runner.invoke(app, ["validate", "--all"])
+    assert r.exit_code == 0, r.output
+    ws = Workspace(repo)
+    assert all(ws.is_frozen(k) for k in ("relu", "vector_add"))
+    r = runner.invoke(app, ["validate", "--all"])
+    assert r.exit_code == 0 and "nothing to validate" in r.output
+    assert runner.invoke(app, ["validate"]).exit_code != 0
+
+
+@needs_cuda
 @needs_triton
 def test_full_workflow(repo):
     """scan -> read -> write_reference -> validate -> write_port -> verify -> bench -> status -> report."""

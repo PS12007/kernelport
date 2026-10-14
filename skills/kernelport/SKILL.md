@@ -45,7 +45,12 @@ moving to the next; it keeps context small. Read `read_skill("common_bugs")` onc
 before your first port.
 
 If `validate_reference` returns `UNAVAILABLE` (no NVIDIA GPU here), the reference
-cannot be frozen on this machine: tell the user, and stop for that kernel.
+cannot be frozen on this machine. Still write the references and specs for every
+kernel, then tell the user how to freeze them all at once on an NVIDIA machine:
+commit `.kernelport/` and run `kernelport validate --all` there (a free Colab T4
+works: `notebooks/freeze_references_colab.ipynb` in the kernelport repo). Once the
+frozen `.kernelport/` is back in the repo, porting and verifying continue here.
+Do not write ports for a kernel whose reference is not frozen: `verify_port` refuses.
 
 If the target backend is not available here, still write the port; `verify_port`
 returns `UNVERIFIED` and the port can be verified later with `kernelport verify` on

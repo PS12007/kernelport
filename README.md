@@ -1,5 +1,7 @@
 # kernelport
 
+[![CI](https://github.com/PS12007/kernelport/actions/workflows/ci.yml/badge.svg)](https://github.com/PS12007/kernelport/actions/workflows/ci.yml)
+
 Bring CUDA-only kernels to Mac, AMD, browsers, and CPU, with proof they are correct.
 
 kernelport is an **MCP server + agent skill + CLI**. Your coding agent (Claude Code, Codex,
@@ -117,7 +119,7 @@ Every MCP tool has a CLI equivalent, so you can drive the workflow by hand or fr
 | `kernelport read <id>` | `read_kernel` | source, parsed signature, suggested input spec |
 | `kernelport skill [name]` | `read_skill` | workflow, common_bugs, or a backend guide |
 | `kernelport write-reference` | `write_reference` | save a candidate reference + spec |
-| `kernelport validate` | `validate_reference` | original CUDA vs reference; freeze on PASS |
+| `kernelport validate <id>` or `--all` | `validate_reference` | original CUDA vs reference; freeze on PASS |
 | `kernelport write-port` | `write_port` | save a port |
 | `kernelport verify` | `verify_port` | port vs frozen reference |
 | `kernelport bench` | `bench_port` | time port vs original (after PASS) |

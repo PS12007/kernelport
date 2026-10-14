@@ -156,11 +156,43 @@ def write_reference_cmd(kernel_id: str, file: str, spec: str = typer.Option(None
 
 
 @app.command()
-def validate(kernel_id: str, as_json: bool = JSON_OPT) -> None:
+def validate(kernel_id: str = typer.Argument(None),
+             all_: bool = typer.Option(False, "--all",
+                                       help="Every kernel whose candidate reference is not frozen yet."),
+             as_json: bool = JSON_OPT) -> None:
     """Run the original CUDA kernel against the reference; freeze on PASS (MCP: validate_reference)."""
-    from kernelport import tools
+    from rich.console import Console
+    from rich.markup import escape
 
-    _emit(tools.validate_reference(kernel_id), as_json)
+    from kernelport import tools
+    from kernelport.workspace import Workspace
+
+    if bool(kernel_id) == all_:
+        raise typer.BadParameter("give a kernel id or --all (not both)")
+    if kernel_id:
+        _emit(tools.validate_reference(kernel_id), as_json)
+        return
+    ws = Workspace()
+    ids = ws.pending_validation() if ws.dir.is_dir() else []
+    results = []
+    for kid in ids:
+        r = {"kernel_id": kid, **tools.validate_reference(kid)}
+        results.append(r)
+        if r.get("status") == "UNAVAILABLE":
+            break  # same reason for every kernel
+    if as_json:
+        print(json.dumps(results, indent=2, default=str))
+    else:
+        con = Console()
+        if not ids:
+            con.print("nothing to validate: every candidate reference is already frozen")
+        for r in results:
+            color = "green" if r.get("ok") else "red"
+            con.print(f"[{color}]{escape(r['kernel_id'])}: {escape(r.get('summary', ''))}[/]")
+            if r.get("report"):
+                con.print(escape(r["report"]))
+    if any(not r.get("ok") for r in results):
+        raise typer.Exit(1)
 
 
 @app.command("write-port")

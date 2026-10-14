@@ -152,6 +152,16 @@ def test_tampered_frozen_reference_detected(ws):
     assert not ws.is_frozen("relu")
 
 
+def test_pending_validation(ws):
+    assert ws.pending_validation() == []             # no candidate yet
+    _ready(ws)
+    assert ws.pending_validation() == ["relu/kernel.cu::relu"]
+    ws.freeze("relu", _validation(ws))
+    assert ws.pending_validation() == []             # candidate == frozen
+    ws.write_reference("relu", REF + "\n# v2\n")
+    assert ws.pending_validation() == ["relu/kernel.cu::relu"]
+
+
 def _to_crlf(path):
     path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
 

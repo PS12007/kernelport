@@ -254,6 +254,23 @@ class Workspace:
         except WorkspaceError:
             return False
 
+    def pending_validation(self) -> list[str]:
+        """Kernel ids with a candidate reference + spec that differs from the frozen copy (or none)."""
+        out = []
+        for kid in self.kernel_ids():
+            d = self.get(kid).dir
+            spec_p, ref_p = d / "launch.json", d / "reference.py"
+            if not (spec_p.is_file() and ref_p.is_file()):
+                continue
+            try:
+                _, _, manifest = self.frozen(kid)
+            except WorkspaceError:
+                out.append(kid)
+                continue
+            if (sha256_file(ref_p), sha256_file(spec_p)) != (manifest["reference_hash"], manifest["spec_hash"]):
+                out.append(kid)
+        return out
+
     # ---------------------------------------------------------------- ports
     def port_path(self, kernel_id: str, backend: str) -> Path:
         """Where the port for ``backend`` lives (may not exist yet)."""
