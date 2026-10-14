@@ -187,6 +187,15 @@
     every current round, then re-verified. Without interleaving, laptop-GPU clock ramp-up made softmax look
     1.22x faster with another BLOCK; interleaved, all variants were within 2% and the port was kept.
 
+  - **WebGPU in CI**: Linux llvmpipe (software Vulkan, 128 MiB binding limit) and macOS Metal ("Apple
+    Paravirtual device"): 12/12 WGSL ports PASS on both. embedding_gather's biggest cases first failed:
+    wgpu validation error on llvmpipe (500 MiB table > 128 MiB), silent all-zero output on paravirtual Metal.
+    A throwaway diagnostic showed the paravirtual GPU claims 3.5 GiB per binding, but a dispatch binding
+    628 MiB total does not run at all (500 MiB works). New `CaseNotRunnable`: runners raise it for
+    device limits; `run_cases` names those cases in `reason` ("cases this device cannot run, not tested")
+    and never counts them as passed (same rule as unsupported dtypes). The webgpu runner checks per-binding
+    limits plus a 500 MiB per-dispatch cap only for the paravirtual device. CI webgpu job is blocking.
+
 ## Next (pick up here)
 - HIP on an AMD/ROCm box (`kernelport zoo --backend hip`); nothing else in CI can cover it.
 - Fresh-agent dogfood (needs a clean agent session; no API spend from here).
