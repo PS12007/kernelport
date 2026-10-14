@@ -90,7 +90,7 @@ atomics, block reductions, scans, gathers and int64 indices. Every original pass
 `kernelport zoo --backend triton|cpu` validates them and verifies the stored ports.
 
 Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX (28 threads), bench case of each spec
-(the largest), float32. Every stored port passes every case: Triton in fp32/fp16/bf16, cpu in fp32, webgpu in fp32/fp16, metal in fp32/fp16/bf16 (on an Apple M1 GitHub Actions runner, checked on every push; no timings, a virtualized runner is not a fair benchmark). CI also runs the WGSL ports on Apple Metal and on llvmpipe; there the 628 MiB embedding_gather case exceeds the adapter binding limit and is reported as not tested.
+(the largest), float32. Every stored port passes every case: Triton in fp32/fp16/bf16, cpu in fp32, webgpu in fp32/fp16, metal in fp32/fp16/bf16 (on an Apple M1 GitHub Actions runner, checked on every push; no timings, a virtualized runner is not a fair benchmark). CI also runs the WGSL ports on Apple Metal and on llvmpipe; there the largest embedding_gather cases exceed those adapters' binding limits (128 MiB on llvmpipe) and are reported as not tested.
 
 | kernel | triton vs original CUDA | cpu (Numba) | webgpu (WGSL) | metal (MLX) |
 |---|---|---|---|---|
