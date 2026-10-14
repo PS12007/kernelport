@@ -53,6 +53,16 @@ Then, in your repo, ask your agent:
 
 > port the CUDA kernels in this repo to Triton and verify them
 
+## Real code: llm.c's CUDA kernels on a Mac
+
+[`examples/llm.c`](examples/llm.c) takes five kernels from Karpathy's
+[llm.c](https://github.com/karpathy/llm.c) `dev/cuda/` (unmodified files, host code and all):
+layernorm, GELU, residual, encoder and online softmax, including bf16 and 128-bit packed loads.
+References were validated against the original CUDA kernels and frozen on an RTX 5060; the
+Triton ports pass there (0.9-1.4x the original), and the Metal ports pass on Apple Silicon in CI
+against those same frozen references. Validation also found an undocumented precondition in
+llm.c: `softmax_forward_online_kernel8` leaves rows unwritten when C < block size.
+
 ## Backends
 
 | backend | port language | runs on | status |

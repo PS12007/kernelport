@@ -196,6 +196,19 @@
     and never counts them as passed (same rule as unsupported dtypes). The webgpu runner checks per-binding
     limits plus a 500 MiB per-dispatch cap only for the paravirtual device. CI webgpu job is blocking.
 
+  - **Real code: `examples/llm.c`** (llm.c @ f1e2ace, MIT, files unmodified). New
+    `harness/device_source.py` slices real .cu files to their device code for NVRTC (drops host
+    functions/globals/prototypes and host `#include <...>`, inlines local includes once with `#line`
+    markers, keeps line numbers, re-adds cuda_fp16/bf16 when a CUDA host header was dropped). All 23
+    llm.c kernels compile; 5 got references + specs (4 validated first try), Triton ports PASS on the
+    RTX 5060 (0.9-1.4x), Metal ports PASS first run on Apple M1 in CI against the NVIDIA-frozen refs.
+    Validation found softmax_forward_online_kernel8 needs C >= blockDim.x (C=31/32/255 FAIL, 256/257 PASS).
+  - Fixes from that run: bench/tune default to the spec's runnable dtype (bf16-only kernels were refused);
+    the CUDA-event timer now queues launches behind `torch.cuda._sleep` (short Triton kernels were
+    measured as Python launch overhead: encoder 0.36x -> 0.9x real); tune reuses one input set (the GPU
+    clocked down while big cases were regenerated) and deletes variant files; `kernelport status` is
+    readable when piped (160 cols, short names, idle kernels folded, `--all`).
+
 ## Next (pick up here)
 - HIP on an AMD/ROCm box (`kernelport zoo --backend hip`); nothing else in CI can cover it.
 - Fresh-agent dogfood (needs a clean agent session; no API spend from here).

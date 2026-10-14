@@ -12,16 +12,16 @@ after validation against the original CUDA kernels), the ports, and the results.
 
 | kernel | what it uses | reference vs original CUDA | Triton (RTX 5060 Laptop) | Metal (Apple M1, CI) |
 |---|---|---|---|---|
-| `layernorm_forward_kernel3` | cooperative groups, warp reduce, 3 outputs | PASS 6/6 | PASS 6/6, 1.00x | pending CI |
-| `gelu_forward_kernel2` | bf16, `Packed128` 128-bit loads | PASS 4/4 | PASS 4/4, 1.00x | pending CI |
-| `residual_forward_kernel1` | bf16 | PASS 4/4 | PASS 4/4, 1.4x | pending CI |
-| `encoder_forward_kernel3` | bf16 gather by token id, `Packed128` | PASS 4/4 | PASS 4/4, 0.9x | pending CI |
-| `softmax_forward_online_kernel8` | online softmax, warp shuffles | PASS 5/5 (C >= 256, see below) | PASS 5/5, 1.0x | pending CI |
+| `layernorm_forward_kernel3` | cooperative groups, warp reduce, 3 outputs | PASS 6/6 | PASS 6/6, 1.00x | PASS 6/6 |
+| `gelu_forward_kernel2` | bf16, `Packed128` 128-bit loads | PASS 4/4 | PASS 4/4, 1.00x | PASS 4/4 |
+| `residual_forward_kernel1` | bf16 | PASS 4/4 | PASS 4/4, 1.4x | PASS 4/4 |
+| `encoder_forward_kernel3` | bf16 gather by token id, `Packed128` | PASS 4/4 | PASS 4/4, 0.9x | PASS 4/4 |
+| `softmax_forward_online_kernel8` | online softmax, warp shuffles | PASS 5/5 (C >= 256, see below) | PASS 5/5, 1.0x | PASS 5/5 |
 
 Speedups are the port vs the original CUDA kernel on the spec's largest case (GPT-2 sizes), same
-GPU, device-event timing. The Metal column is checked by CI on every push (GitHub's macOS arm64
-runner): the Metal ports are verified against the references frozen on the NVIDIA machine,
-without any CUDA there.
+GPU, device-event timing. The Metal column is checked by CI on every push on GitHub's macOS arm64
+runner ("Apple M1 (Virtual)"): the Metal ports are verified against the references frozen on the
+NVIDIA machine, without any CUDA there. All five passed on their first run.
 
 ## What validation found in llm.c
 

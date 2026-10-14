@@ -52,7 +52,8 @@ What's left is mostly real-world proof and polish, not features.
      (docs/installation.md, and the skill tells agents what to do on UNAVAILABLE);
    - ~~ship a Colab notebook that validates and freezes references for a repo~~ Done:
      `notebooks/freeze_references_colab.ipynb` + `kernelport validate --all` (not yet run on Colab itself).
-5. **Prove it on real code.** The zoo is 12 single-file kernels. Real CUDA projects are
+5. ~~**Prove it on real code.**~~ **Done 2026-10-14:** `examples/llm.c` (five unmodified llm.c kernels,
+   Triton on NVIDIA + Metal in CI; found a real precondition bug). The original text: The zoo is 12 single-file kernels. Real CUDA projects are
    multi-file, use macros and templates heavily, and call libraries like cuBLAS. The analyzer
    works on text, not a real C++ parser, so it will miss some of this. Port at least one
    well-known CUDA-only project end to end.
@@ -103,7 +104,7 @@ being pushed.
 1. ~~CI + PyPI packaging~~ (CI done; PyPI waits on the trusted-publisher setup)
 2. Fresh-agent dogfood run
 3. ~~Mac verification run~~ (done in CI)
-4. Port one well-known CUDA-only project end to end
+4. ~~Port one well-known CUDA-only project end to end~~ (llm.c, done)
 5. Demo GIF and README polish
 6. Launch (same-day posts)
 
