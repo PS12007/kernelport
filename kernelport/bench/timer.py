@@ -48,7 +48,10 @@ def time_cuda(launch: Callable[[], None], warmup: int = DEFAULT_WARMUP,
     # measure CPU launch overhead instead of the kernel.
     sleep = getattr(torch.cuda, "_sleep", None)
     if sleep is not None:
-        sleep(GPU_HOLD_CYCLES)
+        try:
+            sleep(GPU_HOLD_CYCLES)
+        except Exception:  # private API; ROCm or future builds may lack it. Timing still works.
+            pass
     for s, e in zip(starts, ends):
         s.record()
         launch()
