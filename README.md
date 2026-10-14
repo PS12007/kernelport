@@ -11,7 +11,7 @@ only ever reported as **PASS** if its current code ran on real hardware and matc
 
 > Status: early development (0.1.0.dev0). Triton, CPU and WebGPU backends work and are verified;
 > Metal is verified on Apple Silicon in CI; the HIP runner and zoo ports are written but not yet
-> verified on an AMD GPU. See [PROGRESS.md](PROGRESS.md).
+> verified on an AMD GPU. See [PROGRESS.md](https://github.com/PS12007/kernelport/blob/main/PROGRESS.md).
 
 ## How it works
 
@@ -33,7 +33,7 @@ your repo: kernels/*.cu
 
 The agent never sets tolerances, never edits the frozen reference, and gets at most 6 failed
 verification attempts per port. Those rules are enforced in the tools, not just in the
-skill. Details: [docs/how-it-works.md](docs/how-it-works.md).
+skill. Details: [docs/how-it-works.md](https://github.com/PS12007/kernelport/blob/main/docs/how-it-works.md).
 
 ## Quick start
 
@@ -55,7 +55,7 @@ Then, in your repo, ask your agent:
 
 ## Real code: llm.c's CUDA kernels on a Mac
 
-[`examples/llm.c`](examples/llm.c) takes five kernels from Karpathy's
+[`examples/llm.c`](https://github.com/PS12007/kernelport/tree/main/examples/llm.c) takes five kernels from Karpathy's
 [llm.c](https://github.com/karpathy/llm.c) `dev/cuda/` (unmodified files, host code and all):
 layernorm, GELU, residual, encoder and online softmax, including bf16 and 128-bit packed loads.
 References were validated against the original CUDA kernels and frozen on an RTX 5060; the
