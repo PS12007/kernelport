@@ -1,0 +1,93 @@
+{
+  "name": "softmax_forward_online_kernel8",
+  "source": "softmax_forward.cu",
+  "entry": "softmax_forward_online_kernel8",
+  "dtypes": [
+    "float32"
+  ],
+  "params": [
+    {
+      "name": "out",
+      "kind": "output",
+      "dtype": "float32",
+      "shape": [
+        "N",
+        "C"
+      ]
+    },
+    {
+      "name": "inp",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "N",
+        "C"
+      ]
+    },
+    {
+      "name": "N",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "N"
+    },
+    {
+      "name": "C",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "C"
+    }
+  ],
+  "launch": {
+    "grid": [
+      "cdiv(N * 32, 256)"
+    ],
+    "block": [
+      256
+    ],
+    "shared_mem": 0
+  },
+  "cases": [
+    {
+      "name": "min_1x256",
+      "dims": {
+        "N": 1,
+        "C": 256
+      }
+    },
+    {
+      "name": "odd_7x257",
+      "dims": {
+        "N": 7,
+        "C": 257
+      }
+    },
+    {
+      "name": "odd_100x1000",
+      "dims": {
+        "N": 100,
+        "C": 1000
+      }
+    },
+    {
+      "name": "odd_33x4097",
+      "dims": {
+        "N": 33,
+        "C": 4097
+      }
+    },
+    {
+      "name": "gpt2_8192x1024",
+      "dims": {
+        "N": 8192,
+        "C": 1024
+      }
+    }
+  ],
+  "init": {
+    "inp": {
+      "dist": "normal",
+      "edges": true
+    }
+  },
+  "bench_case": "gpt2_8192x1024"
+}

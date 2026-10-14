@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/layernorm_forward.cu::layernorm_forward_kernel3",
+  "reference_hash": "0e5e85c190ff183fd4e057f52ffd5212d1367a245339a81486eecd20a94b93d0",
+  "spec_hash": "dcf64b0bc142039c46e28dd85ea3d32dec49191723f7d871bfaa5f280bdb10ef",
+  "source_hash": "f17d02e245e9f133e9658f1d3a9e05986f95d6e0471ebd0f1ac48bdea6e544d0",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T19:12:51+00:00",
+  "cases_passed": 6
+}

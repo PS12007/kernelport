@@ -1,0 +1,133 @@
+{
+  "kernel": "encoder_forward_kernel3",
+  "backend": "cuda",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "cfa029e2005618cc499cc8cc280199b1778b26d29fed382e2e35f1dc5649beb9",
+  "reference_hash": "88d45443761e0e8f6193f1e6e4d339d38f909016c4dac3134a2f06cb4a229c2d",
+  "spec_hash": "ba7bb48dacbaa83910cfd14ad184fa9f80128f1027c7aeffb4fccdfc61dc00ff",
+  "tolerances": {
+    "bfloat16": {
+      "rtol": 0.016,
+      "atol": 1e-05,
+      "reason": "torch.testing default for bfloat16 (~2 ulp)"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x8",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "d16eebefa670bd0c94725f419c1d4d04403f803bc3065efabc788b695e0b7e87",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            8
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 8,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "small_3x5x16",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "f8932206a3b9873994ea14a67aefc1cf1b0bb87bb8cf15a7cbdd287a2ee37206",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            3,
+            5,
+            16
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 240,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_2x37x200",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "b86a2c95cd1e703cec93798f0bb36c18a8e5bd8b2e8932f1f4bbea48acbfb6d1",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            2,
+            37,
+            200
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 14800,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "gpt2_8x1024x768",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "f4b4abf5d4b215bcf3088f876c73c5576ef9aa4de08ee75f9317c313141ecb4e",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            8,
+            1024,
+            768
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 6291456,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T19:12:58+00:00",
+  "schema_version": 1
+}

@@ -1,0 +1,75 @@
+{
+  "id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel1",
+  "name": "softmax_forward_online_kernel1",
+  "file": "dev/cuda/softmax_forward.cu",
+  "line": 309,
+  "end_line": 335,
+  "params": [
+    {
+      "name": "out",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "inp",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "C",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [],
+  "launches": [
+    {
+      "file": "dev/cuda/softmax_forward.cu",
+      "line": 597,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "inp",
+        "N",
+        "C"
+      ]
+    }
+  ],
+  "source_hash": "3289cb2e07fcb8c7618ade5dbb3bff8a445e7fe32d990d6705e7295ca9ce8669"
+}

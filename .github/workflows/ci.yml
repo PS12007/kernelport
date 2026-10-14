@@ -60,6 +60,11 @@ jobs:
         run: python -m pytest -q -rs tests/test_metal_backend.py
       - name: Metal zoo
         run: kernelport zoo --backend metal --no-bench
+      - name: llm.c example (Metal ports vs references frozen on NVIDIA)
+        working-directory: examples/llm.c
+        run: |
+          kernelport verify --backend metal
+          kernelport status
 
   webgpu:
     # WGSL ports through wgpu-native: Mesa llvmpipe (software Vulkan) on Linux, Metal on macOS.

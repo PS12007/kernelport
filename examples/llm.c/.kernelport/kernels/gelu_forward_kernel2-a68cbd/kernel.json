@@ -1,0 +1,63 @@
+{
+  "id": "dev/cuda/gelu_forward.cu::gelu_forward_kernel2",
+  "name": "gelu_forward_kernel2",
+  "file": "dev/cuda/gelu_forward.cu",
+  "line": 53,
+  "end_line": 67,
+  "params": [
+    {
+      "name": "out",
+      "type": "floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": null,
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "inp",
+      "type": "const floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": null,
+      "written": true,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [],
+  "launches": [
+    {
+      "file": "dev/cuda/gelu_forward.cu",
+      "line": 80,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "inp",
+        "N"
+      ]
+    }
+  ],
+  "source_hash": "20da334cfe6158ec713ede09d54db07f338992e3be94d796c257d58b744e6ea6"
+}

@@ -1,0 +1,91 @@
+{
+  "id": "dev/cuda/layernorm_forward.cu::mean_kernel",
+  "name": "mean_kernel",
+  "file": "dev/cuda/layernorm_forward.cu",
+  "line": 113,
+  "end_line": 136,
+  "params": [
+    {
+      "name": "mean",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "inp",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "C",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "block_size",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [
+    "shared_memory",
+    "dynamic_shared_memory",
+    "syncthreads"
+  ],
+  "launches": [
+    {
+      "file": "dev/cuda/layernorm_forward.cu",
+      "line": 434,
+      "grid": "N",
+      "block": "block_size",
+      "shared_mem": "block_size * sizeof(float)",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "mean",
+        "inp",
+        "N",
+        "C",
+        "block_size"
+      ]
+    }
+  ],
+  "source_hash": "b822cb92287488e462d1ba0e76a94406b161b7318b328bbb35355d01bf0b49a2"
+}

@@ -1,0 +1,103 @@
+{
+  "id": "dev/cuda/layernorm_forward.cu::rstd_kernel",
+  "name": "rstd_kernel",
+  "file": "dev/cuda/layernorm_forward.cu",
+  "line": 138,
+  "end_line": 163,
+  "params": [
+    {
+      "name": "rstd",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "inp",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "mean",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "C",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "block_size",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [
+    "shared_memory",
+    "dynamic_shared_memory",
+    "syncthreads"
+  ],
+  "launches": [
+    {
+      "file": "dev/cuda/layernorm_forward.cu",
+      "line": 436,
+      "grid": "N",
+      "block": "block_size",
+      "shared_mem": "block_size * sizeof(float)",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "rstd",
+        "inp",
+        "mean",
+        "N",
+        "C",
+        "block_size"
+      ]
+    }
+  ],
+  "source_hash": "e1fb457e8d4cf389e1f36d970ce6970e4f461831d1ffcf3b32397e4512aba0cc"
+}

@@ -1,0 +1,1 @@
+{"attempt": 1, "timestamp": "2026-10-14T19:13:21+00:00", "code_hash": "058a46f952d2caddc3f51b20a80655286a13c65a9354ecea203576148caded02", "reference_hash": "", "status": "UNVERIFIED", "hardware": "Intel(R) Core(TM) i7-14700HX (Metal)", "cases_passed": 0, "cases_total": 0, "reason": "Metal needs macOS on Apple Silicon"}

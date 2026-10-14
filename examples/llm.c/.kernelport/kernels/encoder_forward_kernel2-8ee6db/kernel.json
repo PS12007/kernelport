@@ -1,0 +1,111 @@
+{
+  "id": "dev/cuda/encoder_forward.cu::encoder_forward_kernel2",
+  "name": "encoder_forward_kernel2",
+  "file": "dev/cuda/encoder_forward.cu",
+  "line": 69,
+  "end_line": 88,
+  "params": [
+    {
+      "name": "out",
+      "type": "floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": null,
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "inp",
+      "type": "const int*",
+      "base_type": "int",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "wte",
+      "type": "const floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": null,
+      "written": false,
+      "read": false,
+      "kind": "input"
+    },
+    {
+      "name": "wpe",
+      "type": "const floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": null,
+      "written": false,
+      "read": false,
+      "kind": "input"
+    },
+    {
+      "name": "B",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "T",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "C",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [],
+  "launches": [
+    {
+      "file": "dev/cuda/encoder_forward.cu",
+      "line": 137,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "inp",
+        "wte",
+        "wpe",
+        "B",
+        "T",
+        "C"
+      ]
+    }
+  ],
+  "source_hash": "d22262727c28b952f4cc2c97a7d98cfe5240e9ac891497d4b2dc43e272c9de8e"
+}

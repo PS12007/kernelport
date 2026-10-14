@@ -1,0 +1,79 @@
+{
+  "id": "dev/cuda/softmax_forward.cu::softmax_forward_kernel3",
+  "name": "softmax_forward_kernel3",
+  "file": "dev/cuda/softmax_forward.cu",
+  "line": 183,
+  "end_line": 219,
+  "params": [
+    {
+      "name": "out",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "inp",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "C",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [
+    "shared_memory",
+    "dynamic_shared_memory",
+    "warp_shuffle"
+  ],
+  "launches": [
+    {
+      "file": "dev/cuda/softmax_forward.cu",
+      "line": 585,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "shared_mem_size",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "inp",
+        "N",
+        "C"
+      ]
+    }
+  ],
+  "source_hash": "88b3fbb969513ce1b88a989be792987a96493e5665987fb751cbcab0acc17372"
+}

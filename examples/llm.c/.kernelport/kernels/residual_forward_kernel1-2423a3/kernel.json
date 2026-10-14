@@ -1,0 +1,75 @@
+{
+  "id": "dev/cuda/residual_forward.cu::residual_forward_kernel1",
+  "name": "residual_forward_kernel1",
+  "file": "dev/cuda/residual_forward.cu",
+  "line": 33,
+  "end_line": 38,
+  "params": [
+    {
+      "name": "out",
+      "type": "floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": null,
+      "written": true,
+      "read": false,
+      "kind": "output"
+    },
+    {
+      "name": "inp1",
+      "type": "const floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": null,
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "inp2",
+      "type": "const floatX*",
+      "base_type": "floatX",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": null,
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [],
+  "launches": [
+    {
+      "file": "dev/cuda/residual_forward.cu",
+      "line": 59,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "inp1",
+        "inp2",
+        "N"
+      ]
+    }
+  ],
+  "source_hash": "a25215fcba4f75b6130acb518688855a49a3510e27bbba2c55892d3c1f4a6211"
+}

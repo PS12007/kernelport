@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/encoder_forward.cu::encoder_forward_kernel3",
+  "reference_hash": "88d45443761e0e8f6193f1e6e4d339d38f909016c4dac3134a2f06cb4a229c2d",
+  "spec_hash": "c18ee79694a005a5682f4e75adf713649c5e73e7ba752f1fb612b2093d1cd611",
+  "source_hash": "cfa029e2005618cc499cc8cc280199b1778b26d29fed382e2e35f1dc5649beb9",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T19:12:58+00:00",
+  "cases_passed": 4
+}

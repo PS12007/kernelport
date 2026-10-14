@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8",
+  "reference_hash": "39ef55b55479ec03098173da9780ac7eaf11273b14da69d2307a2015115268f6",
+  "spec_hash": "68b53baa8ef595962e3173938c5a82b50688f878f0bcd4b8e43ccedfcf3cf430",
+  "source_hash": "5bc29aae3b655fbccdb40a9dc3a071e64f9b9f53e2c98d0fb0c82e346990013e",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T19:13:02+00:00",
+  "cases_passed": 5
+}

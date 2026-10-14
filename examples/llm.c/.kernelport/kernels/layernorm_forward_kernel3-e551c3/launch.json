@@ -1,0 +1,138 @@
+{
+  "name": "layernorm_forward_kernel3",
+  "source": "layernorm_forward.cu",
+  "entry": "layernorm_forward_kernel3",
+  "dtypes": [
+    "float32"
+  ],
+  "params": [
+    {
+      "name": "out",
+      "kind": "output",
+      "dtype": "float32",
+      "shape": [
+        "N",
+        "C"
+      ]
+    },
+    {
+      "name": "mean",
+      "kind": "output",
+      "dtype": "float32",
+      "shape": [
+        "N"
+      ]
+    },
+    {
+      "name": "rstd",
+      "kind": "output",
+      "dtype": "float32",
+      "shape": [
+        "N"
+      ]
+    },
+    {
+      "name": "inp",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "N",
+        "C"
+      ]
+    },
+    {
+      "name": "weight",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "C"
+      ]
+    },
+    {
+      "name": "bias",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "C"
+      ]
+    },
+    {
+      "name": "N",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "N"
+    },
+    {
+      "name": "C",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "C"
+    }
+  ],
+  "launch": {
+    "grid": [
+      "cdiv(N * 32, 256)"
+    ],
+    "block": [
+      256
+    ],
+    "shared_mem": 0
+  },
+  "cases": [
+    {
+      "name": "tiny_1x1",
+      "dims": {
+        "N": 1,
+        "C": 1
+      }
+    },
+    {
+      "name": "tiny_7x3",
+      "dims": {
+        "N": 7,
+        "C": 3
+      }
+    },
+    {
+      "name": "odd_1000x33",
+      "dims": {
+        "N": 1000,
+        "C": 33
+      }
+    },
+    {
+      "name": "gpt2_1023x768",
+      "dims": {
+        "N": 1023,
+        "C": 768
+      }
+    },
+    {
+      "name": "odd_9x4097",
+      "dims": {
+        "N": 9,
+        "C": 4097
+      }
+    },
+    {
+      "name": "large_8192x768",
+      "dims": {
+        "N": 8192,
+        "C": 768
+      }
+    }
+  ],
+  "init": {
+    "inp": {
+      "dist": "normal",
+      "step": 0.0625
+    },
+    "weight": {
+      "dist": "normal"
+    },
+    "bias": {
+      "dist": "normal"
+    }
+  },
+  "bench_case": "large_8192x768"
+}

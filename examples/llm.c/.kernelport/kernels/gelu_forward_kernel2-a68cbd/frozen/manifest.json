@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/gelu_forward.cu::gelu_forward_kernel2",
+  "reference_hash": "9eb6fb616b921b9d19dd647670823fada789b30de410493e595567a0b8dcbfc1",
+  "spec_hash": "185093df293f47df8a76be320612f185e801606b49aad3274e321ab038527f5b",
+  "source_hash": "8bb3661d3a24f1c7f4f071bd581be604e249947094d2ba18c590c2fcbb64397c",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T19:12:54+00:00",
+  "cases_passed": 4
+}

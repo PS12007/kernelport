@@ -1,0 +1,9 @@
+{
+  "kernel_id": "dev/cuda/residual_forward.cu::residual_forward_kernel1",
+  "reference_hash": "10223deea85c02ef18b2408a884968b49cfeeaf3443e0f10819d431601339e8d",
+  "spec_hash": "94f6641d1180ef0c8db970bb31bf55af820889dc5696f6b8d147b1e2018b01f5",
+  "source_hash": "9e55dc9854a546147974e1fb9db8c1a39f43bf39c4c60f5e049ad903c6111073",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-14T19:12:55+00:00",
+  "cases_passed": 4
+}

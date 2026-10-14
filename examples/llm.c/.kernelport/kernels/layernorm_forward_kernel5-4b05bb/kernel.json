@@ -1,0 +1,146 @@
+{
+  "id": "dev/cuda/layernorm_forward.cu::layernorm_forward_kernel5",
+  "name": "layernorm_forward_kernel5",
+  "file": "dev/cuda/layernorm_forward.cu",
+  "line": 281,
+  "end_line": 337,
+  "params": [
+    {
+      "name": "out",
+      "type": "float* __restrict__",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "mean",
+      "type": "float* __restrict__",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "rstd",
+      "type": "float* __restrict__",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "inp",
+      "type": "const float* __restrict__",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "weight",
+      "type": "const float* __restrict__",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "bias",
+      "type": "const float* __restrict__",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "C",
+      "type": "int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": false,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [
+    "shared_memory",
+    "syncthreads",
+    "cooperative_groups"
+  ],
+  "launches": [
+    {
+      "file": "dev/cuda/layernorm_forward.cu",
+      "line": 475,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "mean",
+        "rstd",
+        "inp",
+        "weight",
+        "bias",
+        "N",
+        "C"
+      ]
+    },
+    {
+      "file": "dev/cuda/layernorm_forward.cu",
+      "line": 499,
+      "grid": "grid_size",
+      "block": "block_size",
+      "shared_mem": "0",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "out",
+        "mean",
+        "rstd",
+        "inp",
+        "weight",
+        "bias",
+        "N",
+        "C"
+      ]
+    }
+  ],
+  "source_hash": "49e77ce1ebdd6ce77649a77d5b8ae1754efed3e0cd2fec0c7e19bc19c0fa660f"
+}

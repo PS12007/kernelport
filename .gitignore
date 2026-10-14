@@ -7,3 +7,6 @@ build/
 .pytest_cache/
 .kernelport/
 *.html.tmp
+
+# Committed example workspaces (frozen references, ports, results) are part of the repo.
+!examples/*/.kernelport/

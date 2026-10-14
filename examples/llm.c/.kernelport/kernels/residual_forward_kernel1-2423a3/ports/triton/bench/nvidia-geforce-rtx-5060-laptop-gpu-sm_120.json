@@ -1,0 +1,12 @@
+{
+  "case": "gpt2_8x1024x768",
+  "dtype": "bfloat16",
+  "port_ms": 0.09497600048780441,
+  "method": "cuda_event",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "comparable": true,
+  "note": "",
+  "original_ms": 0.13606399297714233,
+  "speedup": 1.432614473954543,
+  "code_hash": "e232d5368dd1e8466c29894250c75b148138cb9d4234ee1d8037142c379d19c3"
+}

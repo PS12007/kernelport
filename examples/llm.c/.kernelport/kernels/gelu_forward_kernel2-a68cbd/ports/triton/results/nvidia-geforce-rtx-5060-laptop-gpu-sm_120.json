@@ -1,0 +1,125 @@
+{
+  "kernel": "gelu_forward_kernel2",
+  "backend": "triton",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "57c15b66c7debcc82e99375b067c614054cd1a285f289a9038b507a49aeaf73c",
+  "reference_hash": "9eb6fb616b921b9d19dd647670823fada789b30de410493e595567a0b8dcbfc1",
+  "spec_hash": "d51f76f6e3517ca9f35466a5715ff52fd376b9d51f76a09357d3675d39b5edc9",
+  "tolerances": {
+    "bfloat16": {
+      "rtol": 0.016,
+      "atol": 1e-05,
+      "reason": "torch.testing default for bfloat16 (~2 ulp)"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_8",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "4ec8af9b4a36d0b8c0029a23bc24b22e06b670c8541831db888d56b60d471afe",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            8
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 8,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_1000",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "445ffc03f87c1634cd46b069d1fdf83f2e4e359d6685b0d71ffa4bda6508c95e",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            1000
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1000,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_4104",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "c41b760e0bdc58df9f372090c0e771991a1533e6e5d90ec78b232bc959ba5db1",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            4104
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4104,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "gpt2_8x1024x3072",
+      "dtype": "bfloat16",
+      "passed": true,
+      "input_hash": "3bbccd2ce60273ee9632967b2b8067abb2777fe373502e62834cebb9441b53b4",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            25165824
+          ],
+          "dtype": "bfloat16",
+          "reason": "",
+          "max_abs_err": 1.52587890625e-05,
+          "max_rel_err": 0.004,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 25165824,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T19:13:14+00:00",
+  "schema_version": 1
+}

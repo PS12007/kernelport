@@ -1,0 +1,74 @@
+{
+  "name": "gelu_forward_kernel2",
+  "source": "gelu_forward.cu",
+  "entry": "gelu_forward_kernel2",
+  "dtypes": [
+    "bfloat16"
+  ],
+  "params": [
+    {
+      "name": "out",
+      "kind": "output",
+      "dtype": "bfloat16",
+      "shape": [
+        "N"
+      ]
+    },
+    {
+      "name": "inp",
+      "kind": "input",
+      "dtype": "bfloat16",
+      "shape": [
+        "N"
+      ]
+    },
+    {
+      "name": "N",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "N"
+    }
+  ],
+  "launch": {
+    "grid": [
+      "cdiv(N, 128 * 8)"
+    ],
+    "block": [
+      128
+    ],
+    "shared_mem": 0
+  },
+  "cases": [
+    {
+      "name": "tiny_8",
+      "dims": {
+        "N": 8
+      }
+    },
+    {
+      "name": "odd_1000",
+      "dims": {
+        "N": 1000
+      }
+    },
+    {
+      "name": "odd_4104",
+      "dims": {
+        "N": 4104
+      }
+    },
+    {
+      "name": "gpt2_8x1024x3072",
+      "dims": {
+        "N": 25165824
+      }
+    }
+  ],
+  "init": {
+    "inp": {
+      "dist": "normal",
+      "edges": true
+    }
+  },
+  "bench_case": "gpt2_8x1024x3072"
+}

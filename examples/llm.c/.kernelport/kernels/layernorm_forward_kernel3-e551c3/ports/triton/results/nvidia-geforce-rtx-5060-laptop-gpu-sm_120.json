@@ -1,0 +1,387 @@
+{
+  "kernel": "layernorm_forward_kernel3",
+  "backend": "triton",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "84f2c82ddf9c5e46cc996baf8474ebe9eb7a89620955ae133070b17ed7477d4c",
+  "reference_hash": "0e5e85c190ff183fd4e057f52ffd5212d1367a245339a81486eecd20a94b93d0",
+  "spec_hash": "ed45af671c4b8992c9f754434a4a4ae6b19c2d1a879588ab7e8fb301cf0c1a45",
+  "tolerances": {
+    "float32": {
+      "rtol": 1.3e-06,
+      "atol": 1e-05,
+      "reason": "torch.testing default for float32"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "0b03679ececf1d96efaf28d5a8aeb9a0e7631bb761f8305d00d88f54baa9b687",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            1,
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "mean",
+          "passed": true,
+          "shape": [
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "rstd",
+          "passed": true,
+          "shape": [
+            1
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 3.0517578125e-05,
+          "max_rel_err": 9.650505961551806e-08,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "tiny_7x3",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "5ecc4d81ecc50010119486e5d9d1cfe7db6f4a08d1d470eb997e102f8f973a6d",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            7,
+            3
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.1623121224156426e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 21,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "mean",
+          "passed": true,
+          "shape": [
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 5.960464477539063e-08,
+          "max_rel_err": 7.152557543577135e-08,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "rstd",
+          "passed": true,
+          "shape": [
+            7
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 7,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_1000x33",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "adf949e6d48e32b7b01d14c33eadba0ef98acb60c05542a735d62d543dc96fe3",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            1000,
+            33
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 9.5367431640625e-07,
+          "max_rel_err": 0.0017153499019842908,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 33000,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "mean",
+          "passed": true,
+          "shape": [
+            1000
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.9802322387695312e-08,
+          "max_rel_err": 1.1160018030125129e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1000,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "rstd",
+          "passed": true,
+          "shape": [
+            1000
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.3887371886390467e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1000,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "gpt2_1023x768",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "fdf3af5089adef8e7046564c9e5df67cc8af4f38cab86cb531437e5822ffea3a",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            1023,
+            768
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 9.5367431640625e-07,
+          "max_rel_err": 0.0031181646844844796,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 785664,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "mean",
+          "passed": true,
+          "shape": [
+            1023
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 7.450580596923828e-09,
+          "max_rel_err": 1.1889965974484371e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1023,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "rstd",
+          "passed": true,
+          "shape": [
+            1023
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.2580534290259093e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1023,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "odd_9x4097",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "fd4553ceb6ddd19294535be8292ded94deccc5b4b2b7c783aaf0dbef327e341c",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            9,
+            4097
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 9.5367431640625e-07,
+          "max_rel_err": 0.0003716264646906325,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 36873,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "mean",
+          "passed": true,
+          "shape": [
+            9
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 0.0,
+          "max_rel_err": 0.0,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 9,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "rstd",
+          "passed": true,
+          "shape": [
+            9
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-07,
+          "max_rel_err": 1.192512547617026e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 9,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "large_8192x768",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "c028c745e3b8cc3c41fc961abfcd0719b413e97459cb48ffd5656c93e467771d",
+      "outputs": [
+        {
+          "name": "out",
+          "passed": true,
+          "shape": [
+            8192,
+            768
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.430511474609375e-06,
+          "max_rel_err": 0.07456859644617525,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 6291456,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "mean",
+          "passed": true,
+          "shape": [
+            8192
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 7.450580596923828e-09,
+          "max_rel_err": 1.1889965974484371e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 8192,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "rstd",
+          "passed": true,
+          "shape": [
+            8192
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.7881393432617188e-07,
+          "max_rel_err": 1.8633494078275583e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 8192,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-14T19:13:15+00:00",
+  "schema_version": 1
+}
