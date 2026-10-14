@@ -115,9 +115,9 @@ class Workspace:
         """Create .kernelport/ with a .gitignore-friendly README."""
         if not self.dir.exists():
             self.dir.mkdir(parents=True)
-            (self.dir / "README.md").write_text(
-                "kernelport workspace: frozen references, input specs, ports, results.\n"
-                "Commit it to share verified ports; delete it to start over.\n", encoding="utf-8")
+            (self.dir / "README.md").write_bytes(
+                b"kernelport workspace: frozen references, input specs, ports, results.\n"
+                b"Commit it to share verified ports; delete it to start over.\n")
 
     # ---------------------------------------------------------------- index
     def _index(self) -> dict[str, str]:
@@ -308,7 +308,7 @@ class Workspace:
             "reason": result.reason,
         }
         self.safe_path(*path.relative_to(self.dir).parts)
-        with path.open("a", encoding="utf-8") as f:
+        with path.open("a", encoding="utf-8", newline="\n") as f:  # LF on every OS
             f.write(json.dumps(entry) + "\n")
         return entry
 

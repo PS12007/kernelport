@@ -76,7 +76,7 @@ class RunResult:
         """Write as JSON, creating parent dirs."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
+        path.write_bytes(json.dumps(self.to_dict(), indent=2).encode("utf-8"))  # LF on every OS
 
     @classmethod
     def from_dict(cls, d: dict) -> "RunResult":
