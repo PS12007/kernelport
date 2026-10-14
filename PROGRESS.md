@@ -226,7 +226,8 @@
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install
   kernelport` verified. Next release: bump version, tag `vX.Y.Z`.
-- Decide whether to post the llm.c softmax issue (draft kept outside the repo).
+- llm.c softmax fix: posted by the owner as karpathy/llm.c#867 (branch fix-softmax-online-kernel8-small-c
+  on PS12007/llm.c). Watch for review comments.
 - HIP + Triton-on-ROCm: run `bash scripts/amd_check.sh` on an AMD machine (AMD Developer Cloud
   credits via the AMD AI Developer Program); it writes amd_results.txt. Live `kernelport agent` test: skipped
   by owner choice (no API credits); the MCP/CLI path covers the same tools;
