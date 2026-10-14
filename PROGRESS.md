@@ -224,7 +224,8 @@
 
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
-- PyPI: add the pending trusted publisher + `pypi` environment, set version 0.1.0, push tag `v0.1.0`.
+- PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install
+  kernelport` verified. Next release: bump version, tag `vX.Y.Z`.
 - Decide whether to post the llm.c softmax issue (draft kept outside the repo).
 - HIP + Triton-on-ROCm: run `bash scripts/amd_check.sh` on an AMD machine (AMD Developer Cloud
   credits via the AMD AI Developer Program); it writes amd_results.txt. Live `kernelport agent` test: skipped

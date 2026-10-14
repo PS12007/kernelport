@@ -1,6 +1,7 @@
 # kernelport
 
 [![CI](https://github.com/PS12007/kernelport/actions/workflows/ci.yml/badge.svg)](https://github.com/PS12007/kernelport/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/kernelport)](https://pypi.org/project/kernelport/)
 
 Bring CUDA-only kernels to Mac, AMD, browsers, and CPU, with proof they are correct.
 
@@ -44,7 +45,7 @@ skill. Details: [docs/how-it-works.md](https://github.com/PS12007/kernelport/blo
 ```bash
 # 1. install (CUDA build of torch first; see docs/installation.md)
 pip install --index-url https://download.pytorch.org/whl/cu128 torch
-pip install "kernelport[cuda,triton,cpu] @ git+https://github.com/PS12007/kernelport"
+pip install "kernelport[cuda,triton,cpu]"
 
 # 2. check what can run here
 kernelport doctor
@@ -85,7 +86,7 @@ never PASS. Commit `.kernelport/` and run `kernelport verify` on the right machi
 ## No coding agent? Use the built-in one (optional)
 
 ```bash
-pip install "kernelport[agent] @ git+https://github.com/PS12007/kernelport"
+pip install "kernelport[agent]"
 export ANTHROPIC_API_KEY=...        # or: ant auth login
 kernelport agent "port the CUDA kernels in this repo to Triton and verify them"
 ```

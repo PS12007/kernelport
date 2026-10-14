@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kernelport"
-version = "0.1.0"
+version = "0.1.1.dev0"
 description = "Bring CUDA-only kernels to Mac, AMD, browsers, and CPU, with proof they are correct."
 readme = "README.md"
 license = "MIT"

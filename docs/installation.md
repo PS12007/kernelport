@@ -26,7 +26,7 @@ python -m venv .venv
 source .venv/bin/activate                  # Linux / macOS
 
 pip install --index-url https://download.pytorch.org/whl/cu128 torch
-pip install "kernelport[cuda,triton,cpu] @ git+https://github.com/PS12007/kernelport"
+pip install "kernelport[cuda,triton,cpu]"
 kernelport doctor
 ```
 
@@ -41,7 +41,7 @@ Notes:
 ## Mac (Apple Silicon)
 
 ```bash
-pip install "kernelport[metal,webgpu,cpu] @ git+https://github.com/PS12007/kernelport"
+pip install "kernelport[metal,webgpu,cpu]"
 kernelport doctor
 ```
 
@@ -70,7 +70,7 @@ other edit does: the reference then has to be validated again.
 ```bash
 # CPU-only example: verify the cpu ports against references frozen elsewhere
 pip install torch numba
-pip install "kernelport[cpu] @ git+https://github.com/PS12007/kernelport"
+pip install "kernelport[cpu]"
 kernelport verify --backend cpu
 ```
 
