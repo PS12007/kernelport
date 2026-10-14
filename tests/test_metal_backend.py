@@ -21,6 +21,16 @@ KERNELS = sorted(p.parent.parent.name for p in ZOO.glob("*/ports/metal.py"))
 on_mac = get_backend("metal").is_available()[0]
 
 
+@pytest.fixture(autouse=True)
+def _fresh_kernel_cache():
+    # Kernels built with the fake mlx.core must never be reused by a real-Mac test.
+    from kernelport.backends.metal import runner
+
+    runner._kernels.clear()
+    yield
+    runner._kernels.clear()
+
+
 class FakeArray:
     def __init__(self, a, dtype=None):
         self.a = np.asarray(a)

@@ -104,7 +104,7 @@ def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     in_names, out_names = names(spec)
     atomic = bool(getattr(mod, "ATOMIC_OUTPUTS", False))
     header = getattr(mod, "HEADER", "") or ""
-    key = (mod.SOURCE, header, tuple(in_names), tuple(out_names), atomic)
+    key = (id(mx), mod.SOURCE, header, tuple(in_names), tuple(out_names), atomic)
     if key not in _kernels:
         _kernels[key] = mx.fast.metal_kernel(
             name=f"kp_{spec.name}", input_names=in_names, output_names=out_names,
