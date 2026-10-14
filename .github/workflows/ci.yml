@@ -62,11 +62,10 @@ jobs:
         run: kernelport zoo --backend metal --no-bench
 
   webgpu:
-    # WGSL ports through wgpu-native: Mesa lavapipe (software Vulkan) on Linux, Metal on macOS.
-    # Informational until both adapters have a green run.
+    # WGSL ports through wgpu-native: Mesa llvmpipe (software Vulkan) on Linux, Metal on macOS.
+    # Cases larger than an adapter's binding limit are reported as not tested, not as FAIL.
     name: webgpu zoo (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
