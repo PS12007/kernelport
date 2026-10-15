@@ -240,6 +240,20 @@
     "unexpected NaN" hint also names overflow. CI: the WebGPU racy-port test is skipped on CPU adapters,
     where the race may not happen (it caused the red runs on 2026-10-14).
 
+- **Report, browser check, FlashAttention** (2026-10-15, later):
+  - Report: headline sentence, readable dark-mode links, PASS cells name the hardware and speedup,
+    unstarted kernels folded into one list; Markdown matches.
+  - `docs/web/`: an in-browser WebGPU check of the 12 zoo WGSL ports, built from kernelport's own
+    harness (`scripts/build_web_demo.py`); `scripts/check_web_demo.py` runs it headless and CI runs it in
+    Chrome (SwiftShader on Linux, the Apple GPU on macOS). 12/12 in Edge on the RTX 5060 and Intel UHD.
+    It caught a real bug: the softmax WGSL port used `-3.4028235e38` (above FLT_MAX); naga accepts it,
+    Tint rejects it. The runner now refuses out-of-range float literals.
+  - `examples/flash-attention-minimal`: unmodified flash.cu; reference validated 6/6 for N <= 384 (the
+    original's own `__expf`/fp32 rounding exceeds the fixed tolerance at N = 512, so larger sizes are
+    documented, not claimed); Triton 23x, WGSL and Metal PASS. Porting to WGSL found that wgpu-native
+    zeroes a loop-local `var` without initializer only once (WGSL: every iteration); the runner refuses it.
+    Harness: init `{"dist": "full", "value": "-inf"}`.
+
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install
