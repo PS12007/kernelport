@@ -51,8 +51,6 @@
 
 - **Linux GPU in CI:** none of the free runners have one; a Colab or Kaggle notebook run per
   release would cover Linux + NVIDIA.
-- **Macro-generated kernels:** the analyzer and host-code slicer are lexical; kernels defined by
-  macros are missed.
 - **Multi-kernel pipelines:** verify a sequence (e.g. layernorm -> matmul -> gelu) end to end,
   not just single kernels.
 - **More real projects:** e.g. a FlashAttention-style kernel or a cuBLAS-heavy repo.
