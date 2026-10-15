@@ -35,12 +35,13 @@ def _safe_streams() -> None:
 
 
 def _console():
-    """Rich console; piped output gets 160 columns instead of Rich's default 80."""
+    """Rich console; piped output gets $COLUMNS, or 160 columns instead of Rich's default 80."""
+    import os
     import sys
 
     from rich.console import Console
 
-    return Console() if sys.stdout.isatty() else Console(width=160)
+    return Console() if sys.stdout.isatty() or os.environ.get("COLUMNS") else Console(width=160)
 
 
 @app.command()

@@ -1,0 +1,124 @@
+{
+ "recorded": "2026-10-15",
+ "kernelport": "0.1.1.dev0",
+ "columns": 110,
+ "frames": [
+  [
+   {
+    "comment": "# a repo with one CUDA kernel",
+    "cmd": "kernelport scan .",
+    "output": [
+     "                                        found 1 kernel in .: softmax",
+     "┌─────────────────────┬──────┬───────────────────────────────────────┬──────────────────────────────────────┐",
+     "│ kernel id           │ line │ params                                │ features                             │",
+     "├─────────────────────┼──────┼───────────────────────────────────────┼──────────────────────────────────────┤",
+     "│ softmax.cu::softmax │ 10   │ x:input, y:output, rows:scalar,       │ templates, shared_memory,            │",
+     "│                     │      │ cols:scalar                           │ syncthreads                          │",
+     "└─────────────────────┴──────┴───────────────────────────────────────┴──────────────────────────────────────┘"
+    ],
+    "exit": 0
+   }
+  ],
+  [
+   {
+    "comment": "# the agent writes a PyTorch reference and an input spec ...",
+    "cmd": "kernelport write-reference softmax reference.py --spec launch.json",
+    "output": [
+     "reference saved. Next: validate_reference."
+    ],
+    "exit": 0
+   },
+   {
+    "comment": "# ... which must match the ORIGINAL CUDA kernel before anything else",
+    "cmd": "kernelport validate softmax",
+    "output": [
+     "PASS: original CUDA matches the reference on 24/24 cases on NVIDIA GeForce RTX 5060 Laptop GPU (sm_120).",
+     "Reference frozen."
+    ],
+    "exit": 0
+   }
+  ],
+  [
+   {
+    "comment": "# the agent's first Triton port",
+    "cmd": "kernelport write-port softmax triton port.py",
+    "output": [
+     "port saved to .kernelport/kernels/softmax-067e7f/ports/triton/port.py. Next: verify_port."
+    ],
+    "exit": 0
+   },
+   {
+    "comment": "",
+    "cmd": "kernelport verify softmax",
+    "output": [
+     "softmax.cu::softmax / triton: FAIL (3/24 cases passed), attempt 1/6.",
+     "softmax/triton on NVIDIA GeForce RTX 5060 Laptop GPU (sm_120): FAIL (3/24 cases passed)",
+     "- case tiny_3x7 dtype float32:",
+     "  y shape [3, 7]: unexpected NaN: 1/21 NaN positions differ; first at [0, 4] (an element never written stays",
+     "NaN; inf/inf or inf-inf, e.g. from an overflowing exp, also gives NaN)",
+     "  flat[0:] expected [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0214294, 0.0529071]",
+     "  flat[0:] actual   [0.0, 0.0, 0.0, 0.0, 'nan', 0.0, 0.0, 0.0214294, 0.0529071]",
+     "- case tiny_3x7 dtype float16:",
+     "  y shape [3, 7]: unexpected NaN: 1/21 NaN positions differ; first at [0, 4] (an element never written stays",
+     "NaN; inf/inf or inf-inf, e.g. from an overflowing exp, also gives NaN)",
+     "  flat[0:] expected [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0214386, 0.052948]",
+     "  flat[0:] actual   [0.0, 0.0, 0.0, 0.0, 'nan', 0.0, 0.0, 0.0214386, 0.052948]",
+     "- case tiny_3x7 dtype bfloat16:",
+     "  y shape [3, 7]: unexpected NaN: 1/21 NaN positions differ; first at [0, 4] (an element never written stays",
+     "NaN; inf/inf or inf-inf, e.g. from an overflowing exp, also gives NaN)",
+     "  flat[0:] expected [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0213623, 0.0527344]",
+     "  flat[0:] actual   [0.0, 0.0, 0.0, 0.0, 'nan', 0.0, 0.0, 0.0213623, 0.0527344]",
+     "... and 18 more failing cases: odd_7x1000/float32, odd_7x1000/float16, odd_7x1000/bfloat16,",
+     "odd_5x1023/float32, odd_5x1023/float16, odd_5x1023/bfloat16, odd_3x4097/float32, odd_3x4097/float16,",
+     "odd_3x4097/bfloat16, pow2_64x1024/float32, pow2_64x1024/float16, pow2_64x1024/bfloat16,",
+     "large_4096x4096/float32, large_4096x4096/float16, large_4096x4096/bfloat16, edges_big_8x513/float32,",
+     "edges_big_8x513/float16, edges_big_8x513/bfloat16"
+    ],
+    "exit": 1
+   }
+  ],
+  [
+   {
+    "comment": "# the agent reads the report and adds the max subtraction",
+    "cmd": "kernelport write-port softmax triton port.py",
+    "output": [
+     "port saved to .kernelport/kernels/softmax-067e7f/ports/triton/port.py. Next: verify_port."
+    ],
+    "exit": 0
+   },
+   {
+    "comment": "",
+    "cmd": "kernelport verify softmax",
+    "output": [
+     "softmax.cu::softmax / triton: PASS: 24/24 cases on NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)."
+    ],
+    "exit": 0
+   },
+   {
+    "comment": "",
+    "cmd": "kernelport bench softmax",
+    "output": [
+     "softmax.cu::softmax / triton: triton 0.4191 ms (runs 0.3964-0.4192) on NVIDIA GeForce RTX 5060 Laptop GPU",
+     "(sm_120) (large_4096x4096, float32, median of 3 runs); original CUDA 0.4152 ms (runs 0.3946-0.4165); speedup",
+     "0.99x"
+    ],
+    "exit": 0
+   }
+  ],
+  [
+   {
+    "comment": "",
+    "cmd": "kernelport status",
+    "output": [
+     "                                                 1 PASS",
+     "┌─────────┬───────────┬─────────┬─────────────────────────────────────────────┬────────┬───────┬────────┐",
+     "│ kernel  │ reference │ backend │ hardware                                    │ status │ cases │ reason │",
+     "├─────────┼───────────┼─────────┼─────────────────────────────────────────────┼────────┼───────┼────────┤",
+     "│ softmax │ frozen    │ triton  │ NVIDIA GeForce RTX 5060 Laptop GPU (sm_120) │ PASS   │ 24/24 │        │",
+     "└─────────┴───────────┴─────────┴─────────────────────────────────────────────┴────────┴───────┴────────┘"
+    ],
+    "exit": 0
+   }
+  ]
+ ]
+}

@@ -115,9 +115,11 @@ def compare_tensor(name: str, actual: torch.Tensor, expected: torch.Tensor,
         res.num_mismatched = int(bad.sum())
         res.worst_index = _unravel(flat, tuple(exp.shape))
         res.expected_slice, res.actual_slice, res.slice_start = _slices(exp, act, flat)
-        kind = "unexpected NaN" if bool(act_nan.reshape(-1)[flat]) else "missing NaN"
-        res.reason = (f"{kind}: {res.num_mismatched}/{res.num_elements} NaN positions differ; "
-                      f"first at {res.worst_index} (NaN may mean the element was never written)")
+        unexpected = bool(act_nan.reshape(-1)[flat])
+        hint = (" (an element never written stays NaN; inf/inf or inf-inf, e.g. from an overflowing exp, "
+                "also gives NaN)") if unexpected else ""
+        res.reason = (f"{'unexpected' if unexpected else 'missing'} NaN: {res.num_mismatched}/{res.num_elements} "
+                      f"NaN positions differ; first at {res.worst_index}{hint}")
         return res
 
     exp_inf, act_inf = torch.isinf(exp), torch.isinf(act)

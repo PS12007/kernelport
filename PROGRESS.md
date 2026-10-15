@@ -222,6 +222,24 @@
   - llm.c softmax bug: a fix was tested (remove the early return, guard the -inf merge: 10/10 C values
     PASS); issue text drafted for the owner, not posted.
 
+- **Macro-defined kernels + README demo** (2026-10-15):
+  - `analyzer/macros.py`: a small cpp-style expander (object/function-like macros, `#`, `##`,
+    `__VA_ARGS__` and GNU `args...`, nested calls, macro names as arguments, recursion guard, size/depth
+    caps). The analyzer finds kernels stamped out by macros (`FOR_TYPES(DEFINE_SCALE)`), marked by
+    `#define KERNEL __global__ __launch_bounds__(128)`, or opened by a macro (`C_KERNEL(name)(...) {...}`),
+    records `generated_by`, ignores `__global__` inside `#define` bodies, and reads bodies through macros
+    (`KERNEL_LOOP`) for param kinds and features. The NVRTC slicer treats a top-level call of a known macro
+    as its own item (kept if its expansion has device code, blanked if host only), and an unterminated
+    item ends at the next directive. Checked on the 40 kernel-bearing .cu/.cuh files shipped in torch and
+    cupy: no crashes, under 0.1 s each, no false kernels. A macro-generated kernel validates end to end on
+    the RTX 5060 (tests/test_macros.py).
+  - `scripts/record_demo.py`: records a real CLI session (zoo softmax -> Triton: a port without the max
+    subtraction FAILs 21/24, the fix PASSes 24/24) and renders an animated SVG terminal for the README;
+    box characters are drawn as lines and text is pinned to the grid so any font lines up.
+  - CLI/report: `verify`/`bench` take a positional kernel id; piped output honours `$COLUMNS`; the
+    "unexpected NaN" hint also names overflow. CI: the WebGPU racy-port test is skipped on CPU adapters,
+    where the race may not happen (it caused the red runs on 2026-10-14).
+
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install

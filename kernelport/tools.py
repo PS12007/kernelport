@@ -81,7 +81,8 @@ def scan_kernels(path: str = ".", root: str | None = None) -> dict:
         rows.append({"kernel_id": k.id, "name": k.name, "file": k.file, "line": k.line,
                      "params": [f"{p.name}:{p.kind}" for p in k.params], "features": k.features})
     return {"ok": True, "kernels": rows,
-            "summary": f"found {len(rows)} kernels in {path}" + (": " + ", ".join(r["name"] for r in rows[:12]) if rows else "")}
+            "summary": f"found {len(rows)} kernel{'' if len(rows) == 1 else 's'} in {path}"
+                       + (": " + ", ".join(r["name"] for r in rows[:12]) if rows else "")}
 
 
 def read_kernel(kernel_id: str, root: str | None = None) -> dict:

@@ -53,6 +53,10 @@ only backend never run on its real hardware.
 | Area | Change |
 |---|---|
 | Macro-defined kernels | `kernelport/analyzer/macros.py`, a small cpp-style expander (`#`, `##`, variadics, `FOR_TYPES(DEFINE_X)`). The analyzer finds kernels stamped out by macros, marked by `#define KERNEL __global__`, or opened by `C_KERNEL(name)(...)`, and records `generated_by`. The NVRTC slicer treats top-level macro calls as items of their own (kept if device code, blanked if host only). Tests: `tests/test_macros.py`, including a GPU validation of a macro-generated kernel |
+| README demo | `scripts/record_demo.py` records a real CLI session (scan, validate, a broken softmax port FAILs, the fix PASSes, bench, status) and renders `docs/img/demo.svg`, an animated terminal, now at the top of the README. `record` needs CUDA + Triton; `render` re-draws from `docs/demo/transcript.json` |
+| CLI | `kernelport verify softmax` / `bench softmax` take the kernel id as an argument; unknown ids are usage errors; piped output honours `$COLUMNS`; "found 1 kernel" |
+| Failure report | "unexpected NaN" hint also names overflow (inf/inf), not only unwritten elements |
+| CI | Flaky WebGPU test fixed: the racy reduce_sum bad port can PASS on llvmpipe (workgroups run one by one), so it is skipped there; earlier red runs on 2026-10-14 were this flake |
 
 ## Next steps (owner)
 
@@ -63,7 +67,8 @@ None of these need API credits.
 - [ ] **Colab:** run `notebooks/freeze_references_colab.ipynb` once on a free T4 (also the first Linux +
       NVIDIA run).
 - [ ] **Demo video/GIF (30-60 s):** clone a CUDA-only repo, one prompt to the agent, the green status
-      table. The biggest launch lever.
+      table. The biggest launch lever. (The README now has an animated CLI recording; a video of the
+      agent itself doing it is still the stronger asset.)
 - [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X; lead with "proven
       correct, not just translated" and the llm.c bug.
 - [ ] **PR #867:** watch for review comments (llm.c is quiet; replies may be slow).

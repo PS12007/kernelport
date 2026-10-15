@@ -70,7 +70,7 @@ def test_loop_runs_tools_and_returns_final_text(repo):
     assert res.stop_reason == "end_turn" and res.turns == 3 and res.tool_calls == 3
     assert res.final_text == "Done: nothing verified yet."
     assert res.input_tokens == 300 and res.cache_read_tokens == 270
-    assert any("found 1 kernels" in e for e in events)
+    assert any("found 1 kernel in" in e for e in events)
 
     # the tool really ran against this repo's workspace
     assert (repo / ".kernelport" / "index.json").is_file()

@@ -14,6 +14,11 @@ only ever reported as **PASS** if its current code ran on real hardware and matc
 > Metal is verified on Apple Silicon in CI; the HIP runner and zoo ports are written but not yet
 > verified on an AMD GPU. See [PROGRESS.md](https://github.com/PS12007/kernelport/blob/main/PROGRESS.md).
 
+![Terminal recording: kernelport validates a softmax reference against the original CUDA kernel, a first Triton port without the max subtraction fails 21 of 24 cases with NaN, the fixed port passes 24/24 on an RTX 5060](https://raw.githubusercontent.com/PS12007/kernelport/main/docs/img/demo.svg)
+
+*A real session on an RTX 5060, with the steps an agent takes through the MCP tools run here from the CLI.
+Re-record it with [scripts/record_demo.py](https://github.com/PS12007/kernelport/blob/main/scripts/record_demo.py).*
+
 ![kernelport status for nine llm.c kernels: Triton, Metal and WebGPU ports, each verified against a reference frozen on NVIDIA](https://raw.githubusercontent.com/PS12007/kernelport/main/docs/img/llmc-status.svg)
 
 *Real code, real hardware: [examples/llm.c](https://github.com/PS12007/kernelport/tree/main/examples/llm.c).*
