@@ -13,6 +13,8 @@ failure report against these symptoms first.
 | Fails only for tiny sizes (1, 7) | Block size larger than data without a mask, or division by a size that becomes 0 |
 | Fails only for fp16 / bf16 | Accumulating in half precision; missing `.to(float32)` before math |
 | Fails only for float32 with ~1e-3 error | TF32 / fast-math / reduced-precision instructions |
+| float32, a few values off by ~1e-6 relative, largest cases only | Rounding in long fp32 chains (not a logic bug). Shorten them: sum per block then across blocks, vec4 / `tl.dot` partial sums, two passes instead of rescaling an online max many times, an fp64 accumulator for a per-row scalar (Triton/CPU; WGSL has no fp64) |
+| Correct for the first block, wrong after (WGSL) | A loop-local `var x: T;` without initializer keeps its value between iterations in wgpu-native < 30; write `var x = T();` |
 | Every value off by a constant factor | Wrong normalisation: divide by `n` vs `n-1`, eps inside vs outside sqrt |
 | Values correct but in the wrong place | Transposed indexing: row/col swapped, wrong stride, wrong output layout |
 | Off by exactly one element / shifted | Inclusive vs exclusive scan, off-by-one in offsets |

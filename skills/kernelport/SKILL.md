@@ -152,6 +152,19 @@ def reference(x, rows, cols):          # names = launch.json param names
 `validate_reference` runs the original on every case. On FAIL, read the report,
 fix the **reference** (or the spec: wrong kind, wrong shape, wrong grid), and retry.
 
+**When the original is only a few ulp off, on the largest cases only.** Look for, e.g., `2/98304
+values outside tolerance, max rel err 2e-06`, with small cases passing. That is usually the
+original's own float32 rounding: long sequential sums, or fast-math intrinsics such as `__expf`
+on large arguments. It is not a reference bug, and tolerances are never loosened. In order:
+1. If the long sums are sums of *inputs* (reductions, matmuls, scans), add `"step"` to the
+   float inputs (see init above); then the sums are exact and the case passes.
+2. If they are sums of computed values (`exp`, products of non-quantized data), shrink the
+   failing cases until they pass (fewer keys, a smaller reduction length) and keep the
+   largest size that passes. Do not make the reference imitate the kernel's rounding.
+3. Tell the user where the boundary is ("validated up to N = 384; at N = 512 the original's
+   own rounding exceeds the float32 tolerance") instead of presenting it as full coverage.
+   `examples/flash-attention-minimal` is a worked example.
+
 ## Step 6-7: reading a failure report
 
 ```
