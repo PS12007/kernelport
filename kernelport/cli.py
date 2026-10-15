@@ -230,13 +230,19 @@ def write_port_cmd(kernel_id: str, backend: str, file: str, as_json: bool = JSON
     _emit(tools.write_port(kernel_id, backend, Path(file).read_text(encoding="utf-8")), as_json)
 
 
-def _saved_ports(backend: str | None, kernel: str | None) -> list[tuple[str, str]]:
+def _saved_ports(backend: str | None, kernel: str | None, kernel_arg: str | None = None) -> list[tuple[str, str]]:
     from kernelport.backends.base import BACKEND_NAMES
-    from kernelport.workspace import Workspace
+    from kernelport.workspace import Workspace, WorkspaceError
 
+    if kernel and kernel_arg and kernel != kernel_arg:
+        raise typer.BadParameter("give the kernel id once (as an argument or with --kernel)")
+    kernel = kernel or kernel_arg
     ws = Workspace()
     pairs = []
-    ids = [ws.get(kernel).id] if kernel else ws.kernel_ids() if ws.dir.is_dir() else []
+    try:
+        ids = [ws.get(kernel).id] if kernel else ws.kernel_ids() if ws.dir.is_dir() else []
+    except WorkspaceError as exc:
+        raise typer.BadParameter(str(exc)) from None
     for kid in ids:
         for b in ([backend] if backend else BACKEND_NAMES):
             if ws.port_path(kid, b).is_file():
@@ -245,7 +251,8 @@ def _saved_ports(backend: str | None, kernel: str | None) -> list[tuple[str, str
 
 
 @app.command()
-def verify(backend: str = typer.Option(None, help="Only this backend."),
+def verify(kernel_id: str = typer.Argument(None, help="Only this kernel (same as --kernel)."),
+           backend: str = typer.Option(None, help="Only this backend."),
            kernel: str = typer.Option(None, help="Only this kernel id."),
            as_json: bool = JSON_OPT) -> None:
     """Verify saved ports in .kernelport/ on this machine (MCP: verify_port)."""
@@ -253,7 +260,7 @@ def verify(backend: str = typer.Option(None, help="Only this backend."),
 
     from kernelport import tools
 
-    pairs = _saved_ports(backend, kernel)
+    pairs = _saved_ports(backend, kernel, kernel_id)
     results = [{"kernel_id": k, "backend": b, **tools.verify_port(k, b)} for k, b in pairs]
     if as_json:
         print(json.dumps(results, indent=2, default=str))
@@ -271,7 +278,8 @@ def verify(backend: str = typer.Option(None, help="Only this backend."),
 
 
 @app.command()
-def bench(backend: str = typer.Option(None, help="Only this backend."),
+def bench(kernel_id: str = typer.Argument(None, help="Only this kernel (same as --kernel)."),
+          backend: str = typer.Option(None, help="Only this backend."),
           kernel: str = typer.Option(None, help="Only this kernel id."),
           dtype: str = typer.Option(None, help="Default: float32, or the spec's first dtype."),
           as_json: bool = JSON_OPT) -> None:
@@ -281,7 +289,7 @@ def bench(backend: str = typer.Option(None, help="Only this backend."),
     from kernelport import tools
 
     results = [{"kernel_id": k, "backend": b, **tools.bench_port(k, b, {"dtype": dtype})}
-               for k, b in _saved_ports(backend, kernel)]
+               for k, b in _saved_ports(backend, kernel, kernel_id)]
     if as_json:
         print(json.dumps(results, indent=2, default=str))
         return

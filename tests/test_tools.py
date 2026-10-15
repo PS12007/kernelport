@@ -102,6 +102,22 @@ def test_wrong_reference_does_not_freeze(repo):
     assert not Workspace(repo).is_frozen("relu")
 
 
+def test_cli_verify_and_bench_take_a_kernel_argument(repo, monkeypatch):
+    from typer.testing import CliRunner
+
+    from kernelport.cli import app
+
+    tools.scan_kernels(".", root=repo)
+    monkeypatch.setenv("KERNELPORT_ROOT", repo)
+    runner = CliRunner()
+    for cmd in ("verify", "bench"):
+        r = runner.invoke(app, [cmd, "relu"])
+        assert r.exit_code == 0, r.output
+        r = runner.invoke(app, [cmd, "nosuch"])
+        assert r.exit_code == 2 and "unknown kernel" in r.output, r.output
+        assert runner.invoke(app, [cmd, "relu", "--kernel", "vector_add"]).exit_code == 2
+
+
 @needs_cuda
 def test_cli_validate_all_freezes_pending(repo, monkeypatch):
     from typer.testing import CliRunner
