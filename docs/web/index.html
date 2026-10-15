@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>kernelport WebGPU check</title>
+<meta name="description" content="Run kernelport's WebGPU ports of 12 CUDA kernels on your own GPU and check every output against the reference that was validated on the original CUDA kernel.">
+<style>
+:root{--bg:#ffffff;--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--card:#f6f8fa;--code:#eff2f5;
+--pass:#1a7f37;--pass-bg:#dafbe1;--fail:#cf222e;--fail-bg:#ffebe9;--run:#9a6700;--run-bg:#fff8c5;
+--skip:#59636e;--skip-bg:#eff2f5;--accent:#0969da}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d1117;--fg:#e6edf3;
+--muted:#9198a1;--line:#3d444d;--card:#151b23;--code:#151b23;--pass:#3fb950;--pass-bg:#12261e;
+--fail:#f85149;--fail-bg:#2d1214;--run:#d29922;--run-bg:#272115;--skip:#9198a1;--skip-bg:#212830;--accent:#4493f8}}
+:root[data-theme="dark"]{--bg:#0d1117;--fg:#e6edf3;--muted:#9198a1;--line:#3d444d;--card:#151b23;--code:#151b23;
+--pass:#3fb950;--pass-bg:#12261e;--fail:#f85149;--fail-bg:#2d1214;--run:#d29922;--run-bg:#272115;
+--skip:#9198a1;--skip-bg:#212830;--accent:#4493f8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:960px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:1.6rem;margin:0 0 6px;line-height:1.25}
+a{color:var(--accent)}
+.muted{color:var(--muted)}.small{font-size:.85rem}
+.lede{margin:0 0 16px;max-width:70ch}
+.banner{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:14px 16px;margin:18px 0}
+.banner b{font-size:1.15rem}
+.banner.ok{border-color:var(--pass)}.banner.bad{border-color:var(--fail)}
+button{font:inherit;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.6;cursor:default}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.85rem}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.8rem;font-weight:600}
+.PASS{color:var(--pass);background:var(--pass-bg)}.FAIL{color:var(--fail);background:var(--fail-bg)}
+.RUNNING,.QUEUED{color:var(--run);background:var(--run-bg)}.SKIPPED{color:var(--skip);background:var(--skip-bg)}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:10px;overflow-x:auto;margin:8px 0 4px}
+details summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+.why{font-size:.8rem;color:var(--fail);white-space:pre-wrap}
+ol{padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>Check kernelport's WebGPU ports on your GPU</h1>
+<p class="lede">These are the 12 zoo kernels from <a href="https://github.com/PS12007/kernelport">kernelport</a>,
+ported from CUDA to WGSL. This page runs each port on your GPU, here in the browser, and compares every output
+with a reference that was itself validated against the original CUDA kernel. It uses kernelport's fixed tolerances.
+Nothing is uploaded anywhere.</p>
+
+<div id="banner" class="banner" aria-live="polite"><span class="muted">Loading...</span></div>
+
+<div class="scroll"><table>
+<thead><tr><th>kernel</th><th>status</th><th class="num">cases</th><th class="num">max abs error</th><th class="num">time</th></tr></thead>
+<tbody id="rows"></tbody>
+</table></div>
+
+<h2 style="font-size:1.1rem;margin-top:28px">What this checks</h2>
+<ol class="small">
+<li>kernelport ran each original CUDA kernel against a PyTorch reference on an NVIDIA GPU, and froze the reference only after every case matched.</li>
+<li><code>scripts/build_web_demo.py</code> used kernelport's own harness to generate the inputs and the expected
+outputs (the frozen reference, rounded to float32). It also took the tolerances and the exact shader that <code>kernelport verify</code> runs.</li>
+<li>This page uploads those inputs, dispatches the WGSL shader and compares element by element. NaN and
+infinity positions must match, and every other value must be within <code>atol + rtol·|expected|</code>.
+For float32 that is rtol 1.3e-6 and atol 1e-5, the torch.testing defaults.</li>
+</ol>
+<p class="small muted">Only the float32 cases under 400 KB are included, so the page stays small. <code>kernelport verify</code> also runs
+float16 and large cases. <span id="version"></span></p>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const badge = (s) => `<span class="badge ${s}">${s}</span>`;
+let adapterLabel = "", summaryText = "";
+
+function view(dtype, bytes) {
+  const buf = bytes.slice().buffer;  // fresh, aligned copy
+  switch (dtype) {
+    case "float32": return new Float32Array(buf);
+    case "int32": return new Int32Array(buf);
+    case "uint32": return new Uint32Array(buf);
+    case "int64": return new BigInt64Array(buf);
+    default: throw new Error(`dtype ${dtype} is not supported on this page`);
+  }
+}
+
+function compare(out, actualBytes, expectedBytes) {
+  const a = view(out.dtype, actualBytes).subarray(0, out.count);
+  const e = view(out.dtype, expectedBytes);
+  const isFloat = out.dtype === "float32";
+  let maxAbs = 0, bad = 0, first = -1;
+  for (let i = 0; i < out.count; i++) {
+    let ok;
+    if (!isFloat) ok = a[i] === e[i];
+    else if (Number.isNaN(e[i]) || Number.isNaN(a[i])) ok = Number.isNaN(e[i]) && Number.isNaN(a[i]);
+    else if (!Number.isFinite(e[i]) || !Number.isFinite(a[i])) ok = a[i] === e[i];
+    else {
+      const d = Math.abs(a[i] - e[i]);
+      if (d > maxAbs) maxAbs = d;
+      ok = d <= out.atol + out.rtol * Math.abs(e[i]);
+    }
+    if (!ok) { bad++; if (first < 0) first = i; }
+  }
+  const why = bad ? `${out.name}: ${bad}/${out.count} elements differ; first at flat index ${first}: ` +
+    `expected ${e[first]}, got ${a[first]}` : "";
+  return {ok: bad === 0, maxAbs, why};
+}
+
+async function runCase(device, module, pipelines, k, c, data) {
+  const kinds = c.buffers.map((b) => b.kind).concat(c.uniform.length ? ["uniform"] : []);
+  const key = kinds.join(",");
+  if (!pipelines.has(key)) {
+    const type = {input: "read-only-storage", rw: "storage", uniform: "uniform"};
+    const bgl = device.createBindGroupLayout({entries: kinds.map((t, i) => (
+      {binding: i, visibility: GPUShaderStage.COMPUTE, buffer: {type: type[t]}}))});
+    const pipeline = await device.createComputePipelineAsync({
+      layout: device.createPipelineLayout({bindGroupLayouts: [bgl]}), compute: {module, entryPoint: "main"}});
+    pipelines.set(key, {pipeline, bgl});
+  }
+  const {pipeline, bgl} = pipelines.get(key);
+  const made = [];
+  const upload = (bytes, usage) => {
+    const b = device.createBuffer({size: bytes.byteLength, usage, mappedAtCreation: true});
+    new Uint8Array(b.getMappedRange()).set(bytes);
+    b.unmap();
+    made.push(b);
+    return b;
+  };
+  const S = GPUBufferUsage;
+  const gpu = c.buffers.map((b) => upload(data.subarray(b.offset, b.offset + b.size), S.STORAGE | S.COPY_SRC | S.COPY_DST));
+  if (c.uniform.length) gpu.push(upload(new Uint8Array(c.uniform), S.UNIFORM | S.COPY_DST));
+  const group = device.createBindGroup({layout: bgl, entries: gpu.map((buffer, i) => ({binding: i, resource: {buffer}}))});
+  const enc = device.createCommandEncoder();
+  const pass = enc.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, group);
+  pass.dispatchWorkgroups(...c.grid);
+  pass.end();
+  const reads = c.outputs.map((o) => {
+    const size = c.buffers[o.binding].size;
+    const r = device.createBuffer({size, usage: S.MAP_READ | S.COPY_DST});
+    made.push(r);
+    enc.copyBufferToBuffer(gpu[o.binding], 0, r, 0, size);
+    return r;
+  });
+  const t0 = performance.now();
+  device.queue.submit([enc.finish()]);
+  await Promise.all(reads.map((r) => r.mapAsync(GPUMapMode.READ)));
+  const ms = performance.now() - t0;
+  const results = c.outputs.map((o, i) => compare(o, new Uint8Array(reads[i].getMappedRange()),
+                                                  data.subarray(o.offset, o.offset + o.size)));
+  made.forEach((b) => b.destroy());
+  return {ok: results.every((r) => r.ok), maxAbs: Math.max(0, ...results.map((r) => r.maxAbs)),
+          why: results.map((r) => r.why).filter(Boolean).join("; "), ms};
+}
+
+function row(k, status, cells = {}) {
+  const id = `row-${k.name}`;
+  let tr = $(id);
+  if (!tr) { tr = document.createElement("tr"); tr.id = id; $("rows").appendChild(tr); }
+  tr.innerHTML = `<td><code>${esc(k.name)}</code>
+    <details><summary>WGSL port</summary><pre>${esc(k.wgsl.trim())}</pre>
+    <span class="small muted">From <a href="https://github.com/PS12007/kernelport/blob/main/${esc(k.port_file)}">${esc(k.port_file)}</a>,
+    port of <a href="https://github.com/PS12007/kernelport/blob/main/${esc(k.cuda_file)}">${esc(k.cuda_file)}</a></span></details>
+    ${cells.why ? `<div class="why">${esc(cells.why)}</div>` : ""}</td>
+    <td>${badge(status)}</td><td class="num">${cells.cases ?? ""}</td>
+    <td class="num">${cells.err ?? ""}</td><td class="num">${cells.ms ?? ""}</td>`;
+}
+
+function banner(cls, html) {
+  $("banner").className = `banner ${cls}`;
+  $("banner").innerHTML = html;
+}
+
+async function run() {
+  const manifest = await (await fetch("cases.json")).json();
+  $("version").textContent = `Cases built with kernelport ${manifest.kernelport}.`;
+  manifest.kernels.forEach((k) => row(k, "QUEUED"));
+  if (!navigator.gpu) {
+    banner("bad", `<b>WebGPU is not available in this browser.</b><br><span class="small">Try a recent Chrome, Edge or Safari (macOS 26+), or Firefox 141+ on Windows.</span>`);
+    manifest.kernels.forEach((k) => row(k, "SKIPPED"));
+    return;
+  }
+  const adapter = await navigator.gpu.requestAdapter({powerPreference: "high-performance"});
+  if (!adapter) {
+    banner("bad", "<b>No WebGPU adapter.</b> Your browser supports WebGPU but found no usable GPU.");
+    manifest.kernels.forEach((k) => row(k, "SKIPPED"));
+    return;
+  }
+  const info = adapter.info || {};
+  adapterLabel = [info.vendor, info.architecture, info.description].filter(Boolean).join(" ") || "your GPU";
+  const device = await adapter.requestDevice();
+  device.lost.then((l) => banner("bad", `<b>The GPU device was lost:</b> ${esc(l.message)}`));
+  banner("", `Running on <b>${esc(adapterLabel)}</b>...`);
+  let passed = 0, cases = 0, failed = [];
+  const t0 = performance.now();
+  for (const k of manifest.kernels) {
+    row(k, "RUNNING");
+    let ok = true, maxAbs = 0, ms = 0, n = 0, npass = 0, why = "";
+    try {
+      const data = new Uint8Array(await (await fetch(k.data)).arrayBuffer());
+      device.pushErrorScope("validation");
+      const module = device.createShaderModule({code: k.wgsl});
+      const msgs = (await module.getCompilationInfo()).messages.filter((m) => m.type === "error");
+      if (msgs.length) throw new Error("shader: " + msgs.map((m) => `${m.lineNum}:${m.linePos} ${m.message}`).join("; "));
+      const pipelines = new Map();
+      for (const c of k.cases) {
+        const r = await runCase(device, module, pipelines, k, c, data);
+        n++; ms += r.ms; maxAbs = Math.max(maxAbs, r.maxAbs);
+        if (r.ok) npass++; else { ok = false; why = why || `${c.name}: ${r.why}`; }
+      }
+      const err = await device.popErrorScope();
+      if (err) throw new Error(err.message);
+    } catch (e) {
+      ok = false; why = why || String(e.message || e);
+    }
+    cases += n;
+    if (ok) passed++; else failed.push(k.name);
+    row(k, ok ? "PASS" : "FAIL", {cases: `${npass}/${k.cases.length}`, err: maxAbs ? maxAbs.toExponential(1) : "0",
+                                  ms: `${ms.toFixed(1)} ms`, why});
+  }
+  const total = manifest.kernels.length;
+  const secs = ((performance.now() - t0) / 1000).toFixed(1);
+  summaryText = `kernelport WebGPU check: ${passed}/${total} ports PASS (${cases} cases) on ${adapterLabel}`;
+  banner(passed === total ? "ok" : "bad",
+    `<b>${passed}/${total} ports PASS</b> on ${esc(adapterLabel)}<br>
+     <span class="small muted">${cases} cases in ${secs} s, every output within kernelport's float32 tolerance` +
+    (failed.length ? `; failed: ${esc(failed.join(", "))}. Please open an issue with your GPU and browser.` : ".") + `</span>
+     <div class="actions"><button id="again">Run again</button><button id="copy">Copy result</button></div>`);
+  $("again").onclick = () => location.reload();
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText(`${summaryText} (${navigator.userAgent})`); $("copy").textContent = "Copied"; }
+    catch { $("copy").textContent = "Copy failed"; }
+  };
+  document.title = `${passed}/${total} PASS · kernelport WebGPU check`;
+  const result = {passed, total, cases, failed, adapter: adapterLabel,
+                  kernels: [...$("rows").children].map((tr) => tr.innerText.replace(/\s+/g, " ").trim())};
+  document.body.dataset.result = JSON.stringify(result);
+  // scripts/check_web_demo.py opens the page with ?post=1 and collects the result from its local server
+  if (new URLSearchParams(location.search).has("post")) {
+    fetch("result", {method: "POST", body: JSON.stringify(result)}).catch(() => {});
+  }
+}
+
+run().catch((e) => {
+  banner("bad", `<b>Error:</b> ${esc(e.message || e)}`);
+  if (new URLSearchParams(location.search).has("post")) {
+    fetch("result", {method: "POST", body: JSON.stringify({error: String(e.message || e)})}).catch(() => {});
+  }
+});
+</script>
+</body>
+</html>

@@ -37,6 +37,21 @@ def test_every_zoo_kernel_has_a_webgpu_port():
     assert len(KERNELS) == 12
 
 
+def test_float_literals_browsers_reject_are_refused():
+    """No GPU needed. naga accepts -3.4028235e38 (above FLT_MAX); Chrome/Edge's Tint does not."""
+    from kernelport.backends.webgpu.runner import check_browser_literals
+
+    for ok in ("var m = -3.4028234e38;", "let a = 1.0; let b = 2e10f; let c = 6.5e4h; let d = 1e-45;",
+               "// var m = -3.4028235e38;\n", "/* 1e39 */ let x = .5;", "let i = 123456789012345u;"):
+        check_browser_literals(ok)
+    for bad, line in (("var m = -3.4028235e38;", 1), ("\nlet x = 1e39f;", 2), ("let h = 7e4h;", 1)):
+        with pytest.raises(ValueError, match=f"line {line}: .*browsers"):
+            check_browser_literals(bad)
+    for kernel in KERNELS:  # every zoo port is browser-safe
+        from kernelport.backends.webgpu.runner import load_port
+        check_browser_literals(load_port(ZOO / kernel / "ports" / "webgpu.py").WGSL)
+
+
 def test_binding_size_checks():
     """No GPU needed: limits are passed in."""
     from kernelport.backends.webgpu import runner

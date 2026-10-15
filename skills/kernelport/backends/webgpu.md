@@ -66,7 +66,7 @@ def grid(n):                         # launch.json names; arrays are NumPy (use 
 | `atomicAdd(int*)` | `atomicAdd(&buf[i], v)` on `array<atomic<i32>>` / `atomic<u32>` |
 | `atomicAdd(float*)` | **no float atomics in core WGSL**: compare-exchange loop on the bits (below) |
 | `expf, logf, sqrtf, rsqrtf, fmaxf` | `exp, log, sqrt, inverseSqrt, max` |
-| `-INFINITY` | no inf literals in WGSL: use `-3.4028235e38` (-FLT_MAX) as the max identity |
+| `-INFINITY` | no inf literals in WGSL: use `-3.4028234e38` (rounds to -FLT_MAX) as the max identity. Not `-3.4028235e38`: that decimal is above the largest f32, which browsers reject (the runner refuses it too) |
 | `(float)x[i]` / `(T)v` | `f32(x[i])` / `T(v)` |
 | `c ? a : b` | `select(b, a, c)` (note the argument order) |
 | `size_t` / `long long` offsets | `u32` (fine below 4G elements) |

@@ -153,6 +153,7 @@ def test_short_hardware_names():
     assert short_hardware("Apple M1 (Virtual) (Metal)") == "Apple M1 (Virtual)"
     assert short_hardware("llvmpipe (LLVM 20.1.2, 256 bits) (WebGPU/Vulkan)") == "llvmpipe (Vulkan)"
     assert short_hardware("AMD Instinct MI300X (gfx942)") == "Instinct MI300X"
+    assert short_hardware("Intel(R) Core(TM) i7-14700HX (28 threads)") == "Intel Core i7-14700HX"
 
 
 def test_make_report_tool_both_formats(ws):

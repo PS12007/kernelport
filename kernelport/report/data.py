@@ -72,7 +72,7 @@ def _bench_rows(port: Path) -> list[dict]:
 
 def short_hardware(hw: str) -> str:
     """Compact hardware name for tables: 'NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)' -> 'RTX 5060'."""
-    s = re.sub(r"\s*\((?:sm_\d+|gfx\w+|WebGPU/\w+|Metal|LLVM [^)]*)\)", "", hw)
+    s = re.sub(r"\s*\((?:sm_\d+|gfx\w+|WebGPU/\w+|Metal|LLVM [^)]*|\d+ threads|R|TM)\)", "", hw)
     s = re.sub(r"^(?:NVIDIA |AMD |Apple )?(?:GeForce |Radeon )?", "", s)
     s = re.sub(r"\s+(?:Laptop GPU|GPU|device)$", "", s).strip()
     if hw.startswith("Apple") and not s.startswith("Apple"):

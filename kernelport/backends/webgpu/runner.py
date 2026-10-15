@@ -31,6 +31,7 @@ so a port that passes here uses WGSL a browser also accepts.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import numpy as np
@@ -110,6 +111,29 @@ def load_port(path: Path):
             raise AttributeError(f"{path.name} must define grid(...) returning workgroup counts")
         _loaded[key] = mod
     return _loaded[key]
+
+
+F32_MAX = float(np.finfo(np.float32).max)
+F16_MAX = 65504.0
+_FLOAT_LITERAL = re.compile(r"(?<![\w.])((?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+)([fh]?)(?![\w.])")
+
+
+def check_browser_literals(wgsl: str) -> None:
+    """Refuse float literals beyond the f32 (or f16) range.
+
+    wgpu-native's compiler (naga) rounds ``-3.4028235e38`` to -FLT_MAX and accepts it,
+    but browsers' compiler (Tint, in Chrome and Edge) rejects any literal above the
+    largest finite f32, so the same port would fail in a browser.
+    """
+    code = re.sub(r"/\*.*?\*/", " ", re.sub(r"//[^\n]*", " ", wgsl), flags=re.S)
+    for m in _FLOAT_LITERAL.finditer(code):
+        limit = F16_MAX if m.group(2) == "h" else F32_MAX
+        if abs(float(m.group(1))) > limit:
+            line = code.count("\n", 0, m.start()) + 1
+            raise ValueError(
+                f"WGSL line {line}: the literal {m.group(0)} is larger than the largest finite "
+                f"{'f16' if limit == F16_MAX else 'f32'} ({limit:.9g}). wgpu-native rounds it, but browsers (Tint) "
+                "reject the shader. For -FLT_MAX write -3.4028234e38 (or bitcast<f32>(0xff7fffffu)).")
 
 
 def _elem_type(p, case_dtype: str) -> tuple[str, type]:
@@ -211,6 +235,7 @@ def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     unknown = set(overrides) - {p.name for p in spec.params if p.is_tensor}
     if unknown:
         raise KeyError(f"BINDINGS names unknown tensor params {sorted(unknown)}")
+    check_browser_literals(mod.WGSL)
     code = enable + mod.WGSL + "\n" + bindings_source(spec, data.dtype, overrides)
 
     _check_binding_sizes(spec, data, *binding_limits())

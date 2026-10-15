@@ -123,4 +123,5 @@ def test_tool_workflow_on_cpu_without_gpu(tmp_path):
     assert b["ok"] and "Not comparable" in b["summary"]
 
     md = tools.make_report("markdown", root=repo)["content"]
-    assert "| `relu` | frozen | PASS |" in md and "(not comparable)" in md
+    assert "| `relu` | frozen | PASS (" in md  # PASS (<this machine>)
+    assert "(not comparable)" in md

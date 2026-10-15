@@ -34,7 +34,7 @@ fn block_sum(v: f32, tid: u32) -> f32 {
 fn main(@builtin(workgroup_id) wid: vec3<u32>, @builtin(local_invocation_index) tid: u32) {
     let cols = u32(params.cols);
     let base = wid.x * cols;
-    var m = -3.4028235e38;                  // WGSL has no inf literal; -FLT_MAX is the identity here
+    var m = -3.4028234e38;                  // WGSL has no inf literal; this rounds to -FLT_MAX, the identity
     for (var c = tid; c < cols; c += 256u) { m = max(m, f32(x[base + c])); }
     m = block_max(m, tid);
     var s = 0.0;

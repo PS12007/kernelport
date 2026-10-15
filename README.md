@@ -78,11 +78,11 @@ verification. Validation also found an undocumented precondition in llm.c:
 ## Backends
 
 | backend | port language | runs on | status |
-|---|---|---|---|---|
+|---|---|---|---|
 | `triton` | Triton (Python) | NVIDIA (triton / triton-windows), AMD ROCm | working |
 | `cpu` | Numba (Python) | any machine | working (float32/float64) |
 | `metal` | Metal kernel bodies via MLX `metal_kernel` | Apple Silicon | working (float32/float16/bfloat16), verified in CI on an Apple M1 |
-| `webgpu` | WGSL | any Vulkan / Metal / D3D12 GPU via wgpu-native (core WebGPU only, so browser-portable) | working (float32/float16); verified on NVIDIA (Vulkan), Apple (Metal) and llvmpipe (software Vulkan) |
+| `webgpu` | WGSL | any Vulkan / Metal / D3D12 GPU via wgpu-native (core WebGPU only, so browser-portable) | working (float32/float16); verified on NVIDIA (Vulkan), Apple (Metal) and llvmpipe (software Vulkan), and in a browser (Edge) on NVIDIA and Intel GPUs |
 | `hip` | HIP C++ via hipRTC (CuPy ROCm) | AMD ROCm | written, launch path tested on NVIDIA, **not yet verified on AMD** |
 
 Ports for a backend that is not available on the current machine are saved as **UNVERIFIED**,
@@ -130,6 +130,22 @@ Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX (28 threads), benc
 | cumsum | PASS, 1.30x | PASS, 6.9 ms (n/c) | PASS, 1.18 ms (n/c) | PASS |
 
 (n/c = wall-clock time (CPU, or WebGPU including submission), not comparable to GPU kernel time.)
+
+### Check the WGSL ports in your browser
+
+[`docs/web/`](https://github.com/PS12007/kernelport/tree/main/docs/web) is a single page with no
+dependencies. It runs the 12 WGSL ports on your GPU through the browser's WebGPU and compares every
+output with the frozen reference, using kernelport's float32 tolerances. The inputs, expected outputs,
+tolerances and shaders come from kernelport's own harness (`scripts/build_web_demo.py`).
+
+```bash
+python -m http.server -d docs/web 8000     # then open http://localhost:8000
+python scripts/check_web_demo.py           # or headless, in Chrome/Edge (add --discrete for the dGPU)
+```
+
+12/12 ports pass in Edge on an RTX 5060 and on Intel UHD Graphics (Xe-LP, the i7-14700HX's iGPU). The page also caught a
+real portability bug: the softmax port wrote `-3.4028235e38`, a decimal just above the largest f32.
+wgpu-native rounds it, but browsers reject the shader. The webgpu runner now refuses such literals.
 
 ## CLI
 

@@ -64,6 +64,9 @@ packages = ["kernelport"]
 [tool.hatch.build.targets.wheel.force-include]
 "skills" = "kernelport/_skills"
 
+[tool.hatch.build.targets.sdist]
+exclude = ["docs/web/data"]  # 2 MB of test cases for the in-browser check; built by scripts/build_web_demo.py
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
