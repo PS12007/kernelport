@@ -1,6 +1,6 @@
 # kernelport: status and launch plan
 
-*Updated 2026-10-14 (end of day), at kernelport 0.1.0 on PyPI. Technical history: [PROGRESS.md](PROGRESS.md).*
+*Updated 2026-10-15. kernelport 0.1.0 on PyPI; see HANDOFF.md for the latest one-page status. Technical history: [PROGRESS.md](PROGRESS.md).*
 
 ## Where we are
 

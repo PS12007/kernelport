@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-10-14. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-10-15 (end of day). Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -81,6 +81,12 @@ None of these need API credits.
 - [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X; lead with "proven
       correct, not just translated" and the llm.c bug.
 - [ ] **PR #867:** watch for review comments (llm.c is quiet; replies may be slow).
+- [ ] **wgpu loop-var bug (optional):** drafts are ready, not posted, in `drafts/` (local only,
+      gitignored): an issue for pygfx/wgpu-py (`wgpu-loop-var-issue.md`, with
+      `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
+      naga v30 (gfx-rs/wgpu#9592); wgpu-native has no v30 release yet. Re-check both before posting.
+- [ ] **Release 0.1.1:** main has a lot since 0.1.0 (macro kernels, report, browser check, new
+      checks, flash-attention example, CLI fixes). Bump the version and push a `v0.1.1` tag (RELEASING.md).
 - [ ] Optional: try Codex, Cursor or Gemini CLI with `kernelport setup`.
 
 Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.py`, then push a
@@ -89,11 +95,18 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 ## Ideas to make it better
 
 - **Multi-kernel pipelines:** verify a chain end to end (e.g. layernorm -> matmul -> gelu), not just single kernels.
-- **More real projects:** a FlashAttention-style kernel or a cuBLAS-heavy repo.
+- **More real projects:** a cuBLAS-heavy repo, or flash-attention's backward pass (forward is done).
 - **Linux GPU checks:** free CI runners have no GPU; a Colab or Kaggle run per release would cover Linux + NVIDIA.
-- **Browser demo page:** paste a CUDA kernel and watch the WebGPU port verified on your own GPU.
-- **Report polish:** the HTML report is what people will share.
+- **Browser check, more:** add the llm.c / flash-attention WGSL ports to `docs/web` (today only the zoo),
+  or let visitors paste a WGSL port.
 - **Real Mac timings:** CI's virtual M1 proves correctness but gives no fair speed numbers.
+- **When wgpu-native ships v30:** the loop-var check can stay (harmless); note the fixed version in the message.
+
+Done 2026-10-15 from this list: macro-defined kernels, report polish, browser demo page, FlashAttention example.
+
+**Handy here:** headless Edge runs WebGPU on this laptop (`scripts/check_web_demo.py`; `--discrete` for
+the RTX 5060) and takes screenshots for checking pages (`msedge --headless=new --screenshot=...`).
+`scripts/record_demo.py` re-records the README terminal demo.
 
 ## How to resume
 
@@ -106,7 +119,7 @@ Open Claude Code in `C:\-CS\CUDAtoanything` and say "keep working on kernelport"
 | CI runs | https://github.com/PS12007/kernelport/actions |
 | llm.c PR | https://github.com/karpathy/llm.c/pull/867 (branch `fix-softmax-online-kernel8-small-c` on PS12007/llm.c) |
 | Environment | `.venv` (Python 3.12, torch 2.11 cu128, triton-windows 3.7, cupy 14.2); run tools as `.venv\Scripts\python.exe` / `.venv\Scripts\kernelport.exe` |
-| Tests | `.venv\Scripts\python.exe -m pytest -q` (~6 min; 271 pass, 43 skip for hardware not on this machine) |
+| Tests | `.venv\Scripts\python.exe -m pytest -q` (~6-7 min; 287 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
 
 ## Rules to keep
 
