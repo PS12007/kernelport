@@ -182,16 +182,18 @@ async function run() {
   const manifest = await (await fetch("cases.json")).json();
   $("version").textContent = `Cases built with kernelport ${manifest.kernelport}.`;
   manifest.kernels.forEach((k) => row(k, "QUEUED"));
-  if (!navigator.gpu) {
-    banner("bad", `<b>WebGPU is not available in this browser.</b><br><span class="small">Try a recent Chrome, Edge or Safari (macOS 26+), or Firefox 141+ on Windows.</span>`);
+  const unavailable = (msg, html) => {
     manifest.kernels.forEach((k) => row(k, "SKIPPED"));
-    return;
+    return Object.assign(new Error(msg), {html});
+  };
+  if (!navigator.gpu) {
+    throw unavailable("WebGPU is not available in this browser", `<b>WebGPU is not available in this browser.</b><br>
+      <span class="small">Try a recent Chrome, Edge or Safari (macOS 26+), or Firefox 141+ on Windows.</span>`);
   }
   const adapter = await navigator.gpu.requestAdapter({powerPreference: "high-performance"});
   if (!adapter) {
-    banner("bad", "<b>No WebGPU adapter.</b> Your browser supports WebGPU but found no usable GPU.");
-    manifest.kernels.forEach((k) => row(k, "SKIPPED"));
-    return;
+    throw unavailable("no WebGPU adapter",
+      "<b>No WebGPU adapter.</b> Your browser supports WebGPU but found no usable GPU.");
   }
   const info = adapter.info || {};
   adapterLabel = [info.vendor, info.architecture, info.description].filter(Boolean).join(" ") || "your GPU";
@@ -249,7 +251,7 @@ async function run() {
 }
 
 run().catch((e) => {
-  banner("bad", `<b>Error:</b> ${esc(e.message || e)}`);
+  banner("bad", e.html || `<b>Error:</b> ${esc(e.message || e)}`);
   if (new URLSearchParams(location.search).has("post")) {
     fetch("result", {method: "POST", body: JSON.stringify({error: String(e.message || e)})}).catch(() => {});
   }

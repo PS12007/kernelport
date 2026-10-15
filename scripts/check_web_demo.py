@@ -40,6 +40,8 @@ def main() -> None:
     ap.add_argument("--timeout", type=float, default=180)
     ap.add_argument("--dir", type=Path, default=WEB, help="page directory to serve (default docs/web)")
     ap.add_argument("--discrete", action="store_true", help="ask Chromium for the high-performance GPU")
+    ap.add_argument("--browser-arg", action="append", default=[],
+                    help="extra browser flag, e.g. --browser-arg=--enable-features=Vulkan (repeatable)")
     args = ap.parse_args()
 
     got: dict = {}
@@ -62,7 +64,8 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as profile:
         proc = subprocess.Popen([_browser(args.browser), "--headless=new", "--enable-unsafe-webgpu",
                                  f"--user-data-dir={profile}", "--no-first-run",
-                                 *(["--force_high_performance_gpu"] if args.discrete else []), url],
+                                 *(["--force_high_performance_gpu"] if args.discrete else []),
+                                 *args.browser_arg, url],
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
             finished = done.wait(args.timeout)
