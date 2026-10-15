@@ -20,6 +20,13 @@ def _usable() -> bool:
 needs_webgpu = pytest.mark.skipif(not _usable(), reason="needs wgpu + a WebGPU adapter")
 
 
+def _cpu_adapter() -> bool:
+    from kernelport.backends.webgpu import runner
+
+    info = runner.device()._kp_adapter_info
+    return str(info.get("adapter_type", "")).upper() == "CPU" or "llvmpipe" in str(info.get("device", "")).lower()
+
+
 def _verify(kernel, port):
     from kernelport.zoo import verify_zoo_port
 
@@ -113,6 +120,8 @@ def test_zoo_webgpu_port_passes(kernel):
 ])
 def test_bad_webgpu_port_fails(kernel, port, expect):
     r = _verify(kernel, BAD / port)
+    if "racy" in port and r.status == "PASS" and _cpu_adapter():
+        pytest.skip("the lost-update race did not happen: a CPU adapter (llvmpipe) may run workgroups one by one")
     assert r.status == "FAIL"
     assert expect in r.failure_report(), r.failure_report()
 
