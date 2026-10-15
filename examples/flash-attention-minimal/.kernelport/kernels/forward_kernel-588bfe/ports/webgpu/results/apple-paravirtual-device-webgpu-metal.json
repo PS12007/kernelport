@@ -1,0 +1,423 @@
+{
+  "kernel": "forward_kernel",
+  "backend": "webgpu",
+  "status": "PASS",
+  "hardware": "Apple Paravirtual device (WebGPU/Metal)",
+  "reason": "",
+  "code_hash": "1a7f6cc2b43756f1f038e70d5cbb788f354accea8aeccb9c641e84d201d57753",
+  "reference_hash": "99354267f49be6117b3f9edd466d84bddc482ea23291e3178cdb7518d317b798",
+  "spec_hash": "c88e7359e40a3caf5059ec2c4987a2e44472c151ca968ed5fae3d9fe75599ff6",
+  "tolerances": {
+    "float32": {
+      "rtol": 1.3e-06,
+      "atol": 1e-05,
+      "reason": "torch.testing default for float32"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x32x16",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "58536cc34748c9e546345b6fbc1776f9889c15245bda712fafd10dacfecbdd84",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            32
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.86102294921875e-06,
+          "max_rel_err": 3.4437061827129944e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 32,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            32
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 1.2293431926657384e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 32,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            32,
+            16
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 7.163183167070571e-05,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 512,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "small_2x3x64x32",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "d12178d072af0ccda5fc37493a7ac6ce61afa524979bd861ce7373d79e435bc6",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            2,
+            3,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 7.62939453125e-06,
+          "max_rel_err": 6.109868262075467e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 384,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            2,
+            3,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.76837158203125e-07,
+          "max_rel_err": 2.3260038625620142e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 384,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            2,
+            3,
+            64,
+            32
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 0.001972193161775647,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 12288,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "batch_4x8x128x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "1c0f10f2b9f29b2e1a52d85bd64fa7f77e203d21b811b092b88c519844e47dbb",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            4,
+            8,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.52587890625e-05,
+          "max_rel_err": 7.762175230588352e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4096,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            4,
+            8,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 9.5367431640625e-07,
+          "max_rel_err": 3.1080118017424134e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4096,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            4,
+            8,
+            128,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.172325134277344e-07,
+          "max_rel_err": 0.021851732328350016,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 262144,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "heads_1x4x256x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "348b3e45985f34d381af943c05768a976df0dc5654c724ca1b511ee040754452",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            1,
+            4,
+            256
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.6702880859375e-05,
+          "max_rel_err": 7.357206733462746e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1024,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            1,
+            4,
+            256
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 7.152557373046875e-07,
+          "max_rel_err": 2.4597460508982133e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1024,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            1,
+            4,
+            256,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.980232238769531e-07,
+          "max_rel_err": 0.009657633560795565,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 65536,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "logits_std2_2x2x128x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "c0c7668f243c2e2e9705d3d973bc3328320e65dcbd8be3143192f03757243856",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            2,
+            2,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 6.67572021484375e-06,
+          "max_rel_err": 1.3857296635428582e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 512,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            2,
+            2,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.86102294921875e-06,
+          "max_rel_err": 2.486536441227603e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 512,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            2,
+            2,
+            128,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.115964889526367e-06,
+          "max_rel_err": 0.0019456350201533736,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 32768,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "gpt2_heads_8x12x384x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "ae2b9e752b3b36062ad3b5c092e2f6eb1a42ff953007690742499e6554c355d9",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            8,
+            12,
+            384
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 6.103515625e-05,
+          "max_rel_err": 1.073456176795656e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 36864,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            8,
+            12,
+            384
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 9.5367431640625e-07,
+          "max_rel_err": 3.2406727766311196e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 36864,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            8,
+            12,
+            384,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 5.960464477539062e-07,
+          "max_rel_err": 0.4796657734974503,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 2359296,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-15T21:36:35+00:00",
+  "schema_version": 1
+}

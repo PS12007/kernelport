@@ -75,6 +75,13 @@ given only the one-line request and kernelport's guide; each of its ports passed
 verification. Validation also found an undocumented precondition in llm.c:
 `softmax_forward_online_kernel8` leaves rows unwritten when C < block size.
 
+[`examples/flash-attention-minimal`](https://github.com/PS12007/kernelport/tree/main/examples/flash-attention-minimal)
+does the same for a FlashAttention forward pass (unmodified `flash.cu`, PyTorch-extension host
+code). The Triton port passes and runs 23x faster than the original on the same GPU; the WGSL
+port passes on three WebGPU adapters and the Metal port on Apple M1 (CI). Its README documents where the original's own
+`__expf` and float32 rounding stay within kernelport's fixed tolerance (N <= 384), rather than
+loosening it.
+
 ## Backends
 
 | backend | port language | runs on | status |

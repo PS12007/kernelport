@@ -14,8 +14,8 @@ reference (frozen after the original passed it), the ports, attempts and results
 |---|---|---|
 | reference vs original CUDA | PASS 6/6 | RTX 5060 Laptop (sm_120) |
 | Triton | PASS 6/6, **23x** the original | 2.1 ms vs 49.3 ms at 8 batches x 12 heads x 384 tokens x d=64, same GPU |
-| WebGPU (WGSL) | PASS 6/6 | RTX 5060 via Vulkan; CI also runs it on llvmpipe and Apple Metal |
-| Metal (MLX) | checked in CI | Apple M1 runner, on every push |
+| WebGPU (WGSL) | PASS 6/6 on 3 adapters | RTX 5060 (Vulkan); Apple paravirtual GPU (Metal) and llvmpipe in CI |
+| Metal (MLX) | PASS 6/6 | Apple M1 (GitHub's macOS runner), first run; re-checked on every push |
 
 The kernel takes `Q, K, V` of shape `[B, heads, N, d]` and leaves `O`, the running row sum `l`
 and the row max `m` in three inout buffers (the host starts them at 0, 0 and -inf: the spec uses

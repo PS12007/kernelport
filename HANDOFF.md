@@ -8,22 +8,22 @@
 
 kernelport 0.1.0 is on [PyPI](https://pypi.org/project/kernelport/), and the llm.c bug it found is
 fixed upstream in an open PR, [karpathy/llm.c#867](https://github.com/karpathy/llm.c/pull/867).
-CI is green on Linux, Windows, macOS, Apple Silicon (Metal) and two WebGPU adapters. HIP (AMD) is the
-only backend never run on its real hardware.
+CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters and headless Chrome
+(the in-browser check). HIP (AMD) is the only backend never run on its real hardware.
 
 | Measure | Estimate | What's missing |
 |---|---|---|
 | Public v0.1 (installable, works, honest about status) | ~95% | AMD verification |
-| Ready to launch publicly | ~80% | Demo video, a first Linux + NVIDIA run, launch posts |
-| Mature product | ~65% | Multi-kernel pipelines, more agents and real projects |
+| Ready to launch publicly | ~85% | Agent demo video, GitHub Pages switched on, a first Linux + NVIDIA run, launch posts |
+| Mature product | ~70% | Multi-kernel pipelines, more agents, fp16/bf16 in the browser check |
 
 ## What is verified
 
 | Backend | Status | Evidence |
 |---|---|---|
 | Triton | Working | 12/12 zoo + 9/9 llm.c ports pass on RTX 5060 (Windows); 1.0-1.3x the original CUDA, matmul 6.2x |
-| Metal (MLX) | Working | 12/12 zoo + 5/5 llm.c ports pass on Apple M1, checked by CI on every push |
-| WebGPU (WGSL) | Working | 12/12 zoo pass on NVIDIA (Vulkan), Apple (Metal) and llvmpipe; 2/2 llm.c fp32 ports pass on all three |
+| Metal (MLX) | Working | 12/12 zoo + 5/5 llm.c + flash-attention ports pass on Apple M1, checked by CI on every push |
+| WebGPU (WGSL) | Working | 12/12 zoo pass on NVIDIA (Vulkan), Apple (Metal) and llvmpipe; 2/2 llm.c fp32 ports + flash-attention pass on all three; in browsers 12/12 on RTX 5060 + Intel UHD (Edge) and SwiftShader + Apple (Chrome, CI) |
 | CPU (Numba) | Working | 12/12 zoo pass (fp32) |
 | HIP (AMD) | Unverified | Ports written; `scripts/amd_check.sh` ready to run on an AMD machine |
 
@@ -58,6 +58,9 @@ only backend never run on its real hardware.
 | Report | Headline sentence, readable dark-mode links, PASS cells show hardware + speedup, unstarted kernels folded away; Markdown matches |
 | Browser check | `docs/web/index.html` runs the 12 WGSL ports in the browser's WebGPU against kernelport's own cases (`scripts/build_web_demo.py`, 57 float32 cases, 2.1 MB); 12/12 PASS in Edge on the RTX 5060 and the Intel UHD iGPU; a sabotaged port FAILs. `scripts/check_web_demo.py` runs it headless |
 | Browser bug found | zoo softmax WGSL used `-3.4028235e38` (above FLT_MAX): naga accepts, Chrome/Edge reject. Port and the webgpu skill guide fixed; the runner now refuses out-of-range float literals |
+| FlashAttention example | `examples/flash-attention-minimal`: unmodified `flash.cu` (Apache-2.0), reference validated 6/6 within N <= 384 (beyond that the original's own `__expf`/fp32 rounding exceeds the fixed tolerance; documented, not loosened). Triton PASS at 23x, WGSL PASS on RTX 5060 / Apple / llvmpipe, Metal PASS on M1 (CI results committed). New init `{"dist": "full", "value": "-inf"}` |
+| wgpu-native bug found | A `var` declared without initializer in a loop is zeroed once, not per iteration (WGSL spec, browsers). Minimal repro measured; the runner refuses such code. Could be reported to gfx-rs/wgpu (naga) by the owner |
+| Browser CI | `scripts/check_web_demo.py` runs in CI's WebGPU jobs: Chrome on SwiftShader (Linux) and Apple GPU (macOS), 12/12 |
 | Failure report | "unexpected NaN" hint also names overflow (inf/inf), not only unwritten elements |
 | CI | Flaky WebGPU test fixed: the racy reduce_sum bad port can PASS on llvmpipe (workgroups run one by one), so it is skipped there; earlier red runs on 2026-10-14 were this flake |
 
