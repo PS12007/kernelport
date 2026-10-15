@@ -174,8 +174,6 @@ def _elem_type(p, case_dtype: str) -> tuple[str, type]:
     dt = p.resolved_dtype(case_dtype)
     if dt not in _ELEM:
         raise TypeError(f"{p.name}: dtype {dt} is not supported by the webgpu backend")
-    if dt == "float16" and not has_f16():
-        raise TypeError("this WebGPU adapter has no shader-f16 support")
     wgsl, np_t = _ELEM[dt]
     return ("T" if p.dtype == "T" else wgsl), np_t
 
@@ -265,6 +263,8 @@ def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     dev = device()
     enable = "enable f16; " if data.dtype == "float16" or any(
         p.resolved_dtype(data.dtype) == "float16" for p in spec.params if p.is_tensor) else ""
+    if enable and not has_f16():
+        raise TypeError("this WebGPU adapter has no shader-f16 support")
     overrides = dict(getattr(mod, "BINDINGS", {}) or {})
     unknown = set(overrides) - {p.name for p in spec.params if p.is_tensor}
     if unknown:
