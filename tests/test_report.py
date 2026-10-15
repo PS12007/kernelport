@@ -125,11 +125,34 @@ def test_html_escapes_and_embeds_data(ws):
 def test_markdown_matches_html_matrix(ws):
     d = collect(ws)
     md = md_report.render(d)
-    assert "| `relu` | frozen | FAIL | PASS |" in md
+    assert "| `relu` | frozen | FAIL | PASS (Test GPU <sm_x>; 1.20x) |" in md
     assert "| `softmax` | frozen | - | UNVERIFIED |" in md
-    assert "| `vector_add` | not frozen | - | - |" in md
+    assert "1 more kernel found, not started: `vector_add`" in md and "| `vector_add`" not in md
+    assert md.splitlines()[2] == ("**1 kernel ported and verified: 1 PASS result on 1 hardware target, "
+                                  "against 2 references validated on the original CUDA.**")
     assert "## Needs attention" in md and "port changed since this result" in md
     assert "1.20x" in md
+
+
+def test_html_shows_where_ports_passed_and_folds_idle_kernels(ws):
+    d = collect(ws)
+    assert [k["name"] for k in d["kernels"] if not k["started"]] == ["vector_add"]
+    assert d["port_counts"] == {"PASS": 1, "FAIL": 1, "UNVERIFIED": 1, "SKIPPED": 0}
+    page = html_report.render(d)
+    matrix = page.split("<h2>Kernels")[1].split("</table>")[0]
+    assert "vector_add" not in matrix and "1.20x vs CUDA" in matrix and "Test GPU &lt;sm_x&gt;" in matrix
+    assert "1 more kernel found by the scan, not started" in page
+    assert 'id="k-' in page and page.count("<details id=") == 2  # only started kernels get details
+
+
+def test_short_hardware_names():
+    from kernelport.report.data import short_hardware
+
+    assert short_hardware("NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)") == "RTX 5060"
+    assert short_hardware("NVIDIA GeForce RTX 5060 Laptop GPU (WebGPU/Vulkan)") == "RTX 5060 (Vulkan)"
+    assert short_hardware("Apple M1 (Virtual) (Metal)") == "Apple M1 (Virtual)"
+    assert short_hardware("llvmpipe (LLVM 20.1.2, 256 bits) (WebGPU/Vulkan)") == "llvmpipe (Vulkan)"
+    assert short_hardware("AMD Instinct MI300X (gfx942)") == "Instinct MI300X"
 
 
 def test_make_report_tool_both_formats(ws):

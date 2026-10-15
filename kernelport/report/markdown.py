@@ -16,21 +16,40 @@ def _plural(n: int, word: str) -> str:
     return f"{n} {word}" + ("" if n == 1 else "s")
 
 
+def _matrix_cell(k: dict, backend: str) -> str:
+    status = cell_status(k, backend)[0]
+    if status != "PASS":
+        return status or "-"
+    port = next(p for p in k["ports"] if p["backend"] == backend)
+    notes = [", ".join(port["passed_on"])] if port["passed_on"] else []
+    if port["speedup"] is not None:
+        notes.append(f"{port['speedup']:.2f}x")
+    return "PASS" + (f" ({_cell('; '.join(notes))})" if notes else "")
+
+
 def render(d: dict, max_failure_lines: int = 12) -> str:
     """Markdown for report data from ``collect``."""
-    c = d["counts"]
+    c = d["port_counts"]
     lines = ["# kernelport report", "",
+             f"**{d['headline']}**", "",
              f"{d['repo']}, generated {d['generated']}, hardware: {', '.join(d['hardware']) or 'none yet'}", "",
-             "**" + ", ".join(f"{c.get(s, 0)} {s}" for s in STATUS_ORDER) + "**", "",
+             "Port results: " + ", ".join(f"{c.get(s, 0)} {s}" for s in STATUS_ORDER if c.get(s) or s != "SKIPPED"),
+             "",
              "PASS = current code verified on real hardware against a reference validated on the original CUDA kernel.",
              ""]
     if not d["kernels"]:
         return "\n".join(lines + ["No kernels registered yet."]) + "\n"
-    lines.append("| kernel | reference | " + " | ".join(d["backends"]) + " |")
-    lines.append("|---|---|" + "---|" * len(d["backends"]))
-    for k in d["kernels"]:
-        cells = [cell_status(k, b)[0] or "-" for b in d["backends"]]
+    started = [k for k in d["kernels"] if k["started"]]
+    if started:
+        lines.append("| kernel | reference | " + " | ".join(d["backends"]) + " |")
+        lines.append("|---|---|" + "---|" * len(d["backends"]))
+    for k in started:
+        cells = [_matrix_cell(k, b) for b in d["backends"]]
         lines.append(f"| `{_cell(k['name'])}` | {k['reference']['state']} | " + " | ".join(cells) + " |")
+    idle = [k for k in d["kernels"] if not k["started"]]
+    if idle:
+        names = ", ".join(f"`{_cell(k['name'])}`" for k in idle[:30]) + (", ..." if len(idle) > 30 else "")
+        lines += ["", f"{_plural(len(idle), 'more kernel')} found, not started: {names}"]
 
     bench = [(k, p, b) for k in d["kernels"] for p in k["ports"] for b in p["bench"] if b.get("current")]
     if bench:
@@ -61,9 +80,9 @@ def render(d: dict, max_failure_lines: int = 12) -> str:
                 if len(rep) > max_failure_lines:
                     rep = rep[:max_failure_lines] + ["..."]
                 lines += ["", "  ```", *("  " + ln for ln in rep), "  ```"]
-    unfrozen = [k for k in d["kernels"] if k["reference"]["state"] != "frozen"]
+    unfrozen = [k for k in started if k["reference"]["state"] != "frozen"]
     if unfrozen:
-        lines += ["", "## References not frozen", ""]
+        lines += ["", "## References not validated yet", ""]
         lines += [f"- `{k['name']}`: {k['reference']['state']}" for k in unfrozen]
     return "\n".join(lines) + "\n"
 
