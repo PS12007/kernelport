@@ -52,6 +52,23 @@ def test_float_literals_browsers_reject_are_refused():
         check_browser_literals(load_port(ZOO / kernel / "ports" / "webgpu.py").WGSL)
 
 
+def test_uninitialised_loop_vars_are_refused():
+    """No GPU needed. wgpu-native zeroes a loop-local `var x: T;` once, WGSL (and browsers) every iteration."""
+    from kernelport.backends.webgpu.runner import check_loop_vars
+
+    for ok in ("var acc: array<f32, 128>;\nfor (var i = 0u; i < 3u; i++) { acc[i] = 1.0; }",
+               "for (var i = 0u; i < 3u; i++) { var s = 0.0; var a = array<f32, 4>(); }",
+               "var<workgroup> red: array<f32, 256>;\nfn f() { loop { break; } }",
+               "for (var i = 0u; i < 3u; i++) { // var s: f32;\n }"):
+        check_loop_vars(ok)
+    for bad, suggestion in (("for (var i = 0u; i < 3u; i++) {\n  var s: f32;\n}", "var s = f32();"),
+                            ("loop { if (x) { var a: array<f32, 4>; } break; }", "var a = array<f32, 4>();"),
+                            ("while (c) { var v : vec4<f32> ; }", "var v = vec4<f32>();")):
+        with pytest.raises(ValueError, match="inside a loop") as e:
+            check_loop_vars(bad)
+        assert suggestion in str(e.value)
+
+
 def test_binding_size_checks():
     """No GPU needed: limits are passed in."""
     from kernelport.backends.webgpu import runner

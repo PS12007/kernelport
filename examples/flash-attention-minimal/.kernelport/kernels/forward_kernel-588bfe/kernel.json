@@ -1,0 +1,190 @@
+{
+  "id": "flash.cu::forward_kernel",
+  "name": "forward_kernel",
+  "file": "flash.cu",
+  "line": 5,
+  "end_line": 82,
+  "params": [
+    {
+      "name": "Q",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "K",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "V",
+      "type": "const float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": true,
+      "kind": "input"
+    },
+    {
+      "name": "N",
+      "type": "const int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "d",
+      "type": "const int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "Tc",
+      "type": "const int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "Tr",
+      "type": "const int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "Bc",
+      "type": "const int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "Br",
+      "type": "const int",
+      "base_type": "int",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "int32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "softmax_scale",
+      "type": "const float",
+      "base_type": "float",
+      "is_pointer": false,
+      "is_const": true,
+      "dtype": "float32",
+      "written": false,
+      "read": false,
+      "kind": "scalar"
+    },
+    {
+      "name": "l",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "m",
+      "type": "float *",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    },
+    {
+      "name": "O",
+      "type": "float*",
+      "base_type": "float",
+      "is_pointer": true,
+      "is_const": false,
+      "dtype": "float32",
+      "written": true,
+      "read": true,
+      "kind": "inout"
+    }
+  ],
+  "template_params": [],
+  "launch_bounds": "",
+  "extern_c": false,
+  "features": [
+    "shared_memory",
+    "dynamic_shared_memory",
+    "syncthreads",
+    "multi_dim_indexing",
+    "fast_math_intrinsics"
+  ],
+  "launches": [
+    {
+      "file": "flash.cu",
+      "line": 110,
+      "grid": "grid_dim",
+      "block": "block_dim",
+      "shared_mem": "sram_size",
+      "stream": "",
+      "template_args": "",
+      "args": [
+        "Q.data_ptr<float>()",
+        "K.data_ptr<float>()",
+        "V.data_ptr<float>()",
+        "N",
+        "d",
+        "Tc",
+        "Tr",
+        "Bc",
+        "Br",
+        "softmax_scale",
+        "l.data_ptr<float>()",
+        "m.data_ptr<float>()",
+        "O.data_ptr<float>()"
+      ]
+    }
+  ],
+  "generated_by": "",
+  "source_hash": "1bc165017f3784d9fb63036a1ebb1c00839bff865cb860ba1ac66a7f947151f4"
+}

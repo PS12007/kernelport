@@ -120,7 +120,8 @@ infer a value. Fill every TODO; `write_reference` rejects a spec with TODOs.
   with `randint` in range.
 - **init** per input param: `dist` = `normal` (`mean`, `std`), `uniform` (`low`, `high`),
   `randint` (`low`, `high` exclusive, for index arrays: keep indices in range!),
-  `zeros`, `ones`, `arange`. `edges: true` puts 0, -0, ±1, ±big, ±1/big first
+  `zeros`, `ones`, `arange`, `full` (`value`: a number or `"-inf"`, `"inf"`, `"nan"`, e.g. a
+  running max the host initialises to -INFINITY). `edges: true` puts 0, -0, ±1, ±big, ±1/big first
   (`edge_big`, default 1000). Values may be expressions over dims: `"high": "vocab"`.
   Per-case overrides go in the case's own `"init"`.
 - **step** (accumulating kernels: sums, matmuls, scans, atomics): add `"step": 0.0625`

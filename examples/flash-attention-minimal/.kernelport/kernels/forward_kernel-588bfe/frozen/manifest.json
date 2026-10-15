@@ -1,0 +1,9 @@
+{
+  "kernel_id": "flash.cu::forward_kernel",
+  "reference_hash": "99354267f49be6117b3f9edd466d84bddc482ea23291e3178cdb7518d317b798",
+  "spec_hash": "4c871822a578747f83b2089fc2b59d34b155dea0031084345f4b3b728eb77823",
+  "source_hash": "c4b466beb6030b2fd1eeb2d4a606c81235fe0275b6831a1ac728a82f093c4110",
+  "validated_on": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "validated_at": "2026-10-15T21:16:00+00:00",
+  "cases_passed": 6
+}

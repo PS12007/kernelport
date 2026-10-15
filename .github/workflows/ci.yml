@@ -65,10 +65,17 @@ jobs:
         run: |
           kernelport verify --backend metal
           kernelport status
+      - name: flash-attention-minimal example (Metal port vs reference frozen on NVIDIA)
+        working-directory: examples/flash-attention-minimal
+        run: |
+          kernelport verify --backend metal
+          kernelport status
       - uses: actions/upload-artifact@v4
         with:
           name: llmc-results-metal
-          path: examples/llm.c/.kernelport/kernels/*/ports/metal/results/*.json
+          path: |
+            examples/llm.c/.kernelport/kernels/*/ports/metal/results/*.json
+            examples/flash-attention-minimal/.kernelport/kernels/*/ports/metal/results/*.json
 
   webgpu:
     # WGSL ports through wgpu-native: Mesa llvmpipe (software Vulkan) on Linux, Metal on macOS.
@@ -107,10 +114,17 @@ jobs:
         run: |
           kernelport verify --backend webgpu
           kernelport status
+      - name: flash-attention-minimal example (WGSL port vs reference frozen on NVIDIA)
+        working-directory: examples/flash-attention-minimal
+        run: |
+          kernelport verify --backend webgpu
+          kernelport status
       - uses: actions/upload-artifact@v4
         with:
           name: llmc-results-webgpu-${{ matrix.os }}
-          path: examples/llm.c/.kernelport/kernels/*/ports/webgpu/results/*.json
+          path: |
+            examples/llm.c/.kernelport/kernels/*/ports/webgpu/results/*.json
+            examples/flash-attention-minimal/.kernelport/kernels/*/ports/webgpu/results/*.json
 
   package:
     name: build sdist + wheel

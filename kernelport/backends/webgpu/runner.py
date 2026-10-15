@@ -136,6 +136,38 @@ def check_browser_literals(wgsl: str) -> None:
                 "reject the shader. For -FLT_MAX write -3.4028234e38 (or bitcast<f32>(0xff7fffffu)).")
 
 
+_LOOP_HEAD = re.compile(r"\b(?:for|while|loop)\b")
+_BARE_VAR = re.compile(r"\bvar\s+([A-Za-z_]\w*)\s*:\s*([^=;{}]*?)\s*;")
+
+
+def check_loop_vars(wgsl: str) -> None:
+    """Refuse a `var` declared without an initializer inside a loop body.
+
+    WGSL zero-initialises such a variable every time its declaration runs, i.e. on every
+    iteration, and browsers do. wgpu-native (naga, measured with wgpu 0.32 on Vulkan) zeroes it
+    only once per invocation, so the value carries over between iterations and the same port
+    gives different results natively and in a browser.
+    """
+    code = re.sub(r"/\*.*?\*/", " ", re.sub(r"//[^\n]*", " ", wgsl), flags=re.S)
+    for head in _LOOP_HEAD.finditer(code):
+        open_ = code.find("{", head.end())
+        if open_ < 0:
+            continue
+        depth, end = 0, len(code)
+        for i in range(open_, len(code)):
+            depth += {"{": 1, "}": -1}.get(code[i], 0)
+            if depth == 0:
+                end = i
+                break
+        m = _BARE_VAR.search(code, open_, end)
+        if m:
+            line = code.count("\n", 0, m.start()) + 1
+            raise ValueError(
+                f"WGSL line {line}: `{m.group(0).strip()}` is declared inside a loop without an initializer. "
+                "WGSL zeroes it on every iteration, but wgpu-native only once, so native and browser results "
+                f"differ. Initialise it explicitly: `var {m.group(1)} = {m.group(2)}();` (the zero value).")
+
+
 def _elem_type(p, case_dtype: str) -> tuple[str, type]:
     dt = p.resolved_dtype(case_dtype)
     if dt not in _ELEM:
@@ -236,6 +268,7 @@ def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
     if unknown:
         raise KeyError(f"BINDINGS names unknown tensor params {sorted(unknown)}")
     check_browser_literals(mod.WGSL)
+    check_loop_vars(mod.WGSL)
     code = enable + mod.WGSL + "\n" + bindings_source(spec, data.dtype, overrides)
 
     _check_binding_sizes(spec, data, *binding_limits())

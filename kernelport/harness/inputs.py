@@ -118,6 +118,10 @@ def _base_values(init_json: str, shape: tuple[int, ...], is_float: bool, seed: i
         vals = np.ones(n)
     elif dist == "arange":
         vals = np.arange(n, dtype=np.float64)
+    elif dist == "full":  # e.g. a running max that starts at -inf: {"dist": "full", "value": "-inf"}
+        if "value" not in init:
+            raise ValueError('dist "full" needs a "value" (a number, "inf", "-inf" or "nan")')
+        vals = np.full(n, float(init["value"]))
     else:
         raise ValueError(f"unknown dist {dist!r}")
     if init.get("edges") and is_float:

@@ -1,0 +1,423 @@
+{
+  "kernel": "forward_kernel",
+  "backend": "cuda",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "code_hash": "c4b466beb6030b2fd1eeb2d4a606c81235fe0275b6831a1ac728a82f093c4110",
+  "reference_hash": "99354267f49be6117b3f9edd466d84bddc482ea23291e3178cdb7518d317b798",
+  "spec_hash": "c88e7359e40a3caf5059ec2c4987a2e44472c151ca968ed5fae3d9fe75599ff6",
+  "tolerances": {
+    "float32": {
+      "rtol": 1.3e-06,
+      "atol": 1e-05,
+      "reason": "torch.testing default for float32"
+    }
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x32x16",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "58536cc34748c9e546345b6fbc1776f9889c15245bda712fafd10dacfecbdd84",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            32
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.9073486328125e-06,
+          "max_rel_err": 3.0212242514274905e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 32,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            32
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.384185791015625e-07,
+          "max_rel_err": 1.2948091360696795e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 32,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            1,
+            1,
+            32,
+            16
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.086162567138672e-07,
+          "max_rel_err": 2.7665499090769354e-05,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 512,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "small_2x3x64x32",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "d12178d072af0ccda5fc37493a7ac6ce61afa524979bd861ce7373d79e435bc6",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            2,
+            3,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 9.5367431640625e-06,
+          "max_rel_err": 8.166670307640512e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 384,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            2,
+            3,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-06,
+          "max_rel_err": 4.6559321977080147e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 384,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            2,
+            3,
+            64,
+            32
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.76837158203125e-07,
+          "max_rel_err": 0.0018752900653660556,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 12288,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "batch_4x8x128x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "1c0f10f2b9f29b2e1a52d85bd64fa7f77e203d21b811b092b88c519844e47dbb",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            4,
+            8,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 2.86102294921875e-05,
+          "max_rel_err": 1.5875341176516244e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4096,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            4,
+            8,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.9073486328125e-06,
+          "max_rel_err": 5.612608973012668e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 4096,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            4,
+            8,
+            128,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 8.344650268554688e-07,
+          "max_rel_err": 0.031044848403378667,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 262144,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "heads_1x4x256x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "348b3e45985f34d381af943c05768a976df0dc5654c724ca1b511ee040754452",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            1,
+            4,
+            256
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.1961669921875e-05,
+          "max_rel_err": 1.2718878897888332e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1024,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            1,
+            4,
+            256
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.1920928955078125e-06,
+          "max_rel_err": 4.675044111963099e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 1024,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            1,
+            4,
+            256,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 3.2782554626464844e-07,
+          "max_rel_err": 0.031318640650258696,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 65536,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "logits_std2_2x2x128x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "c0c7668f243c2e2e9705d3d973bc3328320e65dcbd8be3143192f03757243856",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            2,
+            2,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.0967254638671875e-05,
+          "max_rel_err": 2.6650704053664783e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 512,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            2,
+            2,
+            128
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 3.814697265625e-06,
+          "max_rel_err": 4.6336846399957186e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 512,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            2,
+            2,
+            128,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 3.933906555175781e-06,
+          "max_rel_err": 0.002318571279059894,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 32768,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    },
+    {
+      "case": "gpt2_heads_8x12x384x64",
+      "dtype": "float32",
+      "passed": true,
+      "input_hash": "ae2b9e752b3b36062ad3b5c092e2f6eb1a42ff953007690742499e6554c355d9",
+      "outputs": [
+        {
+          "name": "l",
+          "passed": true,
+          "shape": [
+            8,
+            12,
+            384
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 7.2479248046875e-05,
+          "max_rel_err": 1.8398904546746053e-06,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 36864,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "m",
+          "passed": true,
+          "shape": [
+            8,
+            12,
+            384
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 1.9073486328125e-06,
+          "max_rel_err": 6.161526892086812e-07,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 36864,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        },
+        {
+          "name": "O",
+          "passed": true,
+          "shape": [
+            8,
+            12,
+            384,
+            64
+          ],
+          "dtype": "float32",
+          "reason": "",
+          "max_abs_err": 4.3213367462158203e-07,
+          "max_rel_err": 3.41253904148812,
+          "worst_index": null,
+          "num_mismatched": 0,
+          "num_elements": 2359296,
+          "expected_slice": [],
+          "actual_slice": [],
+          "slice_start": 0
+        }
+      ],
+      "error": ""
+    }
+  ],
+  "timestamp": "2026-10-15T21:16:00+00:00",
+  "schema_version": 1
+}

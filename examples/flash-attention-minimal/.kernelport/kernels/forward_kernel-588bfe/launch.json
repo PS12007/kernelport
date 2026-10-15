@@ -1,0 +1,214 @@
+{
+  "name": "forward_kernel",
+  "source": "flash.cu",
+  "entry": "forward_kernel",
+  "dtypes": [
+    "float32"
+  ],
+  "params": [
+    {
+      "name": "Q",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "nh",
+        "N",
+        "d"
+      ]
+    },
+    {
+      "name": "K",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "nh",
+        "N",
+        "d"
+      ]
+    },
+    {
+      "name": "V",
+      "kind": "input",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "nh",
+        "N",
+        "d"
+      ]
+    },
+    {
+      "name": "N",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "N"
+    },
+    {
+      "name": "d",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "d"
+    },
+    {
+      "name": "Tc",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "cdiv(N, 32)"
+    },
+    {
+      "name": "Tr",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "cdiv(N, 32)"
+    },
+    {
+      "name": "Bc",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "32"
+    },
+    {
+      "name": "Br",
+      "kind": "scalar",
+      "dtype": "int32",
+      "value": "32"
+    },
+    {
+      "name": "softmax_scale",
+      "kind": "scalar",
+      "dtype": "float32",
+      "value": "d ** -0.5"
+    },
+    {
+      "name": "l",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "nh",
+        "N"
+      ]
+    },
+    {
+      "name": "m",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "nh",
+        "N"
+      ]
+    },
+    {
+      "name": "O",
+      "kind": "inout",
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "nh",
+        "N",
+        "d"
+      ]
+    }
+  ],
+  "launch": {
+    "grid": [
+      "B",
+      "nh"
+    ],
+    "block": [
+      32
+    ],
+    "shared_mem": "(3 * 32 * d + 32 * 32) * 4"
+  },
+  "cases": [
+    {
+      "name": "tiny_1x1x32x16",
+      "dims": {
+        "B": 1,
+        "nh": 1,
+        "N": 32,
+        "d": 16
+      }
+    },
+    {
+      "name": "small_2x3x64x32",
+      "dims": {
+        "B": 2,
+        "nh": 3,
+        "N": 64,
+        "d": 32
+      }
+    },
+    {
+      "name": "batch_4x8x128x64",
+      "dims": {
+        "B": 4,
+        "nh": 8,
+        "N": 128,
+        "d": 64
+      }
+    },
+    {
+      "name": "heads_1x4x256x64",
+      "dims": {
+        "B": 1,
+        "nh": 4,
+        "N": 256,
+        "d": 64
+      }
+    },
+    {
+      "name": "logits_std2_2x2x128x64",
+      "dims": {
+        "B": 2,
+        "nh": 2,
+        "N": 128,
+        "d": 64
+      },
+      "init": {
+        "Q": {
+          "dist": "normal",
+          "std": 2.0
+        },
+        "K": {
+          "dist": "normal",
+          "std": 2.0
+        }
+      }
+    },
+    {
+      "name": "gpt2_heads_8x12x384x64",
+      "dims": {
+        "B": 8,
+        "nh": 12,
+        "N": 384,
+        "d": 64
+      }
+    }
+  ],
+  "init": {
+    "Q": {
+      "dist": "normal"
+    },
+    "K": {
+      "dist": "normal"
+    },
+    "V": {
+      "dist": "normal"
+    },
+    "l": {
+      "dist": "zeros"
+    },
+    "m": {
+      "dist": "full",
+      "value": "-inf"
+    },
+    "O": {
+      "dist": "zeros"
+    }
+  },
+  "bench_case": "gpt2_heads_8x12x384x64"
+}

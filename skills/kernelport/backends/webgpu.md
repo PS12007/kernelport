@@ -144,3 +144,9 @@ were not tested and why.
 - [ ] No plain `out[0] = out[0] + v` from several workgroups (a race): use atomics.
 - [ ] int64 inputs read as `.x` of `vec2<u32>`.
 - [ ] Workgroup arrays sized by the constant workgroup size, not by a runtime value.
+- [ ] Every `var` declared inside a loop has an initializer (`var s = 0.0;`,
+      `var a = array<f32, 128>();`). WGSL zeroes `var s: f32;` on each iteration and browsers
+      do, but wgpu-native only once, so the value would leak between iterations; the runner
+      refuses it.
+- [ ] Float literals stay within f32 range (`-3.4028234e38`, not `-3.4028235e38`); browsers
+      reject larger ones and the runner refuses them.
