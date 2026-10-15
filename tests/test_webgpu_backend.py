@@ -53,7 +53,7 @@ def test_float_literals_browsers_reject_are_refused():
 
 
 def test_uninitialised_loop_vars_are_refused():
-    """No GPU needed. wgpu-native zeroes a loop-local `var x: T;` once, WGSL (and browsers) every iteration."""
+    """No GPU needed. naga before wgpu v30 zeroes a loop-local `var x: T;` once; WGSL and browsers every iteration."""
     from kernelport.backends.webgpu.runner import check_loop_vars
 
     for ok in ("var acc: array<f32, 128>;\nfor (var i = 0u; i < 3u; i++) { acc[i] = 1.0; }",

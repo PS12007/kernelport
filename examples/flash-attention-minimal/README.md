@@ -43,10 +43,13 @@ the code. The reference is plain softmax attention in float64, plus the final `m
   grows), so the port now takes the row max in a first pass and sums `l` in fp64. It passed on
   attempt 2.
 - **WebGPU** (`ports/webgpu/port.py`): one invocation per query row like the original, `vec4` dot
-  products and block-wise sums to stay within fp32 tolerance without fp64. Porting it found a
-  wgpu-native bug: a `var` declared inside a loop without an initializer is zeroed only once,
-  not on every iteration as WGSL requires. kernelport's webgpu runner now refuses such
-  declarations, because browsers follow the spec and the same shader would give other results.
+  products and block-wise sums to stay within fp32 tolerance without fp64. Porting it hit a
+  WGSL compiler bug: with the wgpu-native that wgpu-py 0.32 bundles (29.0.1.1), a `var` declared
+  inside a loop without an initializer is zeroed only once, not on every iteration as WGSL
+  requires. It happens on Vulkan, D3D12 and GL alike, while Chrome and Edge follow the spec. The
+  bug is in naga and was already fixed upstream (gfx-rs/wgpu#9592, wgpu v30), but no
+  wgpu-native release has that fix yet. kernelport's webgpu runner now refuses such declarations,
+  so a port gives the same result everywhere.
 - **Metal** (`ports/metal/port.py`): the same algorithm with `metal::precise::exp`.
 
 ```bash

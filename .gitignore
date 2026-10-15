@@ -10,3 +10,6 @@ build/
 
 # Committed example workspaces (frozen references, ports, results) are part of the repo.
 !examples/*/.kernelport/
+
+# local drafts of upstream issues (not published)
+drafts/

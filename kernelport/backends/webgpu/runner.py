@@ -144,9 +144,10 @@ def check_loop_vars(wgsl: str) -> None:
     """Refuse a `var` declared without an initializer inside a loop body.
 
     WGSL zero-initialises such a variable every time its declaration runs, i.e. on every
-    iteration, and browsers do. wgpu-native (naga, measured with wgpu 0.32 on Vulkan) zeroes it
-    only once per invocation, so the value carries over between iterations and the same port
-    gives different results natively and in a browser.
+    iteration, and browsers do. naga before wgpu v30 zeroed it only once per invocation, so the
+    value carried over between iterations (fixed upstream in gfx-rs/wgpu#9592; wgpu-py 0.32 still
+    bundles wgpu-native 29.0.1.1, measured wrong on Vulkan, D3D12 and GL). Requiring an explicit
+    initializer gives the same result on every version and in browsers.
     """
     code = re.sub(r"/\*.*?\*/", " ", re.sub(r"//[^\n]*", " ", wgsl), flags=re.S)
     for head in _LOOP_HEAD.finditer(code):
@@ -164,8 +165,9 @@ def check_loop_vars(wgsl: str) -> None:
             line = code.count("\n", 0, m.start()) + 1
             raise ValueError(
                 f"WGSL line {line}: `{m.group(0).strip()}` is declared inside a loop without an initializer. "
-                "WGSL zeroes it on every iteration, but wgpu-native only once, so native and browser results "
-                f"differ. Initialise it explicitly: `var {m.group(1)} = {m.group(2)}();` (the zero value).")
+                "WGSL zeroes it on every iteration, but wgpu-native before v30 (naga) only once, so results "
+                f"differ between versions and browsers. Initialise it explicitly: `var {m.group(1)} = "
+                f"{m.group(2)}();` (the zero value).")
 
 
 def _elem_type(p, case_dtype: str) -> tuple[str, type]:

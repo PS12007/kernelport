@@ -251,7 +251,8 @@
   - `examples/flash-attention-minimal`: unmodified flash.cu; reference validated 6/6 for N <= 384 (the
     original's own `__expf`/fp32 rounding exceeds the fixed tolerance at N = 512, so larger sizes are
     documented, not claimed); Triton 23x, WGSL and Metal PASS. Porting to WGSL found that wgpu-native
-    zeroes a loop-local `var` without initializer only once (WGSL: every iteration); the runner refuses it.
+    (naga before v30, as bundled by wgpu-py 0.32) zeroes a loop-local `var` without initializer only once
+    (WGSL: every iteration; fixed upstream in gfx-rs/wgpu#9592); the runner refuses it.
     Harness: init `{"dist": "full", "value": "-inf"}`.
 
 ## Next (pick up here)
