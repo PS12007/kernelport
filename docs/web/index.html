@@ -63,13 +63,13 @@ Nothing is uploaded anywhere.</p>
 <ol class="small">
 <li>kernelport ran each original CUDA kernel against a PyTorch reference on an NVIDIA GPU, and froze the reference only after every case matched.</li>
 <li><code>scripts/build_web_demo.py</code> used kernelport's own harness to generate the inputs and the expected
-outputs (the frozen reference, rounded to float32). It also took the tolerances and the exact shader that <code>kernelport verify</code> runs.</li>
+outputs (the frozen reference, rounded to the output dtype). It also took the tolerances and the exact shader that <code>kernelport verify</code> runs.</li>
 <li>This page uploads those inputs, dispatches the WGSL shader and compares element by element. NaN and
 infinity positions must match, and every other value must be within <code>atol + rtol·|expected|</code>.
-For float32 that is rtol 1.3e-6 and atol 1e-5, the torch.testing defaults.</li>
+These are the torch.testing defaults: rtol 1.3e-6 and atol 1e-5 for float32, and rtol 1e-3 (about one ulp) for float16.</li>
 </ol>
-<p class="small muted">Only the float32 cases under 400 KB are included, so the page stays small. <code>kernelport verify</code> also runs
-float16 and large cases. <span id="version"></span></p>
+<p class="small muted">Only small cases are included (up to 400 KB per float32 case), so the page stays small. float16 runs only
+where the GPU and browser support <code>shader-f16</code>. <code>kernelport verify</code> also runs the large cases. <span id="version"></span></p>
 </main>
 
 <script>
@@ -79,10 +79,18 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&l
 const badge = (s) => `<span class="badge ${s}">${s}</span>`;
 let adapterLabel = "", summaryText = "";
 
+function halfToFloat(h) {
+  const s = h & 0x8000 ? -1 : 1, e = (h >> 10) & 0x1f, f = h & 0x3ff;
+  if (e === 0) return s * f * 2 ** -24;
+  if (e === 31) return f ? NaN : s * Infinity;
+  return s * (1 + f / 1024) * 2 ** (e - 15);
+}
+
 function view(dtype, bytes) {
   const buf = bytes.slice().buffer;  // fresh, aligned copy
   switch (dtype) {
     case "float32": return new Float32Array(buf);
+    case "float16": return Float64Array.from(new Uint16Array(buf), halfToFloat);
     case "int32": return new Int32Array(buf);
     case "uint32": return new Uint32Array(buf);
     case "int64": return new BigInt64Array(buf);
@@ -93,7 +101,7 @@ function view(dtype, bytes) {
 function compare(out, actualBytes, expectedBytes) {
   const a = view(out.dtype, actualBytes).subarray(0, out.count);
   const e = view(out.dtype, expectedBytes);
-  const isFloat = out.dtype === "float32";
+  const isFloat = out.dtype === "float32" || out.dtype === "float16";
   let maxAbs = 0, bad = 0, first = -1;
   for (let i = 0; i < out.count; i++) {
     let ok;
@@ -161,10 +169,10 @@ async function runCase(device, module, pipelines, k, c, data) {
 }
 
 function row(k, status, cells = {}) {
-  const id = `row-${k.name}`;
+  const id = `row-${k.name}-${k.dtype}`;
   let tr = $(id);
   if (!tr) { tr = document.createElement("tr"); tr.id = id; $("rows").appendChild(tr); }
-  tr.innerHTML = `<td><code>${esc(k.name)}</code>
+  tr.innerHTML = `<td><code>${esc(k.name)}</code> <span class="small muted">${k.dtype === "float16" ? "fp16" : "fp32"}</span>
     <details><summary>WGSL port</summary><pre>${esc(k.wgsl.trim())}</pre>
     <span class="small muted">From <a href="https://github.com/PS12007/kernelport/blob/main/${esc(k.port_file)}">${esc(k.port_file)}</a>,
     port of <a href="https://github.com/PS12007/kernelport/blob/main/${esc(k.cuda_file)}">${esc(k.cuda_file)}</a></span></details>
@@ -197,12 +205,18 @@ async function run() {
   }
   const info = adapter.info || {};
   adapterLabel = [info.vendor, info.architecture, info.description].filter(Boolean).join(" ") || "your GPU";
-  const device = await adapter.requestDevice();
+  const hasF16 = adapter.features.has("shader-f16");
+  const device = await adapter.requestDevice({requiredFeatures: hasF16 ? ["shader-f16"] : []});
   device.lost.then((l) => banner("bad", `<b>The GPU device was lost:</b> ${esc(l.message)}`));
   banner("", `Running on <b>${esc(adapterLabel)}</b>...`);
-  let passed = 0, cases = 0, failed = [];
+  let passed = 0, cases = 0, failed = [], skipped = 0;
   const t0 = performance.now();
   for (const k of manifest.kernels) {
+    if (k.dtype === "float16" && !hasF16) {
+      skipped++;
+      row(k, "SKIPPED", {why: "not tested: this GPU/browser has no shader-f16"});
+      continue;
+    }
     row(k, "RUNNING");
     let ok = true, maxAbs = 0, ms = 0, n = 0, npass = 0, why = "";
     try {
@@ -223,16 +237,18 @@ async function run() {
       ok = false; why = why || String(e.message || e);
     }
     cases += n;
-    if (ok) passed++; else failed.push(k.name);
+    if (ok) passed++; else failed.push(`${k.name} (${k.dtype})`);
     row(k, ok ? "PASS" : "FAIL", {cases: `${npass}/${k.cases.length}`, err: maxAbs ? maxAbs.toExponential(1) : "0",
                                   ms: `${ms.toFixed(1)} ms`, why});
   }
-  const total = manifest.kernels.length;
+  const total = manifest.kernels.length - skipped;
+  const ports = new Set(manifest.kernels.map((k) => k.name)).size;
+  const dtypes = hasF16 ? "fp32 + fp16" : "fp32 (no shader-f16 here, fp16 not tested)";
   const secs = ((performance.now() - t0) / 1000).toFixed(1);
-  summaryText = `kernelport WebGPU check: ${passed}/${total} ports PASS (${cases} cases) on ${adapterLabel}`;
+  summaryText = `kernelport WebGPU check: ${passed}/${total} PASS (${ports} ports, ${dtypes}, ${cases} cases) on ${adapterLabel}`;
   banner(passed === total ? "ok" : "bad",
-    `<b>${passed}/${total} ports PASS</b> on ${esc(adapterLabel)}<br>
-     <span class="small muted">${cases} cases in ${secs} s, every output within kernelport's float32 tolerance` +
+    `<b>${passed}/${total} PASS</b> on ${esc(adapterLabel)} <span class="small muted">(${ports} ports, ${dtypes})</span><br>
+     <span class="small muted">${cases} cases in ${secs} s, every output within kernelport's tolerance` +
     (failed.length ? `; failed: ${esc(failed.join(", "))}. Please open an issue with your GPU and browser.` : ".") + `</span>
      <div class="actions"><button id="again">Run again</button><button id="copy">Copy result</button></div>`);
   $("again").onclick = () => location.reload();
@@ -241,7 +257,7 @@ async function run() {
     catch { $("copy").textContent = "Copy failed"; }
   };
   document.title = `${passed}/${total} PASS · kernelport WebGPU check`;
-  const result = {passed, total, cases, failed, adapter: adapterLabel,
+  const result = {passed, total, skipped, cases, failed, adapter: adapterLabel,
                   kernels: [...$("rows").children].map((tr) => tr.innerText.replace(/\s+/g, " ").trim())};
   document.body.dataset.result = JSON.stringify(result);
   // scripts/check_web_demo.py opens the page with ?post=1 and collects the result from its local server

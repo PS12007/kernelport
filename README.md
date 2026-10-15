@@ -142,7 +142,7 @@ Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX (28 threads), benc
 
 [`docs/web/`](https://github.com/PS12007/kernelport/tree/main/docs/web) is a single page with no
 dependencies. It runs the 12 WGSL ports on your GPU through the browser's WebGPU and compares every
-output with the frozen reference, using kernelport's float32 tolerances. The inputs, expected outputs,
+output with the frozen reference, using kernelport's tolerances, in float32 and (where the GPU has `shader-f16`) float16. The inputs, expected outputs,
 tolerances and shaders come from kernelport's own harness (`scripts/build_web_demo.py`).
 
 ```bash
@@ -150,7 +150,7 @@ python -m http.server -d docs/web 8000     # then open http://localhost:8000
 python scripts/check_web_demo.py           # or headless, in Chrome/Edge (add --discrete for the dGPU)
 ```
 
-12/12 ports pass in Edge on an RTX 5060 and on Intel UHD Graphics (Xe-LP, the i7-14700HX's iGPU). The page also caught a
+All 12 ports pass in both dtypes (24/24, 114 cases) in Edge on an RTX 5060 and on Intel UHD Graphics (the i7-14700HX's iGPU). The page also caught a
 real portability bug: the softmax port wrote `-3.4028235e38`, a decimal just above the largest f32.
 wgpu-native rounds it, but browsers reject the shader. The webgpu runner now refuses such literals.
 

@@ -16,12 +16,14 @@ WEB = ROOT / "docs" / "web"
 def test_web_demo_matches_zoo_ports():
     """If this fails, run: python scripts/build_web_demo.py"""
     manifest = json.loads((WEB / "cases.json").read_text(encoding="utf-8"))
-    names = [k["name"] for k in manifest["kernels"]]
-    assert names == sorted(p.parent.parent.name for p in ZOO.glob("*/ports/webgpu.py"))
+    zoo = sorted(p.parent.parent.name for p in ZOO.glob("*/ports/webgpu.py"))
+    for dtype in ("float32", "float16"):
+        assert [k["name"] for k in manifest["kernels"] if k["dtype"] == dtype] == zoo
     for k in manifest["kernels"]:
         port = load_port(ZOO / k["name"] / "ports" / "webgpu.py")
         spec = LaunchSpec.load(ZOO / k["name"] / "launch.json")
-        expected = port.WGSL + "\n" + bindings_source(spec, "float32", dict(getattr(port, "BINDINGS", {}) or {}))
+        bindings = bindings_source(spec, k["dtype"], dict(getattr(port, "BINDINGS", {}) or {}))
+        expected = ("enable f16; " if k["dtype"] == "float16" else "") + port.WGSL + "\n" + bindings
         assert k["wgsl"] == expected, f"{k['name']}: docs/web is stale"
         check_browser_literals(k["wgsl"])
         blob = (WEB / k["data"]).read_bytes()

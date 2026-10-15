@@ -79,7 +79,8 @@ def main() -> None:
         sys.exit(f"page error: {got['error']}")
     for line in got["kernels"]:
         print("  " + line.replace(" ▶ WGSL port", "").replace(" WGSL port", ""))
-    print(f"{got['passed']}/{got['total']} ports PASS ({got['cases']} cases) on {got['adapter']}")
+    skipped = f", {got['skipped']} not tested (no shader-f16)" if got.get("skipped") else ""
+    print(f"{got['passed']}/{got['total']} PASS ({got['cases']} cases{skipped}) on {got['adapter']}")
     sys.exit(0 if got["passed"] == got["total"] else 1)
 
 

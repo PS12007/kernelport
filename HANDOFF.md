@@ -15,7 +15,7 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 |---|---|---|
 | Public v0.1 (installable, works, honest about status) | ~95% | AMD verification |
 | Ready to launch publicly | ~85% | Agent demo video, GitHub Pages switched on, a first Linux + NVIDIA run, launch posts |
-| Mature product | ~70% | Multi-kernel pipelines, more agents, fp16/bf16 in the browser check |
+| Mature product | ~70% | Multi-kernel pipelines, more agents tested, AMD |
 
 ## What is verified
 
@@ -23,7 +23,7 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 |---|---|---|
 | Triton | Working | 12/12 zoo + 9/9 llm.c ports pass on RTX 5060 (Windows); 1.0-1.3x the original CUDA, matmul 6.2x |
 | Metal (MLX) | Working | 12/12 zoo + 5/5 llm.c + flash-attention ports pass on Apple M1, checked by CI on every push |
-| WebGPU (WGSL) | Working | 12/12 zoo pass on NVIDIA (Vulkan), Apple (Metal) and llvmpipe; 2/2 llm.c fp32 ports + flash-attention pass on all three; in browsers 12/12 on RTX 5060 + Intel UHD (Edge) and SwiftShader + Apple (Chrome, CI) |
+| WebGPU (WGSL) | Working | 12/12 zoo pass on NVIDIA (Vulkan), Apple (Metal) and llvmpipe; 2/2 llm.c fp32 ports + flash-attention pass on all three; in browsers 24/24 (fp32 + fp16) on RTX 5060 + Intel UHD (Edge), and in Chrome on SwiftShader + Apple (CI) |
 | CPU (Numba) | Working | 12/12 zoo pass (fp32) |
 | HIP (AMD) | Unverified | Ports written; `scripts/amd_check.sh` ready to run on an AMD machine |
 
