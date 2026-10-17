@@ -255,6 +255,23 @@
     (WGSL: every iteration; fixed upstream in gfx-rs/wgpu#9592); the runner refuses it.
     Harness: init `{"dist": "full", "value": "-inf"}`.
 
+- **Pipelines** (2026-10-17): `kernelport/harness/pipeline.py`, tools `write_pipeline` /
+  `verify_pipeline` (14 tools), CLI `kernelport pipeline`. A pipeline (`.kernelport/pipelines/<name>.json`)
+  names buffers (generated with `init`, or written by a stage) and stages (kernel id, `dims` mapping,
+  `bind` params -> buffers). `resolve` checks names, dtypes, read-before-write and element counts against
+  the frozen specs. Each stage's port output is compared with its frozen reference on the exact input it
+  received (usual tolerances; PASS/FAIL comes only from this). A float64 chain of references gives
+  end-to-end drift: worst |err| / (atol + rtol|exact|) per buffer plus a count of inf/NaN in one chain
+  only; reported, never decides (relative error was useless: 1e-90 vs 0). Backend `cuda` chains the
+  originals. Results in `pipelines/results/<name>/<backend>/<hw>.json`; `status` and both reports show
+  them, downgraded to UNVERIFIED when the pipeline, a port/source or a reference changed.
+  examples/llm.c: `gpt2_loss_head` (softmax -> crossentropy -> backward, fp32) and
+  `gpt2_embed_gelu_residual` (bf16), PASS on Triton and the originals (RTX 5060); CI runs the bf16 one
+  on Metal. Findings: fp32 softmax underflow makes some losses inf on confident logits (originals 8/16,
+  ports 5/16, `__expf` vs `exp`); bf16 drift reaches 1.5x one kernel's tolerance after 3 kernels, same for
+  originals and ports. `tests/bad_ports/crossentropy_clamped.py` (clamps probs >= 1e-3) PASSes its own
+  cases and FAILs the pipeline.
+
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install

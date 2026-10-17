@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-10-15 (end of day). Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-10-17. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -15,7 +15,7 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 |---|---|---|
 | Public v0.1 (installable, works, honest about status) | ~95% | AMD verification |
 | Ready to launch publicly | ~85% | Agent demo video, GitHub Pages switched on, a first Linux + NVIDIA run, launch posts |
-| Mature product | ~70% | Multi-kernel pipelines, more agents tested, AMD |
+| Mature product | ~75% | More agents tested, AMD, pipeline timing |
 
 ## What is verified
 
@@ -64,6 +64,14 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 | Failure report | "unexpected NaN" hint also names overflow (inf/inf), not only unwritten elements |
 | CI | Flaky WebGPU test fixed: the racy reduce_sum bad port can PASS on llvmpipe (workgroups run one by one), so it is skipped there; earlier red runs on 2026-10-14 were this flake |
 
+## What was done on 2026-10-17
+
+| Area | Change |
+|---|---|
+| Pipelines | Kernels run in a chain over named buffers (`.kernelport/pipelines/<name>.json`); every stage's port is checked against its frozen reference on the data the stage before really wrote. End-to-end drift vs a float64 chain is reported, never decides. Tools `write_pipeline` / `verify_pipeline` (14 tools), CLI `kernelport pipeline`, rows in `status` and both reports (stale results shown as UNVERIFIED). Backend `cuda` chains the originals |
+| llm.c pipelines | `gpt2_loss_head` (softmax -> crossentropy -> backward) and `gpt2_embed_gelu_residual` (bf16): PASS on Triton and the originals; CI runs the bf16 one on Metal |
+| Why it matters | A crossentropy port that clamps probs to >= 1e-3 passes its own cases and fails the pipeline (test). Drift shows fp32 softmax underflow (inf losses) and bf16 error growth (1.5x a tolerance after 3 kernels, same in the originals) |
+
 ## Next steps (owner)
 
 None of these need API credits.
@@ -85,7 +93,7 @@ None of these need API credits.
       gitignored): an issue for pygfx/wgpu-py (`wgpu-loop-var-issue.md`, with
       `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
       naga v30 (gfx-rs/wgpu#9592); wgpu-native has no v30 release yet. Re-check both before posting.
-- [ ] **Release 0.1.1:** main has a lot since 0.1.0 (macro kernels, report, browser check, new
+- [ ] **Release 0.1.1:** main has a lot since 0.1.0 (pipelines, macro kernels, report, browser check, new
       checks, flash-attention example, CLI fixes). Bump the version and push a `v0.1.1` tag (RELEASING.md).
 - [ ] Optional: try Codex, Cursor or Gemini CLI with `kernelport setup`.
 
@@ -94,7 +102,7 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 
 ## Ideas to make it better
 
-- **Multi-kernel pipelines:** verify a chain end to end (e.g. layernorm -> matmul -> gelu), not just single kernels.
+- **Pipelines, more:** time a whole chain (ports vs originals); a pipeline in the browser check; a chain with a matmul.
 - **More real projects:** a cuBLAS-heavy repo, or flash-attention's backward pass (forward is done).
 - **Linux GPU checks:** free CI runners have no GPU; a Colab or Kaggle run per release would cover Linux + NVIDIA.
 - **Browser check, more:** add the llm.c / flash-attention WGSL ports to `docs/web` (today only the zoo),
@@ -103,6 +111,7 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 - **When wgpu-native ships v30:** the loop-var check can stay (harmless); note the fixed version in the message.
 
 Done 2026-10-15 from this list: macro-defined kernels, report polish, browser demo page, FlashAttention example.
+Done 2026-10-17: multi-kernel pipelines.
 
 **Handy here:** headless Edge runs WebGPU on this laptop (`scripts/check_web_demo.py`; `--discrete` for
 the RTX 5060) and takes screenshots for checking pages (`msedge --headless=new --screenshot=...`).
@@ -119,7 +128,7 @@ Open Claude Code in `C:\-CS\CUDAtoanything` and say "keep working on kernelport"
 | CI runs | https://github.com/PS12007/kernelport/actions |
 | llm.c PR | https://github.com/karpathy/llm.c/pull/867 (branch `fix-softmax-online-kernel8-small-c` on PS12007/llm.c) |
 | Environment | `.venv` (Python 3.12, torch 2.11 cu128, triton-windows 3.7, cupy 14.2); run tools as `.venv\Scripts\python.exe` / `.venv\Scripts\kernelport.exe` |
-| Tests | `.venv\Scripts\python.exe -m pytest -q` (~6-7 min; 287 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
+| Tests | `.venv\Scripts\python.exe -m pytest -q` (~6-7 min; 312 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
 
 ## Rules to keep
 
