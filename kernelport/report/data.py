@@ -174,6 +174,7 @@ def collect(ws: Workspace) -> dict[str, Any]:
         "passed_on": [short_hardware(h) for h in passed_on],
         "kernels": kernels,
         "rows": status_rows,
+        "pipelines": ws.pipeline_status(),
     }
 
 

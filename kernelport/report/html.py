@@ -185,6 +185,21 @@ def _kernel_details(k: dict) -> str:
             f"{ports}</div></details>")
 
 
+def _pipelines(d: dict) -> str:
+    if not d.get("pipelines"):
+        return ""
+    rows = "".join(
+        f"<tr><td><code>{_e(p['pipeline'])}</code></td><td>{p['stages']}</td><td>{_e(p['backend'])}</td>"
+        f"<td>{_e(p['hardware'])}</td><td>{_badge(p['status'], p['reason'])}"
+        f"{' <span class=small>' + _e(p['reason']) + '</span>' if p['reason'] else ''}</td><td>{_e(p['cases'])}</td>"
+        f"<td class=small>{'<br>'.join(_e(x) for x in p.get('drift', []))}</td></tr>"
+        for p in d["pipelines"])
+    return ("<h2>Pipelines</h2><p class=small>Kernels run in a chain; every stage is checked against its reference "
+            "on what the stage before really wrote. Drift compares the chain with a float64 chain of references; "
+            "it is information, not a verdict.</p><table><thead><tr><th>pipeline</th><th>stages</th><th>backend</th>"
+            f"<th>hardware</th><th>status</th><th>cases</th><th>drift</th></tr></thead><tbody>{rows}</tbody></table>")
+
+
 def render(d: dict) -> str:
     """Full HTML page for report data from ``collect``."""
     hw = ", ".join(d["hardware"]) or "none yet"
@@ -201,6 +216,7 @@ first validated against the original CUDA kernel. Anything that changed since it
 <h2>Kernels × backends</h2>
 {_matrix(d)}
 {_idle(d)}
+{_pipelines(d)}
 <h2>Details</h2>
 {''.join(_kernel_details(k) for k in d['kernels'] if k['started']) or '<p class="muted">Nothing started yet.</p>'}
 <script type="application/json" id="kernelport-data">{data_json}</script>

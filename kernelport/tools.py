@@ -422,7 +422,13 @@ def list_status(root: str | None = None) -> dict:
     for r in rows:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     summary = ", ".join(f"{v} {k}" for k, v in sorted(counts.items())) or "workspace is empty"
-    return {"ok": True, "rows": rows, "counts": counts, "summary": summary}
+    out = {"ok": True, "rows": rows, "counts": counts, "summary": summary}
+    pipes = ws.pipeline_status() if ws.dir.is_dir() else []
+    if pipes:
+        out["pipelines"] = pipes
+        n_pass = sum(p["status"] == "PASS" for p in pipes)
+        out["summary"] += f"; pipelines: {n_pass}/{len(pipes)} PASS"
+    return out
 
 
 def make_report(format: str = "html", root: str | None = None) -> dict:

@@ -203,6 +203,40 @@ def test_result_round_trips(repo, tmp_path):
     assert back.status == "PASS" and back.drift_lines() == res.drift_lines()
 
 
+@needs_torch
+def test_status_and_report_downgrade_stale_results(repo):
+    from kernelport import tools
+    from kernelport.harness.pipeline import PipelineSpec, resolve, run_pipeline
+    from kernelport.workspace import Workspace, sha256_file
+
+    ws = Workspace(repo)
+    small = _small(_pipe())
+    small["name"] = "small"
+    assert tools.write_pipeline(small, root=str(repo))["ok"]
+    pipe = PipelineSpec.load(ws.pipeline_path("small"))
+    stages = resolve(pipe, ws.pipeline_kernel)
+    res = run_pipeline(pipe, stages, _reference_runner, backend="triton", hardware="Test GPU",
+                       code_hashes={s.kernel_id: sha256_file(ws.port_path(s.kernel_id, "triton")) for s in stages},
+                       reference_hashes={s.kernel_id: sha256_file(s.reference) for s in stages})
+    res.save(ws.pipeline_result_path("small", "triton", "Test GPU"))
+
+    def row():
+        return next(p for p in tools.list_status(root=str(repo))["pipelines"] if p["pipeline"] == "small")
+
+    assert row()["status"] == "PASS" and row()["cases"] == "3/3"
+    md = tools.make_report("markdown", root=str(repo))["content"]
+    assert "## Pipelines" in md and "`small`" in md
+    html = tools.make_report("html", root=str(repo))
+    assert "<h2>Pipelines</h2>" in (repo / html["path"]).read_text(encoding="utf-8")
+
+    port = ws.port_path(CE, "triton")
+    port.write_text(port.read_text(encoding="utf-8") + "\n# edited\n", encoding="utf-8")
+    assert row()["status"] == "UNVERIFIED" and "port changed" in row()["reason"]
+    small["cases"] = small["cases"][:1]
+    tools.write_pipeline(small, root=str(repo))
+    assert row()["status"] == "UNVERIFIED" and "pipeline changed" in row()["reason"]
+
+
 # ---------------------------------------------------------------- on real hardware
 @needs_triton
 def test_triton_ports_pass_in_a_chain(repo):

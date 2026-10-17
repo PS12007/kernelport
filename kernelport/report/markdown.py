@@ -80,6 +80,17 @@ def render(d: dict, max_failure_lines: int = 12) -> str:
                 if len(rep) > max_failure_lines:
                     rep = rep[:max_failure_lines] + ["..."]
                 lines += ["", "  ```", *("  " + ln for ln in rep), "  ```"]
+    if d.get("pipelines"):
+        lines += ["", "## Pipelines", "",
+                  "Kernels run in a chain; every stage checked on what the stage before wrote. "
+                  "Drift: the chain vs a float64 chain of references (information, not a verdict).", "",
+                  "| pipeline | stages | backend | hardware | status | cases | drift |",
+                  "|---|---|---|---|---|---|---|"]
+        for p in d["pipelines"]:
+            status = f"**{p['status']}**" + (f" ({_cell(p['reason'])})" if p["reason"] else "")
+            drift = "<br>".join(_cell(x) for x in p.get("drift", []))
+            lines.append(f"| `{_cell(p['pipeline'])}` | {p['stages']} | {p['backend']} | {_cell(p['hardware'])} "
+                         f"| {status} | {p['cases']} | {drift} |")
     unfrozen = [k for k in started if k["reference"]["state"] != "frozen"]
     if unfrozen:
         lines += ["", "## References not validated yet", ""]

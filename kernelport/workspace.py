@@ -393,6 +393,51 @@ class Workspace:
         d = self.dir / "pipelines" / "results" / name
         return [PipelineResult.load(p) for p in sorted(d.glob("*/*.json"))] if d.is_dir() else []
 
+    def pipeline_status(self) -> list[dict]:
+        """One row per pipeline x backend x hardware. A stored PASS/FAIL only counts while the pipeline
+        file, every port (or original source) and every frozen reference still have the hashes it was
+        earned with; otherwise the row is UNVERIFIED with the reason."""
+        from kernelport.harness.pipeline import PipelineSpec
+
+        rows = []
+        for name in self.pipeline_names():
+            try:
+                pipe = PipelineSpec.load(self.pipeline_path(name))
+            except Exception as exc:
+                rows.append({"pipeline": name, "backend": "-", "hardware": "-", "status": "SKIPPED",
+                             "reason": f"invalid pipeline file: {exc}", "cases": "", "stages": 0})
+                continue
+            results = self.pipeline_results(name)
+            if not results:
+                rows.append({"pipeline": name, "backend": "-", "hardware": "-", "status": "UNVERIFIED",
+                             "reason": "not run on any hardware yet", "cases": "", "stages": len(pipe.stages)})
+            for r in results:
+                status, reason = r.status, r.reason
+                stale = self._pipeline_staleness(pipe, r)
+                if stale and status in ("PASS", "FAIL"):
+                    status, reason = "UNVERIFIED", stale
+                rows.append({"pipeline": name, "backend": r.backend, "hardware": r.hardware, "status": status,
+                             "reason": reason, "cases": f"{r.num_passed}/{len(r.cases)}" if r.cases else "",
+                             "stages": len(pipe.stages), "drift": r.drift_lines(), "timestamp": r.timestamp})
+        return rows
+
+    def _pipeline_staleness(self, pipe, result) -> str:
+        """Why a stored pipeline result no longer applies, or "" if it still does."""
+        if result.pipeline_hash != pipe.hash():
+            return "pipeline changed since this result"
+        for kid, h in result.code_hashes.items():
+            try:
+                rec = self.get(kid)
+                path = self.original_source(rec) if result.backend == "cuda" else self.port_path(kid, result.backend)
+                if not path.is_file() or sha256_file(path) != h:
+                    return f"{rec.name} {'source' if result.backend == 'cuda' else 'port'} changed since this result"
+                _, ref, _ = self.frozen(kid)
+                if sha256_file(ref) != result.reference_hashes.get(kid):
+                    return f"{rec.name} reference changed since this result"
+            except WorkspaceError as exc:
+                return str(exc)
+        return ""
+
     # --------------------------------------------------------------- status
     def status(self) -> list[dict]:
         """One row per kernel x backend x hardware, with honest, current statuses.

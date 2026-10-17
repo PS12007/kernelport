@@ -410,6 +410,15 @@ def status(show_all: bool = typer.Option(False, "--all", help="Also list kernels
     con.print(table)
     if idle and not show_all:
         con.print(f"[dim]{len(idle)} more kernels have no reference or port yet (--all lists them)[/]")
+    if res.get("pipelines"):
+        pt = Table(title="pipelines (kernels in a chain)")
+        for col in ("pipeline", "stages", "backend", "hardware", "status", "cases"):
+            pt.add_column(col)
+        pt.add_column("reason", overflow="fold")
+        for p in res["pipelines"]:
+            pt.add_row(escape(p["pipeline"]), str(p["stages"]), p["backend"], escape(p["hardware"]),
+                       f"[{colors[p['status']]}]{p['status']}[/]", p["cases"], escape(p["reason"]))
+        con.print(pt)
 
 
 @app.command()
