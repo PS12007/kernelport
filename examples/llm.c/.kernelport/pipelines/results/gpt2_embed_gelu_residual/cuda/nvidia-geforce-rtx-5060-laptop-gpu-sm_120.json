@@ -1,0 +1,478 @@
+{
+  "pipeline": "gpt2_embed_gelu_residual",
+  "backend": "cuda",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "pipeline_hash": "65df6fd4da517e670c26e2c777513a155cd1677193a861690769fd1a1df0c719",
+  "code_hashes": {
+    "dev/cuda/encoder_forward.cu::encoder_forward_kernel3": "cfa029e2005618cc499cc8cc280199b1778b26d29fed382e2e35f1dc5649beb9",
+    "dev/cuda/gelu_forward.cu::gelu_forward_kernel2": "8bb3661d3a24f1c7f4f071bd581be604e249947094d2ba18c590c2fcbb64397c",
+    "dev/cuda/residual_forward.cu::residual_forward_kernel1": "9e55dc9854a546147974e1fb9db8c1a39f43bf39c4c60f5e049ad903c6111073"
+  },
+  "reference_hashes": {
+    "dev/cuda/encoder_forward.cu::encoder_forward_kernel3": "88d45443761e0e8f6193f1e6e4d339d38f909016c4dac3134a2f06cb4a229c2d",
+    "dev/cuda/gelu_forward.cu::gelu_forward_kernel2": "9eb6fb616b921b9d19dd647670823fada789b30de410493e595567a0b8dcbfc1",
+    "dev/cuda/residual_forward.cu::residual_forward_kernel1": "10223deea85c02ef18b2408a884968b49cfeeaf3443e0f10819d431601339e8d"
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x8",
+      "passed": true,
+      "input_hash": "01bce7f146f77f0abdde31db538f330e8687739bc0d5b2d861a7a26240a8e2c8",
+      "stages": [
+        {
+          "stage": "1:encoder_forward_kernel3",
+          "kernel_id": "dev/cuda/encoder_forward.cu::encoder_forward_kernel3",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                1,
+                1,
+                8
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 8,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:gelu_forward_kernel2",
+          "kernel_id": "dev/cuda/gelu_forward.cu::gelu_forward_kernel2",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                8
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 8,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:residual_forward_kernel1",
+          "kernel_id": "dev/cuda/residual_forward.cu::residual_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                8
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 8,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "g",
+          "dtype": "bfloat16",
+          "num_elements": 8,
+          "max_abs_err": 0.0038439295349953495,
+          "tol_ratio": 0.4237367930095374,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "x",
+          "dtype": "bfloat16",
+          "num_elements": 8,
+          "max_abs_err": 0.00390625,
+          "tol_ratio": 0.1656418954733383,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "y",
+          "dtype": "bfloat16",
+          "num_elements": 8,
+          "max_abs_err": 0.006534751891285273,
+          "tol_ratio": 0.27799948382948453,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "odd_3x5x16",
+      "passed": true,
+      "input_hash": "b6e31d5e903b9ec9fc0cf0d1e1dbd387386f8a3e9751727040e611b21b71e0d0",
+      "stages": [
+        {
+          "stage": "1:encoder_forward_kernel3",
+          "kernel_id": "dev/cuda/encoder_forward.cu::encoder_forward_kernel3",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                3,
+                5,
+                16
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 240,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:gelu_forward_kernel2",
+          "kernel_id": "dev/cuda/gelu_forward.cu::gelu_forward_kernel2",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                240
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 240,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:residual_forward_kernel1",
+          "kernel_id": "dev/cuda/residual_forward.cu::residual_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                240
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 240,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "g",
+          "dtype": "bfloat16",
+          "num_elements": 240,
+          "max_abs_err": 0.00961207307182832,
+          "tol_ratio": 0.4175738773316921,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "x",
+          "dtype": "bfloat16",
+          "num_elements": 240,
+          "max_abs_err": 0.00390625,
+          "tol_ratio": 0.2411637598394814,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "y",
+          "dtype": "bfloat16",
+          "num_elements": 240,
+          "max_abs_err": 0.015000597412380579,
+          "tol_ratio": 0.4267639655436559,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "mid_2x37x200",
+      "passed": true,
+      "input_hash": "b1d796b8a2ee03141e09e1d6de4ff6e05c9db93a953365ea90494e50447d842f",
+      "stages": [
+        {
+          "stage": "1:encoder_forward_kernel3",
+          "kernel_id": "dev/cuda/encoder_forward.cu::encoder_forward_kernel3",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                2,
+                37,
+                200
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 14800,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:gelu_forward_kernel2",
+          "kernel_id": "dev/cuda/gelu_forward.cu::gelu_forward_kernel2",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                14800
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 14800,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:residual_forward_kernel1",
+          "kernel_id": "dev/cuda/residual_forward.cu::residual_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                14800
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 14800,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "g",
+          "dtype": "bfloat16",
+          "num_elements": 14800,
+          "max_abs_err": 0.0121639902894497,
+          "tol_ratio": 1.002000541149016,
+          "nonfinite_mismatch": 0,
+          "within": false
+        },
+        {
+          "name": "x",
+          "dtype": "bfloat16",
+          "num_elements": 14800,
+          "max_abs_err": 0.0078125,
+          "tol_ratio": 0.24311498366267306,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "y",
+          "dtype": "bfloat16",
+          "num_elements": 14800,
+          "max_abs_err": 0.0287451218001884,
+          "tol_ratio": 0.5272547741678965,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "gpt2_4x256x768",
+      "passed": true,
+      "input_hash": "43b73e02720d056bc438fde365adef951f20df522cdc5e418e4ab1ae12b40b5c",
+      "stages": [
+        {
+          "stage": "1:encoder_forward_kernel3",
+          "kernel_id": "dev/cuda/encoder_forward.cu::encoder_forward_kernel3",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                4,
+                256,
+                768
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 786432,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:gelu_forward_kernel2",
+          "kernel_id": "dev/cuda/gelu_forward.cu::gelu_forward_kernel2",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                786432
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 786432,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:residual_forward_kernel1",
+          "kernel_id": "dev/cuda/residual_forward.cu::residual_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                786432
+              ],
+              "dtype": "bfloat16",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 786432,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "g",
+          "dtype": "bfloat16",
+          "num_elements": 786432,
+          "max_abs_err": 0.015835079057186174,
+          "tol_ratio": 1.4788462289256108,
+          "nonfinite_mismatch": 0,
+          "within": false
+        },
+        {
+          "name": "x",
+          "dtype": "bfloat16",
+          "num_elements": 786432,
+          "max_abs_err": 0.0078125,
+          "tol_ratio": 0.24311498366267306,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "y",
+          "dtype": "bfloat16",
+          "num_elements": 786432,
+          "max_abs_err": 0.038509982488085015,
+          "tol_ratio": 0.5868084107389986,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    }
+  ],
+  "timestamp": "2026-10-17T21:51:07+00:00",
+  "schema_version": 1
+}

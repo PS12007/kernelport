@@ -1,0 +1,23 @@
+{
+  "name": "gpt2_embed_gelu_residual",
+  "_notes": "bf16, as llm.c's train_gpt2.cu: token + position embeddings (encoder_forward_kernel3), GELU on them, then the residual add x + gelu(x). Not GPT-2's exact block order (that has layernorm and matmuls in between), but each kernel reads what the previous one wrote. C is a multiple of 8: the Packed128 kernels move 8 bf16 values per thread without a tail check.",
+  "buffers": {
+    "tokens": {"dtype": "int32",    "shape": ["B", "T"],    "init": {"dist": "randint", "low": 0, "high": "V"}},
+    "wte":    {"dtype": "bfloat16", "shape": ["V", "C"],    "init": {"dist": "normal", "std": 0.5}},
+    "wpe":    {"dtype": "bfloat16", "shape": ["maxT", "C"], "init": {"dist": "normal", "std": 0.5}},
+    "x":      {"dtype": "bfloat16", "shape": ["B", "T", "C"]},
+    "g":      {"dtype": "bfloat16", "shape": ["B", "T", "C"]},
+    "y":      {"dtype": "bfloat16", "shape": ["B", "T", "C"]}
+  },
+  "stages": [
+    {"kernel": "encoder_forward_kernel3", "bind": {"out": "x", "inp": "tokens"}},
+    {"kernel": "gelu_forward_kernel2", "dims": {"N": "B * T * C"}, "bind": {"inp": "x", "out": "g"}},
+    {"kernel": "residual_forward_kernel1", "dims": {"N": "B * T * C"}, "bind": {"inp1": "x", "inp2": "g", "out": "y"}}
+  ],
+  "cases": [
+    {"name": "tiny_1x1x8", "dims": {"B": 1, "T": 1, "C": 8, "V": 3, "maxT": 1}},
+    {"name": "odd_3x5x16", "dims": {"B": 3, "T": 5, "C": 16, "V": 11, "maxT": 7}},
+    {"name": "mid_2x37x200", "dims": {"B": 2, "T": 37, "C": 200, "V": 1000, "maxT": 64}},
+    {"name": "gpt2_4x256x768", "dims": {"B": 4, "T": 256, "C": 768, "V": 50257, "maxT": 1024}}
+  ]
+}

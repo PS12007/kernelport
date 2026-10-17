@@ -73,9 +73,18 @@ float64 gives a large finite value. The original kernels do this too (8 of 16 lo
 ports 5, as `__expf` and `exp` underflow at slightly different points). It is reported as drift,
 not as a failure.
 
+A second pipeline, `gpt2_embed_gelu_residual`, chains the bf16 kernels: token + position
+embedding (`encoder_forward_kernel3`) -> `gelu_forward_kernel2` -> `residual_forward_kernel1`
+(x + gelu(x)), up to B=4, T=256, C=768 with the GPT-2 vocabulary. Triton ports and originals
+PASS 4/4 on the RTX 5060; CI runs the Metal ports on every push. Here drift goes past one
+kernel's tolerance: `g` ends 1.5x a bf16 tolerance away from exact float64 math, for the
+originals exactly as for the ports. Each stage rounds to bf16 and GELU passes on the rounded
+embedding's error; that is what bf16 does over three kernels, not a bug in any of them.
+
 ```bash
 kernelport pipeline gpt2_loss_head --backend triton   # the ports
 kernelport pipeline gpt2_loss_head --backend cuda     # the originals
+kernelport pipeline                                   # every pipeline, every backend with ports
 ```
 
 ## Reproduce

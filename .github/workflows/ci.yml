@@ -64,6 +64,7 @@ jobs:
         working-directory: examples/llm.c
         run: |
           kernelport verify --backend metal
+          kernelport pipeline gpt2_embed_gelu_residual --backend metal
           kernelport status
       - name: flash-attention-minimal example (Metal port vs reference frozen on NVIDIA)
         working-directory: examples/flash-attention-minimal
@@ -75,6 +76,7 @@ jobs:
           name: llmc-results-metal
           path: |
             examples/llm.c/.kernelport/kernels/*/ports/metal/results/*.json
+            examples/llm.c/.kernelport/pipelines/results/*/metal/*.json
             examples/flash-attention-minimal/.kernelport/kernels/*/ports/metal/results/*.json
 
   webgpu:
