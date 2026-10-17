@@ -1,0 +1,26 @@
+{
+  "name": "gpt2_loss_head",
+  "_notes": "GPT-2's loss head as llm.c runs it: logits -> softmax -> per-token cross-entropy loss, then the fused softmax+cross-entropy backward into a zeroed dlogits with dloss = 1/(B*T). The single-kernel specs test crossentropy on uniform probs in [0.001, 1]; here it gets real softmax output (near 1/V, some far smaller). V >= 256 everywhere: the original softmax_forward_online_kernel8 needs C >= blockDim.x (see the example README).",
+  "buffers": {
+    "logits":  {"dtype": "float32", "shape": ["B", "T", "V"], "init": {"dist": "normal", "std": 4.0}},
+    "targets": {"dtype": "int32",   "shape": ["B", "T"],      "init": {"dist": "randint", "low": 0, "high": "V"}},
+    "dlosses": {"dtype": "float32", "shape": ["B", "T"],      "init": {"dist": "full", "value": 0.03125}},
+    "dlogits": {"dtype": "float32", "shape": ["B", "T", "V"], "init": {"dist": "zeros"}},
+    "probs":   {"dtype": "float32", "shape": ["B", "T", "V"]},
+    "losses":  {"dtype": "float32", "shape": ["B", "T"]}
+  },
+  "stages": [
+    {"kernel": "softmax_forward_online_kernel8", "dims": {"N": "B * T", "C": "V"},
+     "bind": {"inp": "logits", "out": "probs"}},
+    {"kernel": "crossentropy_forward_kernel1"},
+    {"kernel": "crossentropy_softmax_backward_kernel1"}
+  ],
+  "cases": [
+    {"name": "tiny_1x1x256", "dims": {"B": 1, "T": 1, "V": 256}},
+    {"name": "odd_3x5x1000", "dims": {"B": 3, "T": 5, "V": 1000}},
+    {"name": "odd_2x7x4097", "dims": {"B": 2, "T": 7, "V": 4097}},
+    {"name": "confident_2x8x1024", "dims": {"B": 2, "T": 8, "V": 1024},
+     "init": {"logits": {"dist": "normal", "std": 30.0}}},
+    {"name": "gpt2_4x64x50257", "dims": {"B": 4, "T": 64, "V": 50257}}
+  ]
+}

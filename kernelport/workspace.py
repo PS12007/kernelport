@@ -348,6 +348,51 @@ class Workspace:
         result.save(p)
         return p
 
+    # ------------------------------------------------------------ pipelines
+    def pipeline_path(self, name: str) -> Path:
+        """``.kernelport/pipelines/<name>.json`` (may not exist yet)."""
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", name or ""):
+            raise WorkspaceError(f"pipeline name {name!r}: use letters, digits, - and _ (max 64)")
+        return self.safe_path("pipelines", f"{name}.json")
+
+    def pipeline_names(self) -> list[str]:
+        """Saved pipelines."""
+        d = self.dir / "pipelines"
+        return sorted(p.stem for p in d.glob("*.json")) if d.is_dir() else []
+
+    def write_pipeline(self, spec: dict) -> Path:
+        """Validate (including against the kernels' frozen specs) and save a pipeline."""
+        from kernelport.harness.pipeline import PipelineError, PipelineSpec, resolve
+
+        try:
+            pipe = PipelineSpec.from_dict(spec)
+            resolve(pipe, self.pipeline_kernel)
+        except PipelineError as exc:
+            raise WorkspaceError(str(exc)) from None
+        path = self.pipeline_path(pipe.name)
+        self.ensure()
+        return self._write(json.dumps(spec, indent=2) + "\n", *path.relative_to(self.dir).parts)
+
+    def pipeline_kernel(self, kernel_id: str) -> tuple[str, LaunchSpec, Path]:
+        """(full id, frozen spec, frozen reference) for a pipeline stage."""
+        rec = self.get(kernel_id)
+        spec, ref, _ = self.frozen(rec.id)
+        return rec.id, spec, ref
+
+    def pipeline_result_path(self, name: str, backend: str, hardware: str) -> Path:
+        self.pipeline_path(name)
+        if backend not in (*BACKEND_NAMES, "cuda"):
+            raise WorkspaceError(f"unknown backend {backend!r}")
+        return self.safe_path("pipelines", "results", name, backend, f"{slugify(hardware, 64)}.json")
+
+    def pipeline_results(self, name: str) -> list:
+        """Latest result per backend x hardware for a pipeline."""
+        from kernelport.harness.pipeline import PipelineResult
+
+        self.pipeline_path(name)
+        d = self.dir / "pipelines" / "results" / name
+        return [PipelineResult.load(p) for p in sorted(d.glob("*/*.json"))] if d.is_dir() else []
+
     # --------------------------------------------------------------- status
     def status(self) -> list[dict]:
         """One row per kernel x backend x hardware, with honest, current statuses.

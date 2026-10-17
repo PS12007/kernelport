@@ -82,6 +82,25 @@ code. Without the interleaving, a laptop GPU's clock ramp made a memory-bound so
 1.22x faster with a different block size; interleaved, every variant came within 2%, and the
 port was left alone.
 
+## 8. Pipelines check ports on the data they really get
+
+A kernel's own cases are generated inputs. In a program, a kernel reads what the kernel before
+it wrote: probabilities near 1/V after a softmax, normalized rows after a layernorm. A pipeline
+(`.kernelport/pipelines/<name>.json`, saved with `write_pipeline`) runs several ported kernels in
+a chain over named buffers, and **every stage is checked against its frozen reference on the
+exact input that stage received**, with the usual tolerances. The first failing stage of each
+case is reported.
+
+It also runs the chain of references in float64 from the same starting buffers and reports how
+far the chain of ports ended from it ("drift", as a multiple of one kernel's tolerance, plus a
+count of values that are inf/NaN in one chain only). Drift is information, not a verdict:
+rounding adds up over a chain, and the pipeline author never sets a tolerance.
+
+The test suite has a crossentropy port that clamps probabilities to at least 1e-3 before the
+log. It PASSes its kernel's own cases (probabilities drawn from [0.001, 1]) and FAILs the
+softmax -> crossentropy pipeline. With backend `cuda`, the chain runs the original kernels, which
+checks that they agree with their references on chained data too.
+
 ## The workspace
 
 ```
@@ -98,6 +117,8 @@ port was left alone.
       attempts.jsonl                 every verify_port call
       results/<hardware>.json        latest result on each machine
       bench/<hardware>.json          latest timing on each machine
+  pipelines/<name>.json              a chain of kernels (write_pipeline)
+  pipelines/results/<name>/<backend>/<hardware>.json
   report.html, report.md
 ```
 

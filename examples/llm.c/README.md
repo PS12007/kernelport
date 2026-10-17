@@ -52,6 +52,32 @@ The `Packed128` kernels have a precondition too: each thread moves 8 bf16 values
 per-element bounds check, so N (gelu) and C (encoder) must be multiples of 8. Their specs only
 use such sizes.
 
+## The loss head as a pipeline
+
+`.kernelport/pipelines/gpt2_loss_head.json` chains three of these kernels the way GPT-2 training
+runs them: logits -> `softmax_forward_online_kernel8` -> `crossentropy_forward_kernel1` (loss per
+token) -> `crossentropy_softmax_backward_kernel1` (into a zeroed `dlogits`, dloss = 1/32). Each
+stage is checked on what the stage before really wrote. That matters for crossentropy: its own
+cases draw probabilities from [0.001, 1], while real softmax output is near 1/V (2e-5 at
+V = 50257). Five cases, up to B=4, T=64, V=50257:
+
+| chain | result |
+|---|---|
+| Triton ports (RTX 5060 Laptop) | PASS 5/5, every stage |
+| original CUDA kernels (RTX 5060 Laptop) | PASS 5/5, every stage |
+
+The float64 chain of references ends within 0.08x of one kernel's float32 tolerance on every
+buffer. One case, `confident_2x8x1024` (logits with std 30), shows an fp32 effect that per-kernel
+tests never see: softmax probabilities underflow to exactly 0, so a few losses are inf where
+float64 gives a large finite value. The original kernels do this too (8 of 16 losses; the Triton
+ports 5, as `__expf` and `exp` underflow at slightly different points). It is reported as drift,
+not as a failure.
+
+```bash
+kernelport pipeline gpt2_loss_head --backend triton   # the ports
+kernelport pipeline gpt2_loss_head --backend cuda     # the originals
+```
+
 ## Reproduce
 
 ```bash

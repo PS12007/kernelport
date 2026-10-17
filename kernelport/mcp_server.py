@@ -83,6 +83,16 @@ def build_server() -> MCPServer:
         """Write the report: format "html" (returns its path) or "markdown" (also returns the text as content)."""
         return tools.make_report(format)
 
+    @server.tool()
+    def write_pipeline(spec: dict[str, Any]) -> dict[str, Any]:
+        """Save a pipeline: kernels (with frozen references) run in a chain over named buffers. See read_skill("workflow"), "Pipelines"."""
+        return tools.write_pipeline(spec)
+
+    @server.tool()
+    def verify_pipeline(name: str, backend: str) -> dict[str, Any]:
+        """Run the pipeline's ports in a chain; each stage is checked on the real output of the stage before. backend "cuda" chains the originals."""
+        return tools.verify_pipeline(name, backend)
+
     return server
 
 

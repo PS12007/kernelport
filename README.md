@@ -170,6 +170,7 @@ Every MCP tool has a CLI equivalent, so you can drive the workflow by hand or fr
 | `kernelport verify` | `verify_port` | port vs frozen reference |
 | `kernelport bench` | `bench_port` | time port vs original (after PASS) |
 | `kernelport tune <id> <backend>` | `tune_port` | verify + time every `TUNE` variant, keep the fastest that passes |
+| `kernelport pipeline [name]` | `write_pipeline`, `verify_pipeline` | run ported kernels in a chain; check every stage on real intermediate data |
 | `kernelport status` | `list_status` | kernel × backend × hardware table |
 | `kernelport report [--md]` | `make_report` | HTML or Markdown report |
 | `kernelport setup` | – | register with Claude Code / Codex / Cursor / Gemini CLI |

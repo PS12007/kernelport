@@ -322,6 +322,62 @@ def tune(kernel_id: str, backend: str,
 
 
 @app.command()
+def pipeline(name: str = typer.Argument(None, help="A saved pipeline, or a .json file to save first. Default: all saved."),
+             backend: str = typer.Option(None, help='Default: every backend with ports for all stages. "cuda" chains the originals.'),
+             as_json: bool = JSON_OPT) -> None:
+    """Run kernels in a chain and check every stage on real data (MCP: write_pipeline, verify_pipeline)."""
+    from pathlib import Path
+
+    from rich.markup import escape
+
+    from kernelport import tools
+    from kernelport.backends.base import BACKEND_NAMES
+    from kernelport.harness.pipeline import PipelineSpec
+    from kernelport.workspace import Workspace
+
+    ws = Workspace()
+    con = _console()
+    if name and name.endswith(".json"):
+        try:
+            spec = json.loads(Path(name).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise typer.BadParameter(f"cannot read {name}: {exc}") from None
+        saved = tools.write_pipeline(spec)
+        if not saved["ok"]:
+            _emit(saved, as_json)
+        name = saved["name"]
+    names = [name] if name else ws.pipeline_names()
+    results = []
+    for n in names:
+        backends = [backend] if backend else []
+        if not backend and ws.pipeline_path(n).is_file():
+            try:
+                kids = [ws.get(s.kernel).id for s in PipelineSpec.load(ws.pipeline_path(n)).stages]
+                backends = [b for b in BACKEND_NAMES if all(ws.port_path(k, b).is_file() for k in kids)]
+            except Exception:
+                backends = []
+            if not backends:
+                results.append({"pipeline": n, "backend": "-", "status": "SKIPPED", "ok": True,
+                                "summary": "no backend has ports for every stage; pass --backend"})
+        for b in backends:
+            results.append({"pipeline": n, "backend": b, **tools.verify_pipeline(n, b)})
+    if as_json:
+        print(json.dumps(results, indent=2, default=str))
+    else:
+        if not results:
+            con.print("no saved pipelines (.kernelport/pipelines/); pass a .json file")
+        for r in results:
+            color = {"PASS": "green", "FAIL": "red"}.get(r.get("status"), "yellow")
+            con.print(f"[{color}]{escape(r['pipeline'])} / {r['backend']}: {escape(r['summary'])}[/]")
+            if r.get("report"):
+                con.print(escape(r["report"]))
+            for line in r.get("drift", []):
+                con.print(f"  drift {escape(line)}")
+    if any(r.get("status") in ("FAIL", "REFUSED") for r in results):
+        raise typer.Exit(1)
+
+
+@app.command()
 def status(show_all: bool = typer.Option(False, "--all", help="Also list kernels with no reference or port."),
            as_json: bool = JSON_OPT) -> None:
     """Kernel x backend x hardware status table (MCP: list_status)."""

@@ -1,0 +1,602 @@
+{
+  "pipeline": "gpt2_loss_head",
+  "backend": "cuda",
+  "status": "PASS",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "reason": "",
+  "pipeline_hash": "6f9b6acdd9827864a4e383a693dc6bd419095cbfb570116b58edbfdeac2a1cbc",
+  "code_hashes": {
+    "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8": "5bc29aae3b655fbccdb40a9dc3a071e64f9b9f53e2c98d0fb0c82e346990013e",
+    "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1": "bd2f6db35e07170173faa00b76d543709dcc9eca90b30c978bb98b242dfe4867",
+    "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1": "b1825fd7b498f28851df5c5bbf380877b32a1ca627234278c627974981e5a660"
+  },
+  "reference_hashes": {
+    "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8": "39ef55b55479ec03098173da9780ac7eaf11273b14da69d2307a2015115268f6",
+    "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1": "8fdc2b6457ee62e4b6a59042f08e2837c1b60e39d5d4e33447c81e38dccbaa34",
+    "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1": "ebf49b8f1f6c43a72f2ba856e73ad2cfe34cc945bcf06114037bb4958823b229"
+  },
+  "cases": [
+    {
+      "case": "tiny_1x1x256",
+      "passed": true,
+      "input_hash": "f93aef03b7cf5c12d46ef5d5908cc765542e4efee625734f45009e5b76183d3c",
+      "stages": [
+        {
+          "stage": "1:softmax_forward_online_kernel8",
+          "kernel_id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                1,
+                256
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 2.9802322387695312e-08,
+              "max_rel_err": 1.0764362296572391e-06,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 256,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:crossentropy_forward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "losses",
+              "passed": true,
+              "shape": [
+                1,
+                1
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 1,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:crossentropy_softmax_backward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "dlogits",
+              "passed": true,
+              "shape": [
+                1,
+                1,
+                256
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 256,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "dlogits",
+          "dtype": "float32",
+          "num_elements": 256,
+          "max_abs_err": 6.635323401837923e-10,
+          "tol_ratio": 6.626875992450933e-05,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "losses",
+          "dtype": "float32",
+          "num_elements": 1,
+          "max_abs_err": 6.704988049222038e-07,
+          "tol_ratio": 0.02633562449280769,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "probs",
+          "dtype": "float32",
+          "num_elements": 256,
+          "max_abs_err": 2.1233034885881352e-08,
+          "tol_ratio": 0.0020400862675325152,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "odd_3x5x1000",
+      "passed": true,
+      "input_hash": "88ff65a75338220f1930fe9ba5fcdec8761a10bbecdcfff1dfa99216cac08057",
+      "stages": [
+        {
+          "stage": "1:softmax_forward_online_kernel8",
+          "kernel_id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                15,
+                1000
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 5.960464477539063e-08,
+              "max_rel_err": 1.2251530787933516e-06,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 15000,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:crossentropy_forward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "losses",
+              "passed": true,
+              "shape": [
+                3,
+                5
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 15,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:crossentropy_softmax_backward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "dlogits",
+              "passed": true,
+              "shape": [
+                3,
+                5,
+                1000
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 15000,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "dlogits",
+          "dtype": "float32",
+          "num_elements": 15000,
+          "max_abs_err": 2.6443312643731343e-09,
+          "tol_ratio": 0.0002638824191923206,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "losses",
+          "dtype": "float32",
+          "num_elements": 15,
+          "max_abs_err": 8.831952733601156e-07,
+          "tol_ratio": 0.031066965954237812,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "probs",
+          "dtype": "float32",
+          "num_elements": 15000,
+          "max_abs_err": 8.46186004599403e-08,
+          "tol_ratio": 0.00793213511308968,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "odd_2x7x4097",
+      "passed": true,
+      "input_hash": "986d2863c912d4bd087d93c5ef5252b22f0f93f40766b8593383b3c77ead5ada",
+      "stages": [
+        {
+          "stage": "1:softmax_forward_online_kernel8",
+          "kernel_id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                14,
+                4097
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 5.960464477539063e-08,
+              "max_rel_err": 1.3937339117063594e-06,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 57358,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:crossentropy_forward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "losses",
+              "passed": true,
+              "shape": [
+                2,
+                7
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 14,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:crossentropy_softmax_backward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "dlogits",
+              "passed": true,
+              "shape": [
+                2,
+                7,
+                4097
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 57358,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "dlogits",
+          "dtype": "float32",
+          "num_elements": 57358,
+          "max_abs_err": 1.902294790440129e-09,
+          "tol_ratio": 0.0001900633958960813,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "losses",
+          "dtype": "float32",
+          "num_elements": 14,
+          "max_abs_err": 1.3051788378959372e-06,
+          "tol_ratio": 0.036375198743040044,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "probs",
+          "dtype": "float32",
+          "num_elements": 57358,
+          "max_abs_err": 6.087343329408412e-08,
+          "tol_ratio": 0.0059217558262666965,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "confident_2x8x1024",
+      "passed": true,
+      "input_hash": "e9fe3e39302c260a2523c1c0ad97198212191c9e8d0f431a58d71469278d6ad9",
+      "stages": [
+        {
+          "stage": "1:softmax_forward_online_kernel8",
+          "kernel_id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                16,
+                1024
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 1.1920928955078125e-07,
+              "max_rel_err": 1.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 16384,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:crossentropy_forward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "losses",
+              "passed": true,
+              "shape": [
+                2,
+                8
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 16,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:crossentropy_softmax_backward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "dlogits",
+              "passed": true,
+              "shape": [
+                2,
+                8,
+                1024
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 1.1679636327451595e-38,
+              "max_rel_err": 1.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 16384,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "dlogits",
+          "dtype": "float32",
+          "num_elements": 16384,
+          "max_abs_err": 3.4525421063746897e-09,
+          "tol_ratio": 0.00034388552207856467,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "losses",
+          "dtype": "float32",
+          "num_elements": 16,
+          "max_abs_err": 3.2205389572936838e-06,
+          "tol_ratio": 0.02761724172471402,
+          "nonfinite_mismatch": 8,
+          "within": false
+        },
+        {
+          "name": "probs",
+          "dtype": "float32",
+          "num_elements": 16384,
+          "max_abs_err": 1.1048134740399007e-07,
+          "tol_ratio": 0.009799986418702038,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    },
+    {
+      "case": "gpt2_4x64x50257",
+      "passed": true,
+      "input_hash": "811eb6f851edd1969538d7355d8c1b0736bfeadaf952fe9899c398f850620463",
+      "stages": [
+        {
+          "stage": "1:softmax_forward_online_kernel8",
+          "kernel_id": "dev/cuda/softmax_forward.cu::softmax_forward_online_kernel8",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "out",
+              "passed": true,
+              "shape": [
+                256,
+                50257
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 4.470348358154297e-08,
+              "max_rel_err": 2.4470600797741584e-06,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 12865792,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "2:crossentropy_forward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_forward.cu::crossentropy_forward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "losses",
+              "passed": true,
+              "shape": [
+                4,
+                64
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 1.9073486328125e-06,
+              "max_rel_err": 1.1551052185343563e-07,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 256,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        },
+        {
+          "stage": "3:crossentropy_softmax_backward_kernel1",
+          "kernel_id": "dev/cuda/crossentropy_softmax_backward.cu::crossentropy_softmax_backward_kernel1",
+          "passed": true,
+          "outputs": [
+            {
+              "name": "dlogits",
+              "passed": true,
+              "shape": [
+                4,
+                64,
+                50257
+              ],
+              "dtype": "float32",
+              "reason": "",
+              "max_abs_err": 0.0,
+              "max_rel_err": 0.0,
+              "worst_index": null,
+              "num_mismatched": 0,
+              "num_elements": 12865792,
+              "expected_slice": [],
+              "actual_slice": [],
+              "slice_start": 0
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "end_to_end": [
+        {
+          "name": "dlogits",
+          "dtype": "float32",
+          "num_elements": 12865792,
+          "max_abs_err": 1.3725905397086319e-09,
+          "tol_ratio": 0.00013723459226958846,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "losses",
+          "dtype": "float32",
+          "num_elements": 256,
+          "max_abs_err": 2.9286080973633943e-06,
+          "tol_ratio": 0.07520176633917314,
+          "nonfinite_mismatch": 0,
+          "within": true
+        },
+        {
+          "name": "probs",
+          "dtype": "float32",
+          "num_elements": 12865792,
+          "max_abs_err": 4.392289727067622e-08,
+          "tol_ratio": 0.0043673785711975405,
+          "nonfinite_mismatch": 0,
+          "within": true
+        }
+      ],
+      "not_runnable": ""
+    }
+  ],
+  "timestamp": "2026-10-17T21:42:47+00:00",
+  "schema_version": 1
+}

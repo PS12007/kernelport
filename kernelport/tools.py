@@ -451,6 +451,94 @@ def make_report(format: str = "html", root: str | None = None) -> dict:
     return {"ok": True, "path": str(path), "counts": counts, "summary": f"report written to {path} ({tally})"}
 
 
+def write_pipeline(spec: dict, root: str | None = None) -> dict:
+    """Save a pipeline (kernels run in a chain over shared buffers) after checking it against the frozen specs."""
+    ws = _ws(root)
+    try:
+        path = ws.write_pipeline(spec)
+    except WorkspaceError as exc:
+        return _err(str(exc))
+    rel = path.relative_to(ws.root).as_posix()
+    return {"ok": True, "path": rel, "name": path.stem,
+            "summary": f"pipeline saved to {rel}. Next: verify_pipeline with a backend."}
+
+
+def verify_pipeline(name: str, backend: str, root: str | None = None) -> dict:
+    """Run a saved pipeline's ports in a chain; check every stage on its real input. PASS, FAIL or UNVERIFIED.
+
+    backend "cuda" runs the ORIGINAL kernels in the chain instead (NVIDIA only): it checks that
+    originals and references agree on chained data.
+    """
+    from kernelport.harness.pipeline import PipelineError, PipelineSpec, resolve, run_pipeline
+
+    ws = _ws(root)
+    try:
+        path = ws.pipeline_path(name)
+        if not path.is_file():
+            known = ws.pipeline_names()
+            return _err(f"no pipeline {name!r}" + (f"; saved: {', '.join(known)}" if known else
+                                                   "; save one with write_pipeline"), status="REFUSED")
+        pipe = PipelineSpec.load(path)
+        stages = resolve(pipe, ws.pipeline_kernel)
+    except (WorkspaceError, PipelineError) as exc:
+        return _err(str(exc), status="REFUSED")
+    except (ValueError, OSError) as exc:
+        return _err(f"cannot read {name}: {exc}", status="REFUSED")
+    ref_hashes = {rs.kernel_id: sha256_file(rs.reference) for rs in stages}
+    if backend == "cuda":
+        from kernelport.harness import run_cuda
+        from kernelport.hardware import gpu_name
+
+        ok, why = run_cuda.is_available()
+        hardware = gpu_name() if ok else "unknown"
+        sources = {rs.kernel_id: ws.original_source(ws.get(rs.kernel_id)) for rs in stages}
+        code_hashes = {k: run_cuda.source_hash(p) for k, p in sources.items()}
+        runner = lambda rs, d: run_cuda.run_original(sources[rs.kernel_id], rs.spec, d)  # noqa: E731
+        tols, dtypes = None, None
+    else:
+        try:
+            be = get_backend(backend)
+            ports = {rs.kernel_id: ws.port_path(rs.kernel_id, backend) for rs in stages}
+        except (KeyError, WorkspaceError) as exc:
+            return _err(str(exc), status="REFUSED")
+        missing = sorted({k for k, p in ports.items() if not p.is_file()})
+        if missing:
+            return _err(f"no {backend} port for {', '.join(missing)}; write and verify those first",
+                        status="REFUSED")
+        ok, why = be.is_available()
+        hardware = be.hardware_name()
+        code_hashes = {k: sha256_file(p) for k, p in ports.items()}
+        runner = lambda rs, d: be.run(ports[rs.kernel_id], rs.spec, d)  # noqa: E731
+        tols, dtypes = be.config.tolerances, be.dtypes()
+    if not ok:
+        return {"ok": False, "status": "UNVERIFIED", "reason": why,
+                "summary": f"UNVERIFIED: {backend} is not available here ({why})"}
+    result = run_pipeline(pipe, stages, runner, backend=backend, hardware=hardware, code_hashes=code_hashes,
+                          reference_hashes=ref_hashes, tol_overrides=tols, supported_dtypes=dtypes)
+    if result.status in ("PASS", "FAIL"):
+        result.save(ws.pipeline_result_path(name, backend, hardware))
+    n, total = result.num_passed, len(result.cases)
+    out = {"ok": result.status == "PASS", "status": result.status, "hardware": result.hardware,
+           "cases_passed": n, "cases_total": total, "stages": [rs.label for rs in stages],
+           "drift": result.drift_lines()}
+    what = "originals" if backend == "cuda" else "ports"
+    if result.status == "PASS":
+        out["summary"] = (f"PASS: {len(stages)} {what} in a chain, every stage matched its reference on "
+                          f"{n}/{total} cases on {result.hardware}.")
+    elif result.status == "FAIL":
+        out["report"] = result.failure_report()
+        out["summary"] = f"FAIL ({n}/{total} cases passed every stage) on {result.hardware}."
+        if backend == "cuda":
+            out["summary"] += (" The original kernel disagrees with its reference on chained data: check the "
+                               "kernel's preconditions (sizes, value ranges) before changing anything.")
+    else:
+        out["summary"] = f"{result.status}: {result.reason}"
+    if result.reason and result.status != "SKIPPED":
+        out["summary"] += f" Note: {result.reason}."
+    return out
+
+
 TOOLS = [kernelport_doctor, scan_kernels, read_kernel, read_skill, write_reference, validate_reference,
-         write_port, verify_port, bench_port, tune_port, list_status, make_report]
+         write_port, verify_port, bench_port, tune_port, list_status, make_report, write_pipeline,
+         verify_pipeline]
 

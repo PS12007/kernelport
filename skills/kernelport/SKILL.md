@@ -39,6 +39,7 @@ trusted reference. **A port only counts as working when `verify_port` returns
 | 7 REPAIR | Explain suspected bug, fix, verify again (max 6 failures) | `write_port`, `verify_port` |
 | 8 BENCHMARK | Only after PASS | `bench_port(kernel_id, backend)` |
 | 8b TUNE (optional) | Python ports with a `TUNE` dict: verify + time each variant, keep the fastest passing one | `tune_port(kernel_id, backend)` |
+| 8c PIPELINE (optional) | Kernels that feed each other: check the ports in a chain on real intermediate data | `write_pipeline(spec)`, `verify_pipeline(name, backend)` |
 | 9 REPORT | Show the user the status table and the report path | `list_status()`, `make_report()` |
 
 Do the steps for one kernel at a time (validate it, port it, verify it) before
@@ -204,6 +205,37 @@ port is kept. Report the result it returns, not your own estimate.
 the range of the runs. On laptops and shared GPUs the runs can differ a lot; when the
 summary says the runs differed by more than 20%, report the speedup as approximate (with
 the range), or run `bench_port` again on a quieter machine.
+
+## Step 8c: pipelines (optional)
+
+When the repo runs kernels in sequence (softmax then cross-entropy, layernorm then a matmul),
+and each has a PASSing port, check them together: each stage then gets what the stage before
+really wrote (probabilities near 1/V, normalized rows) instead of the spec's generated inputs.
+A port can pass its own cases and still be wrong there. Write the chain as JSON:
+
+```json
+{"name": "loss_head",
+ "buffers": {"logits":  {"dtype": "float32", "shape": ["B", "T", "V"], "init": {"dist": "normal", "std": 4.0}},
+             "targets": {"dtype": "int32", "shape": ["B", "T"], "init": {"dist": "randint", "high": "V"}},
+             "probs":   {"dtype": "float32", "shape": ["B", "T", "V"]},
+             "losses":  {"dtype": "float32", "shape": ["B", "T"]}},
+ "stages": [{"kernel": "softmax_kernel", "dims": {"N": "B * T", "C": "V"}, "bind": {"inp": "logits", "out": "probs"}},
+            {"kernel": "crossentropy_kernel"}],
+ "cases": [{"name": "small", "dims": {"B": 2, "T": 5, "V": 1000}}]}
+```
+
+- `buffers` with `init` are generated (same options as launch.json); others must be written by
+  a stage first. `bind` maps the kernel's params to buffers (same name when omitted);
+  `dims` maps the kernel's launch.json dims to expressions over the pipeline's dims.
+- Use sizes the original kernels support (the preconditions you found while validating).
+- `write_pipeline(spec)` checks names, dtypes and element counts against the frozen specs;
+  then `verify_pipeline(name, backend)`. With backend `"cuda"` it chains the ORIGINAL kernels
+  (NVIDIA only): run it once to confirm the originals behave on chained data.
+- PASS/FAIL comes from the per-stage checks. A FAIL report names the first failing stage of
+  each case; fix that port (it passed alone, so look for assumptions about value ranges).
+- `drift` lines compare the chain of ports with a float64 chain of references. They are for
+  information: rounding adds up, and fp32 effects (a softmax probability that underflows to 0,
+  a loss that becomes inf) show up there. Report them; do not try to "fix" them in a port.
 
 ## Step 9: what to tell the user
 
