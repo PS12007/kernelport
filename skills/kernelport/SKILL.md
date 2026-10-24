@@ -115,6 +115,11 @@ infer a value. Fill every TODO; `write_reference` rejects a spec with TODOs.
   not exceed some dimension. The reference runs on the CPU in float64, so a large case
   of ~50M elements is plenty. If the original fails only outside such a limit, say so
   in your report and keep the cases inside it; never edit the original.
+- **warnings** from `read_kernel` point at code that tests on one GPU can miss, e.g. a
+  lane that returns early before a full-mask warp shuffle (undefined in CUDA, often
+  right by luck). Add cases that trigger it (a size that is not a multiple of 32, smaller
+  than the block). If they still PASS, keep them but mention the warning in your report;
+  do not copy the pattern into ports.
 - **init** must respect the kernel's input domain. The suggestion from `read_kernel` is
   `normal` + `edges` everywhere; change it where that is invalid: variances and second
   moments `>= 0` (`uniform`, `low: 0`), probabilities in (0, 1] before a `log`, indices

@@ -144,6 +144,9 @@ def scan(path: str = typer.Argument(".", help="File or directory inside this rep
     for k in res["kernels"]:
         table.add_row(escape(k["kernel_id"]), str(k["line"]), escape(", ".join(k["params"])), ", ".join(k["features"]))
     _console().print(table)
+    for k in res["kernels"]:
+        for w in k.get("warnings", []):
+            _console().print(f"[yellow]warning[/yellow] {escape(k['kernel_id'])}: {escape(w)}")
 
 
 @app.command()
@@ -155,6 +158,8 @@ def read(kernel_id: str, as_json: bool = JSON_OPT) -> None:
     if not as_json and res.get("ok"):
         print(res["source"])
         print(json.dumps(res["input_spec"], indent=2))
+        for w in res.get("warnings", []):
+            print(f"warning: {w}")
     _emit(res, as_json, ())
 
 

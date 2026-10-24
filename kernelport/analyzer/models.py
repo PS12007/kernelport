@@ -59,6 +59,7 @@ class KernelInfo:
     source: str = ""  # full kernel text including template line
     launches: list[LaunchConfig] = field(default_factory=list)
     generated_by: str = ""  # macro invocation that defines the kernel, e.g. "DEFINE_SCALE(float, scale_f32)"
+    warnings: list[str] = field(default_factory=list)  # static hazards (analyzer/hazards.py)
 
     @property
     def is_template(self) -> bool:
@@ -79,4 +80,5 @@ class KernelInfo:
         tpl = f"template<{', '.join(self.template_params)}> " if self.template_params else ""
         feats = f"  [{', '.join(self.features)}]" if self.features else ""
         via = f"  (from {self.generated_by})" if self.generated_by else ""
-        return f"{self.id} (line {self.line}): {tpl}{self.name}({sig}){feats}{via}"
+        warn = f"  ({len(self.warnings)} warning{'s' if len(self.warnings) > 1 else ''})" if self.warnings else ""
+        return f"{self.id} (line {self.line}): {tpl}{self.name}({sig}){feats}{via}{warn}"

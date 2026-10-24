@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-10-17. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-10-24. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -72,6 +72,14 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 | llm.c pipelines | `gpt2_loss_head` (softmax -> crossentropy -> backward) and `gpt2_embed_gelu_residual` (bf16): PASS on Triton and the originals; CI runs the bf16 one on Metal |
 | Why it matters | A crossentropy port that clamps probs to >= 1e-3 passes its own cases and fails the pipeline (test). Drift shows fp32 softmax underflow (inf losses) and bf16 error growth (1.5x a tolerance after 3 kernels, same in the originals) |
 
+## What was done on 2026-10-24
+
+| Area | Change |
+|---|---|
+| llm.c PR #867 | A reviewer found the same early-return bug in `softmax_forward_kernel7`. Fixed on the PR branch (only whole warps exit; same speed), tested 504/504 configs on the RTX 5060. The unfixed kernel also passes there: undefined behaviour that happens to work, so only a static check can catch it. The PR's first commit had turned the file into CRLF (all 733 lines in the diff); restored to LF. **Committed in `C:\-CS\llm.c-fork`, not pushed** |
+| Static warnings | `kernelport/analyzer/hazards.py`: a lane can return early before a full-mask warp shuffle/reduce. Shown by `scan` and `read_kernel`; the skill tells agents to test warp-splitting sizes. Flags exactly kernel7 + kernel8 in llm.c; 1 of 152 llama.cpp kernels |
+| Analyzer crash | A kernel opening a brace in each `#if` branch (llama.cpp `mmf.cuh`) crashed the whole scan; fixed |
+
 ## Next steps (owner)
 
 None of these need API credits.
@@ -88,7 +96,8 @@ None of these need API credits.
       a good launch link). Nothing else is needed; it is static.
 - [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X; lead with "proven
       correct, not just translated" and the llm.c bug.
-- [ ] **PR #867:** watch for review comments (llm.c is quiet; replies may be slow).
+- [ ] **PR #867:** push the 2 new commits (`cd C:\-CS\llm.c-fork; git push`) and reply to the
+      reviewer's kernel7 comment. Then keep watching for review comments.
 - [ ] **wgpu loop-var bug (optional):** drafts are ready, not posted, in `drafts/` (local only,
       gitignored): an issue for pygfx/wgpu-py (`wgpu-loop-var-issue.md`, with
       `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
@@ -126,9 +135,9 @@ Open Claude Code in `C:\-CS\CUDAtoanything` and say "keep working on kernelport"
 | Repo | https://github.com/PS12007/kernelport |
 | Package | https://pypi.org/project/kernelport/ |
 | CI runs | https://github.com/PS12007/kernelport/actions |
-| llm.c PR | https://github.com/karpathy/llm.c/pull/867 (branch `fix-softmax-online-kernel8-small-c` on PS12007/llm.c) |
+| llm.c PR | https://github.com/karpathy/llm.c/pull/867 (branch `fix-softmax-online-kernel8-small-c` on PS12007/llm.c; local clone `C:\-CS\llm.c-fork`, `core.autocrlf=false`) |
 | Environment | `.venv` (Python 3.12, torch 2.11 cu128, triton-windows 3.7, cupy 14.2); run tools as `.venv\Scripts\python.exe` / `.venv\Scripts\kernelport.exe` |
-| Tests | `.venv\Scripts\python.exe -m pytest -q` (~6-7 min; 312 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
+| Tests | `.venv\Scripts\python.exe -m pytest -q` (~5-7 min; 322 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
 
 ## Rules to keep
 

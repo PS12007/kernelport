@@ -48,6 +48,15 @@ the boundary gave C = 31, 32, 255 FAIL and C = 256, 257 PASS. llm.c calls this k
 `C >= blockDim.x` is not written down anywhere. The frozen spec only uses C >= 256, the range
 where the original is correct; the ports have no such limit.
 
+The fix is upstream as [karpathy/llm.c#867](https://github.com/karpathy/llm.c/pull/867). A reviewer
+there pointed out that `softmax_forward_kernel7` in the same file has a similar early return: when
+C is not a multiple of 32, the lanes left in a partial warp go into full-mask warp reductions
+while the others have exited, and the exiting lanes race lane 0 on the shared-memory slots. That
+is undefined behaviour, yet kernel7 gives the right answer on the RTX 5060 for every C from 1 to
+50257, so validation alone would not have found it. The fix for kernel7 lets only whole warps
+exit early, at the same speed as before. `kernelport scan` / `read_kernel` warn about this pattern statically (both llm.c kernels are
+flagged; nothing else in llm.c's `dev/cuda` is).
+
 The `Packed128` kernels have a precondition too: each thread moves 8 bf16 values with no
 per-element bounds check, so N (gelu) and C (encoder) must be multiples of 8. Their specs only
 use such sizes.

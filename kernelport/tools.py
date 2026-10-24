@@ -78,11 +78,16 @@ def scan_kernels(path: str = ".", root: str | None = None) -> dict:
             k.file = f"{rel_prefix}/{k.file}"
         k.id = f"{k.file}::{k.id.split('::', 1)[1]}"
         ws.register(k)
-        rows.append({"kernel_id": k.id, "name": k.name, "file": k.file, "line": k.line,
-                     "params": [f"{p.name}:{p.kind}" for p in k.params], "features": k.features})
+        row = {"kernel_id": k.id, "name": k.name, "file": k.file, "line": k.line,
+               "params": [f"{p.name}:{p.kind}" for p in k.params], "features": k.features}
+        if k.warnings:
+            row["warnings"] = k.warnings
+        rows.append(row)
+    warned = [r["name"] for r in rows if r.get("warnings")]
     return {"ok": True, "kernels": rows,
             "summary": f"found {len(rows)} kernel{'' if len(rows) == 1 else 's'} in {path}"
-                       + (": " + ", ".join(r["name"] for r in rows[:12]) if rows else "")}
+                       + (": " + ", ".join(r["name"] for r in rows[:12]) if rows else "")
+                       + (f"; warnings for {', '.join(warned[:12])} (read_kernel shows them)" if warned else "")}
 
 
 def read_kernel(kernel_id: str, root: str | None = None) -> dict:
@@ -116,13 +121,15 @@ def read_kernel(kernel_id: str, root: str | None = None) -> dict:
         "params": [{"name": q["name"], "type": q["type"], "kind": q["kind"]} for q in rec.info["params"]],
         "template_params": rec.info["template_params"],
         "features": rec.info["features"], "launches": rec.info["launches"],
+        "warnings": info.warnings if info is not None else rec.info.get("warnings", []),
         "input_spec": spec, "input_spec_origin": spec_origin,
         "input_spec_has_todo": bool(spec) and has_todo(spec),
         "reference_frozen": ws.is_frozen(rec.id), "ports": ports,
     }
     out["summary"] = (f"{rec.id}: {len(rec.info['params'])} params, features [{', '.join(rec.info['features'])}]; "
                       f"input spec {spec_origin}" + (" (has TODOs)" if out["input_spec_has_todo"] else "")
-                      + f"; reference {'frozen' if out['reference_frozen'] else 'not frozen'}")
+                      + f"; reference {'frozen' if out['reference_frozen'] else 'not frozen'}"
+                      + (f"; {len(out['warnings'])} warning(s): see warnings" if out["warnings"] else ""))
     return out
 
 

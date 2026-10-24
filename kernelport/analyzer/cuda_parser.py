@@ -17,6 +17,7 @@ import ast
 import re
 from pathlib import Path
 
+from kernelport.analyzer.hazards import warnings_for
 from kernelport.analyzer.macros import Expander, Macro, directive_spans, find_macros, match_paren, strip_comments
 from kernelport.analyzer.models import KernelInfo, LaunchConfig, Param
 
@@ -141,6 +142,35 @@ def split_top_level(text: str, sep: str = ",") -> list[str]:
             start = i + 1
     parts.append(text[start:])
     return [p.strip() for p in parts if p.strip()]
+
+
+def first_branch_view(clean: str) -> str:
+    """``clean`` with ``#elif`` / ``#else`` branches blanked; same length and lines.
+
+    Kernels often open a brace in each branch of an ``#if`` (one per GPU architecture), so
+    counting braces across all branches never balances. Matching braces in this view counts
+    one branch only, as a compiler would.
+    """
+    if "#" not in clean:
+        return clean
+    out = []
+    stack: list[bool] = []  # per open #if: inside a later branch (being blanked)?
+    for line in clean.splitlines(keepends=True):
+        d = re.match(r"[ \t]*#[ \t]*(\w+)", line)
+        word = d.group(1) if d else ""
+        if word in ("if", "ifdef", "ifndef"):
+            stack.append(False)
+        elif word in ("elif", "else") and stack:
+            stack[-1] = True
+        elif word == "endif" and stack:
+            stack.pop()
+            out.append(line)
+            continue
+        if any(stack) or word in ("elif", "else"):
+            out.append(re.sub(r"[^\n]", " ", line))
+        else:
+            out.append(line)
+    return "".join(out)
 
 
 def _line_of(text: str, offset: int) -> int:
@@ -397,6 +427,7 @@ def _parse_kernels(text: str, clean: str, rel_path: str, line_offset: int,
     if device_funcs is None:
         device_funcs = _device_functions(clean)
     kernels: list[KernelInfo] = []
+    braces = first_branch_view(clean)
     words = "|".join(["__global__", *(re.escape(n) for n in markers)])
     for gm in re.finditer(rf"\b(?:{words})\b", clean):
         if _in_spans(gm.start(), skip):
@@ -433,7 +464,13 @@ def _parse_kernels(text: str, clean: str, rel_path: str, line_offset: int,
         b_start = p_end + after.end()
         if b_start >= len(clean) or clean[b_start] != "{":
             continue  # declaration only
-        b_end = _match_close(clean, b_start, "{", "}")
+        try:
+            b_end = _match_close(braces, b_start, "{", "}")
+        except ValueError:
+            try:
+                b_end = _match_close(clean, b_start, "{", "}")
+            except ValueError:
+                continue  # braces never balance (unusual #if layout): skip this kernel, keep the rest
 
         stmt_start = _statement_start(clean, gm.start())
         prefix = clean[stmt_start:gm.start()]
@@ -458,12 +495,20 @@ def _parse_kernels(text: str, clean: str, rel_path: str, line_offset: int,
         for p in params:
             if p.is_pointer and p.name:
                 p.read, p.written = _usage(body, p.name)
+        kernel_line = _line_of(text, gm.start()) + line_offset
+        if body == clean[b_start:b_end]:
+            def line_of(off: int) -> int:
+                return _line_of(text, b_start + off) + line_offset
+        else:  # macro-expanded body: offsets no longer match the file
+            def line_of(off: int) -> int:
+                return kernel_line
+        warnings = warnings_for(body, device_funcs, line_of)
 
         kernels.append(KernelInfo(
             id=f"{rel_path}::{name}",
             name=name,
             file=rel_path,
-            line=_line_of(text, gm.start()) + line_offset,
+            line=kernel_line,
             end_line=_line_of(text, b_end - 1) + line_offset,
             params=params,
             template_params=template_params,
@@ -471,6 +516,7 @@ def _parse_kernels(text: str, clean: str, rel_path: str, line_offset: int,
             extern_c=extern_c,
             features=_features(clean[pos:p_end] + "\n" + body, device_funcs, template_params),
             source=text[src_start:b_end],
+            warnings=warnings,
         ))
     return kernels
 

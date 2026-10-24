@@ -272,12 +272,30 @@
   originals and ports. `tests/bad_ports/crossentropy_clamped.py` (clamps probs >= 1e-3) PASSes its own
   cases and FAILs the pipeline.
 
+- **Static warnings + llm.c kernel7** (2026-10-24): a reviewer on llm.c#867 noted that
+  `softmax_forward_kernel7` returns early on `tid >= C` too, which leaves partial warps in full-mask
+  `warpReduceMax/Sum` (undefined) and races lane 0 on `maxvals/sumvals[warpId]`. On the RTX 5060 the
+  unfixed kernel7 is still correct for C = 1..50257, block 32..1024, with and without fast math (504/504
+  configs), so validation cannot find it. Fix on the PR branch (local commit, not pushed): return only
+  when the whole warp is past C, lane 0 writes the slots; 504/504, same speed at C = 50257 (removing the
+  return entirely was ~2% slower). The PR's first commit had also converted softmax_forward.cu to CRLF
+  (GitHub showed all 733 lines changed); a commit restores LF, net diff 16 lines.
+  New `kernelport/analyzer/hazards.py`: warns when a lane-varying condition (from threadIdx.x,
+  thread_rank(), laneid; `/ 32` makes a value warp-uniform) returns before a full-mask warp op
+  (`__shfl*_sync`, `__syncwarp()`, votes, `cg::reduce`, warp-reduce helpers by name or via `__device__`
+  bodies; `__activemask()` masks excluded). `KernelInfo.warnings`; shown by `scan` (CLI + tool summary) and
+  `read_kernel`; SKILL.md tells agents to add warp-splitting cases. Flags exactly kernel7 and kernel8 in
+  llm.c dev/cuda; 1 of 152 llama.cpp ggml-cuda kernels (`quantize_mmq_q8_1`, safe there only because ne0 is
+  padded). Also fixed: kernels opening a brace in each `#if` branch (llama.cpp mmf.cuh) crashed the whole
+  scan; braces are now matched in the first branch only, and an unparseable kernel is skipped.
+
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install
   kernelport` verified. Next release: bump version, tag `vX.Y.Z`.
 - llm.c softmax fix: posted by the owner as karpathy/llm.c#867 (branch fix-softmax-online-kernel8-small-c
-  on PS12007/llm.c). Watch for review comments.
+  on PS12007/llm.c). A reviewer flagged kernel7; the fix and an LF restore are committed in the local
+  clone C:\-CS\llm.c-fork, waiting for the owner's go-ahead to push (and to reply on the PR).
 - HIP + Triton-on-ROCm: run `bash scripts/amd_check.sh` on an AMD machine (AMD Developer Cloud
   credits via the AMD AI Developer Program); it writes amd_results.txt. Live `kernelport agent` test: skipped
   by owner choice (no API credits); the MCP/CLI path covers the same tools;
