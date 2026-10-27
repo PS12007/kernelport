@@ -304,7 +304,8 @@ def test_bench_pipeline_times_chain_and_stages(repo):
     assert res["ok"], res
     assert res["case"] == "odd_3x5x1000" and len(res["stages"]) == 3
     assert res["chain"]["port_ms"] > 0 and all(s["port_ms"] > 0 for s in res["stages"])
-    assert "chain of 3 ports" in res["summary"]
+    assert "chain of 3 ports" in res["summary"] and res["rounds"] == 5
+    assert isinstance(res["slower_stages"], list)
     assert (repo / ".kernelport" / "pipelines" / "results" / "small" / "triton" / "bench").is_dir()
     # the bench file must not be read back as a verification result
     from kernelport.workspace import Workspace

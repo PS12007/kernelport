@@ -17,7 +17,7 @@ after validation against the original CUDA kernels), the ports, and the results.
 | `layernorm_forward_kernel3` | cooperative groups, warp reduce, 3 outputs | PASS 6/6 | PASS 6/6, 1.00x | PASS 6/6 |
 | `gelu_forward_kernel2` | bf16, `Packed128` 128-bit loads | PASS 4/4 | PASS 4/4, 1.00x | PASS 4/4 |
 | `residual_forward_kernel1` | bf16 | PASS 4/4 | PASS 4/4, 1.4x | PASS 4/4 |
-| `encoder_forward_kernel3` | bf16 gather by token id, `Packed128` | PASS 4/4 | PASS 4/4, 0.9-1.8x (25 µs kernel, varies between sessions) | PASS 4/4 |
+| `encoder_forward_kernel3` | bf16 gather by token id, `Packed128` | PASS 4/4 | PASS 4/4, 1.0-1.9x (port a steady 23 µs; the original measures 24-47 µs depending on the session) | PASS 4/4 |
 | `softmax_forward_online_kernel8` | online softmax, warp shuffles | PASS 5/5 (C >= 256, see below) | PASS 5/5, 1.0x | PASS 5/5 |
 
 **Ported by a fresh agent.** These four were done by a coding agent with no prior context,

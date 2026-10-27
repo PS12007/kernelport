@@ -6,7 +6,7 @@
   "reason": "",
   "pipeline_hash": "65df6fd4da517e670c26e2c777513a155cd1677193a861690769fd1a1df0c719",
   "code_hashes": {
-    "dev/cuda/encoder_forward.cu::encoder_forward_kernel3": "a8359a3ad2c6e7444c912d7c13a350b372b5ade10b31adba3ab189734024de2f",
+    "dev/cuda/encoder_forward.cu::encoder_forward_kernel3": "123cd17bd1e300d915994ddca9f1d843d6eea873c23f99a1c9990da37d0a268f",
     "dev/cuda/gelu_forward.cu::gelu_forward_kernel2": "57c15b66c7debcc82e99375b067c614054cd1a285f289a9038b507a49aeaf73c",
     "dev/cuda/residual_forward.cu::residual_forward_kernel1": "e232d5368dd1e8466c29894250c75b148138cb9d4234ee1d8037142c379d19c3"
   },
@@ -473,6 +473,6 @@
       "not_runnable": ""
     }
   ],
-  "timestamp": "2026-10-17T21:50:56+00:00",
+  "timestamp": "2026-10-27T17:55:54+00:00",
   "schema_version": 1
 }

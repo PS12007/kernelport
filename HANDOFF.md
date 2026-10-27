@@ -85,7 +85,9 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 | Area | Change |
 |---|---|
 | Pipeline timing | New `bench_pipeline` tool (15 tools) and `kernelport pipeline <name> --bench`: after a PASS, the chain is run once to capture each stage's real input, then the whole chain of ports and each stage are timed against the original CUDA kernels on those inputs (3 alternating rounds). Saved under `.kernelport/pipelines/results/<name>/<backend>/bench/` |
-| First numbers (RTX 5060, Triton) | `gpt2_loss_head` at B=4, T=64, V=50257: chain 1.00 ms vs 1.33 ms original (1.33x; softmax 1.68x, the two cross-entropy kernels ~0.97x). `gpt2_embed_gelu_residual` (bf16, 4x256x768): 1.21x, but the encoder port is 0.44x of the original at this small size (runs noisy) |
+| First numbers (RTX 5060, Triton) | `gpt2_loss_head` at B=4, T=64, V=50257: chain 1.00 ms vs 1.33 ms original (1.33x; softmax 1.68x, the two cross-entropy kernels ~0.97x). `gpt2_embed_gelu_residual` (bf16, 4x256x768, ~10 µs kernels): about even (1.0-1.4x between runs) |
+| Timing noise | A first run flagged a "slow" stage that moved between stages on reruns: single rounds of ~10 µs kernels spike up to 3x on this laptop. `bench_pipeline` now uses 5 rounds and names a stage slower only if every port round lost to every original round (as `tune_port` does) |
+| Encoder port | `encoder_forward_kernel3` Triton port rewritten row-wise (one program per token and block of C: one token-id load, no per-element divide): 0.023 vs 0.025 ms for the old port, steady across runs; re-verified 4/4 and the bf16 pipeline PASS |
 | PR #867 reply | Reply to the kernel7 reviewer drafted in `drafts/llm-c-867-kernel7-reply.md` (local, gitignored), with the push steps. Still not pushed or posted |
 
 ## Next steps (owner)
@@ -119,7 +121,7 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 
 ## Ideas to make it better
 
-- **Pipelines, more:** a pipeline in the browser check; a chain with a matmul; look at why the bf16 encoder port is slow at small sizes.
+- **Pipelines, more:** a pipeline in the browser check; a chain with a matmul; why the original encoder's time doubles between sessions.
 - **More real projects:** a cuBLAS-heavy repo, or flash-attention's backward pass (forward is done).
 - **Linux GPU checks:** free CI runners have no GPU; a Colab or Kaggle run per release would cover Linux + NVIDIA.
 - **Browser check, more:** add the llm.c / flash-attention WGSL ports to `docs/web` (today only the zoo),

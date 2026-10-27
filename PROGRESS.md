@@ -297,8 +297,11 @@
   backend allows). No data flows between stages while timing, so the numbers are kernel time only. Result
   in `pipelines/results/<name>/<backend>/bench/<hw>.json` (not read back as a verification result).
   RTX 5060, Triton: `gpt2_loss_head` at 4x64x50257 = 1.00 ms vs 1.33 ms (1.33x; softmax 1.68x,
-  crossentropy fwd/bwd ~0.97x); `gpt2_embed_gelu_residual` at 4x256x768 bf16 = 1.21x, encoder port 0.44x
-  (noisy runs at ~10 us per kernel).
+  crossentropy fwd/bwd ~0.97x); `gpt2_embed_gelu_residual` at 4x256x768 bf16 about even. A first run named the encoder
+  port 0.44x; reruns moved the "slow" stage around: single rounds of ~10 us kernels spike up to 3x, so
+  bench_pipeline now takes 5 rounds and names a stage slower only when no round overlaps. The encoder's
+  Triton port was rewritten row-wise anyway (one token-id load per row, no per-element divide): 0.023 vs
+  0.025 ms. The original encoder measures 0.024-0.047 ms depending on the session (steady within one).
 
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):

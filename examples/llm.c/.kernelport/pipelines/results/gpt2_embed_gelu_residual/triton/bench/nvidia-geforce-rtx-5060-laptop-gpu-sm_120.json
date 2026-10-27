@@ -1,0 +1,75 @@
+{
+  "ok": true,
+  "pipeline": "gpt2_embed_gelu_residual",
+  "backend": "triton",
+  "hardware": "NVIDIA GeForce RTX 5060 Laptop GPU (sm_120)",
+  "case": "gpt2_4x256x768",
+  "method": "cuda_event",
+  "rounds": 5,
+  "chain": {
+    "stage": "chain",
+    "port_ms": 0.026655999943614006,
+    "port_ms_range": [
+      0.018271999433636665,
+      0.031808000057935715
+    ],
+    "original_ms": 0.028528000228106976,
+    "original_ms_range": [
+      0.02510399930179119,
+      0.051184000447392464
+    ],
+    "speedup": 1.070228102057805
+  },
+  "stages": [
+    {
+      "stage": "1:encoder_forward_kernel3",
+      "port_ms": 0.006911999778822064,
+      "port_ms_range": [
+        0.006784000201150775,
+        0.007023999933153391
+      ],
+      "original_ms": 0.008383999578654766,
+      "original_ms_range": [
+        0.0074720000848174095,
+        0.008528000209480524
+      ],
+      "speedup": 1.212962940818201
+    },
+    {
+      "stage": "2:gelu_forward_kernel2",
+      "port_ms": 0.006831999868154526,
+      "port_ms_range": [
+        0.006704000057652593,
+        0.007344000041484833
+      ],
+      "original_ms": 0.008064000401645899,
+      "original_ms_range": [
+        0.006704000057652593,
+        0.00836799992248416
+      ],
+      "speedup": 1.1803279504196131
+    },
+    {
+      "stage": "3:residual_forward_kernel1",
+      "port_ms": 0.006800000090152025,
+      "port_ms_range": [
+        0.006768000079318881,
+        0.0071039998438209295
+      ],
+      "original_ms": 0.010847999714314938,
+      "original_ms_range": [
+        0.010784000158309937,
+        0.010992000345140696
+      ],
+      "speedup": 1.5952940544846983
+    }
+  ],
+  "noisy": true,
+  "comparable": true,
+  "note": "",
+  "code_hashes": {
+    "dev/cuda/encoder_forward.cu::encoder_forward_kernel3": "123cd17bd1e300d915994ddca9f1d843d6eea873c23f99a1c9990da37d0a268f",
+    "dev/cuda/gelu_forward.cu::gelu_forward_kernel2": "57c15b66c7debcc82e99375b067c614054cd1a285f289a9038b507a49aeaf73c",
+    "dev/cuda/residual_forward.cu::residual_forward_kernel1": "e232d5368dd1e8466c29894250c75b148138cb9d4234ee1d8037142c379d19c3"
+  }
+}

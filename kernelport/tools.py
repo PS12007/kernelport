@@ -551,6 +551,9 @@ def verify_pipeline(name: str, backend: str, root: str | None = None) -> dict:
     return out
 
 
+PIPELINE_BENCH_ROUNDS = 5  # alternating port/original rounds per stage and for the whole chain
+
+
 def bench_pipeline(name: str, backend: str, case: str | None = None, root: str | None = None) -> dict:
     """Time a pipeline's ports run back to back vs the original CUDA kernels, on this machine.
 
@@ -564,8 +567,6 @@ def bench_pipeline(name: str, backend: str, case: str | None = None, root: str |
     from kernelport.bench.timer import time_cuda, time_wall
     from kernelport.harness import run_cuda
     from kernelport.harness.pipeline import PipelineError, PipelineSpec, resolve, stage_inputs
-    from kernelport.zoo import BENCH_ROUNDS
-
     if backend == "cuda":
         return _err('bench_pipeline compares a backend\'s ports with the originals; pass a port backend, '
                     'not "cuda"')
@@ -615,7 +616,7 @@ def bench_pipeline(name: str, backend: str, case: str | None = None, root: str |
     n = len(stages)
     port_rounds: list[list[float]] = [[] for _ in range(n + 1)]  # index n = whole chain
     orig_rounds: list[list[float]] = [[] for _ in range(n + 1)]
-    for _ in range(BENCH_ROUNDS):
+    for _ in range(PIPELINE_BENCH_ROUNDS):
         port_rounds[n].append(time_ports(chain([p.launch for p in prepared])))
         if orig:
             orig_rounds[n].append(time_cuda(chain(orig)).median_ms)
@@ -638,19 +639,22 @@ def bench_pipeline(name: str, backend: str, case: str | None = None, root: str |
     spreads = [hi / lo for r in [*rows, total] for k in ("port_ms_range", "original_ms_range")
                if k in r for lo, hi in [r[k]] if lo > 0]
     out = {"ok": True, "pipeline": name, "backend": backend, "hardware": hw, "case": cs.name,
-           "method": method, "rounds": BENCH_ROUNDS, "chain": total, "stages": rows,
+           "method": method, "rounds": PIPELINE_BENCH_ROUNDS, "chain": total, "stages": rows,
            "noisy": any(s > 1.2 for s in spreads), "comparable": be.config.timing_comparable,
            "note": be.config.timing_note}
     path = ws.safe_path("pipelines", "results", name, backend, "bench", f"{slugify(hw, 64)}.json")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(json.dumps({**out, "code_hashes": {k: sha256_file(p) for k, p in ports.items()}},
                                 indent=2).encode())
-    s = f"{backend} chain of {n} ports {total['port_ms']:.4f} ms on {hw} ({cs.name}, median of {BENCH_ROUNDS} runs)"
+    s = f"{backend} chain of {n} ports {total['port_ms']:.4f} ms on {hw} ({cs.name}, median of {PIPELINE_BENCH_ROUNDS} runs)"
     if orig:
         s += f"; original CUDA chain {total['original_ms']:.4f} ms; speedup {total['speedup']:.2f}x"
-        slow = [r["stage"] for r in rows if r.get("speedup") and r["speedup"] < 0.9]
+        # A stage counts as slower only if every port round lost to every original round: single
+        # rounds of ~10 us kernels can spike 3x on a laptop GPU, so a median alone misleads.
+        slow = [r["stage"] for r in rows if r["port_ms_range"][0] > r["original_ms_range"][1]]
+        out["slower_stages"] = slow
         if slow:
-            s += f". Slower than the original: {', '.join(slow)}"
+            s += f". Slower than the original in every run: {', '.join(slow)}"
     if out["noisy"]:
         s += ". Runs differed by more than 20%: treat the speedup as approximate"
     if not out["comparable"]:
