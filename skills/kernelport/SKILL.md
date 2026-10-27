@@ -39,7 +39,7 @@ trusted reference. **A port only counts as working when `verify_port` returns
 | 7 REPAIR | Explain suspected bug, fix, verify again (max 6 failures) | `write_port`, `verify_port` |
 | 8 BENCHMARK | Only after PASS | `bench_port(kernel_id, backend)` |
 | 8b TUNE (optional) | Python ports with a `TUNE` dict: verify + time each variant, keep the fastest passing one | `tune_port(kernel_id, backend)` |
-| 8c PIPELINE (optional) | Kernels that feed each other: check the ports in a chain on real intermediate data | `write_pipeline(spec)`, `verify_pipeline(name, backend)` |
+| 8c PIPELINE (optional) | Kernels that feed each other: check the ports in a chain on real intermediate data | `write_pipeline(spec)`, `verify_pipeline(name, backend)`, `bench_pipeline(name, backend)` |
 | 9 REPORT | Show the user the status table and the report path | `list_status()`, `make_report()` |
 
 Do the steps for one kernel at a time (validate it, port it, verify it) before
@@ -241,6 +241,10 @@ A port can pass its own cases and still be wrong there. Write the chain as JSON:
 - `drift` lines compare the chain of ports with a float64 chain of references. They are for
   information: rounding adds up, and fp32 effects (a softmax probability that underflows to 0,
   a loss that becomes inf) show up there. Report them; do not try to "fix" them in a port.
+- After a PASS, `bench_pipeline(name, backend)` times the whole chain of ports against the chain
+  of originals, and each stage, on the inputs each stage really gets (default: the last case).
+  The chain speedup is what the user's program sees; a stage the summary lists as slower than
+  the original is the one to tune. Same noise rules as `bench_port`.
 
 ## Step 9: what to tell the user
 

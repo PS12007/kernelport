@@ -551,7 +551,115 @@ def verify_pipeline(name: str, backend: str, root: str | None = None) -> dict:
     return out
 
 
+def bench_pipeline(name: str, backend: str, case: str | None = None, root: str | None = None) -> dict:
+    """Time a pipeline's ports run back to back vs the original CUDA kernels, on this machine.
+
+    Only for pipelines whose current ports PASSED verify_pipeline here. The chain is run once to
+    capture each stage's real input; then the whole chain and each stage are timed, ports and
+    originals in alternating rounds on those same inputs. Default case: the pipeline's last.
+    Each stage reads its own copy of its input, so the time is the kernels' alone (no copies).
+    """
+    import statistics
+
+    from kernelport.bench.timer import time_cuda, time_wall
+    from kernelport.harness import run_cuda
+    from kernelport.harness.pipeline import PipelineError, PipelineSpec, resolve, stage_inputs
+    from kernelport.zoo import BENCH_ROUNDS
+
+    if backend == "cuda":
+        return _err('bench_pipeline compares a backend\'s ports with the originals; pass a port backend, '
+                    'not "cuda"')
+    ws = _ws(root)
+    try:
+        pipe = PipelineSpec.load(ws.pipeline_path(name))
+        stages = resolve(pipe, ws.pipeline_kernel)
+        be = get_backend(backend)
+        ports = {rs.kernel_id: ws.port_path(rs.kernel_id, backend) for rs in stages}
+    except (WorkspaceError, PipelineError, KeyError) as exc:
+        return _err(str(exc))
+    except (ValueError, OSError) as exc:
+        return _err(f"cannot read {name}: {exc}")
+    ok, why = be.is_available()
+    if not ok:
+        return _err(f"{backend} is not available here ({why})")
+    hw = be.hardware_name()
+    if not any(r["backend"] == backend and r["hardware"] == hw and r["status"] == "PASS"
+               for r in ws.pipeline_status() if r["pipeline"] == name):
+        return _err(f"no current PASS for pipeline {name} on {backend} / {hw}; run verify_pipeline first")
+    try:
+        cs = pipe.cases[-1] if case is None else next(c for c in pipe.cases if c.name == case)
+    except StopIteration:
+        return _err(f"unknown case {case!r}; cases: {', '.join(c.name for c in pipe.cases)}")
+
+    datas = stage_inputs(pipe, stages, cs, lambda rs, d: be.run(ports[rs.kernel_id], rs.spec, d))
+    copy = lambda d: type(d)(d.case, d.dtype, d.dims, {k: v.clone() for k, v in d.tensors.items()},  # noqa: E731
+                             d.scalars, d.input_hash)
+    prepared = [be.prepare(ports[rs.kernel_id], rs.spec, copy(d)) for rs, d in zip(stages, datas)]
+    method = prepared[0].timer if all(p.timer == prepared[0].timer for p in prepared) else "wall_clock"
+
+    def time_ports(launches) -> float:
+        if method == "cuda_event":
+            return time_cuda(launches).median_ms
+        return time_wall(launches, lambda: [p.sync() for p in prepared]).median_ms
+
+    def chain(launches):
+        def run() -> None:
+            for f in launches:
+                f()
+        return run
+
+    orig = None
+    if run_cuda.is_available()[0]:
+        orig = [run_cuda.prepare(ws.original_source(ws.get(rs.kernel_id)), rs.spec, copy(d))[0]
+                for rs, d in zip(stages, datas)]
+    n = len(stages)
+    port_rounds: list[list[float]] = [[] for _ in range(n + 1)]  # index n = whole chain
+    orig_rounds: list[list[float]] = [[] for _ in range(n + 1)]
+    for _ in range(BENCH_ROUNDS):
+        port_rounds[n].append(time_ports(chain([p.launch for p in prepared])))
+        if orig:
+            orig_rounds[n].append(time_cuda(chain(orig)).median_ms)
+        for i in range(n):
+            port_rounds[i].append(time_ports(prepared[i].launch))
+            if orig:
+                orig_rounds[i].append(time_cuda(orig[i]).median_ms)
+
+    med = statistics.median
+    rows = []
+    for i, rs in enumerate([*stages, None]):
+        row = {"stage": rs.label if rs else "chain", "port_ms": med(port_rounds[i]),
+               "port_ms_range": [min(port_rounds[i]), max(port_rounds[i])]}
+        if orig:
+            row["original_ms"] = med(orig_rounds[i])
+            row["original_ms_range"] = [min(orig_rounds[i]), max(orig_rounds[i])]
+            row["speedup"] = row["original_ms"] / row["port_ms"] if row["port_ms"] > 0 else None
+        rows.append(row)
+    total = rows.pop()
+    spreads = [hi / lo for r in [*rows, total] for k in ("port_ms_range", "original_ms_range")
+               if k in r for lo, hi in [r[k]] if lo > 0]
+    out = {"ok": True, "pipeline": name, "backend": backend, "hardware": hw, "case": cs.name,
+           "method": method, "rounds": BENCH_ROUNDS, "chain": total, "stages": rows,
+           "noisy": any(s > 1.2 for s in spreads), "comparable": be.config.timing_comparable,
+           "note": be.config.timing_note}
+    path = ws.safe_path("pipelines", "results", name, backend, "bench", f"{slugify(hw, 64)}.json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(json.dumps({**out, "code_hashes": {k: sha256_file(p) for k, p in ports.items()}},
+                                indent=2).encode())
+    s = f"{backend} chain of {n} ports {total['port_ms']:.4f} ms on {hw} ({cs.name}, median of {BENCH_ROUNDS} runs)"
+    if orig:
+        s += f"; original CUDA chain {total['original_ms']:.4f} ms; speedup {total['speedup']:.2f}x"
+        slow = [r["stage"] for r in rows if r.get("speedup") and r["speedup"] < 0.9]
+        if slow:
+            s += f". Slower than the original: {', '.join(slow)}"
+    if out["noisy"]:
+        s += ". Runs differed by more than 20%: treat the speedup as approximate"
+    if not out["comparable"]:
+        s += f". Not comparable to native GPU numbers: {out['note']}"
+    out["summary"] = s
+    return out
+
+
 TOOLS = [kernelport_doctor, scan_kernels, read_kernel, read_skill, write_reference, validate_reference,
          write_port, verify_port, bench_port, tune_port, list_status, make_report, write_pipeline,
-         verify_pipeline]
+         verify_pipeline, bench_pipeline]
 

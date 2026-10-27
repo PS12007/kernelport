@@ -103,7 +103,7 @@ export ANTHROPIC_API_KEY=...        # or: ant auth login
 kernelport agent "port the CUDA kernels in this repo to Triton and verify them"
 ```
 
-`kernelport agent` runs Claude (default `claude-opus-5-5`) in a tool-use loop over the same 12
+`kernelport agent` runs Claude (default `claude-opus-5-5`) in a tool-use loop over the same 15
 tools the MCP server exposes, with the workflow skill as its system prompt. It can only act
 through those tools, so all writes stay in `.kernelport/` and it cannot run shell commands.
 Runs are billed to **your** Anthropic account, so it asks before starting (`--yes` skips the
@@ -171,6 +171,7 @@ Every MCP tool has a CLI equivalent, so you can drive the workflow by hand or fr
 | `kernelport bench` | `bench_port` | time port vs original (after PASS) |
 | `kernelport tune <id> <backend>` | `tune_port` | verify + time every `TUNE` variant, keep the fastest that passes |
 | `kernelport pipeline [name]` | `write_pipeline`, `verify_pipeline` | run ported kernels in a chain; check every stage on real intermediate data |
+| `kernelport pipeline <name> --bench` | `bench_pipeline` | time the chain of ports vs the original CUDA chain, whole and per stage (after PASS) |
 | `kernelport status` | `list_status` | kernel × backend × hardware table |
 | `kernelport report [--md]` | `make_report` | HTML or Markdown report |
 | `kernelport setup` | – | register with Claude Code / Codex / Cursor / Gemini CLI |

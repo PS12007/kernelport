@@ -329,8 +329,10 @@ def tune(kernel_id: str, backend: str,
 @app.command()
 def pipeline(name: str = typer.Argument(None, help="A saved pipeline, or a .json file to save first. Default: all saved."),
              backend: str = typer.Option(None, help='Default: every backend with ports for all stages. "cuda" chains the originals.'),
+             bench: bool = typer.Option(False, "--bench", help="After a PASS, time the chain of ports vs the original CUDA chain."),
+             case: str = typer.Option(None, help="With --bench: the case to time (default: the pipeline's last)."),
              as_json: bool = JSON_OPT) -> None:
-    """Run kernels in a chain and check every stage on real data (MCP: write_pipeline, verify_pipeline)."""
+    """Run kernels in a chain and check every stage on real data (MCP: write_pipeline, verify_pipeline, bench_pipeline)."""
     from pathlib import Path
 
     from rich.markup import escape
@@ -366,6 +368,8 @@ def pipeline(name: str = typer.Argument(None, help="A saved pipeline, or a .json
                                 "summary": "no backend has ports for every stage; pass --backend"})
         for b in backends:
             results.append({"pipeline": n, "backend": b, **tools.verify_pipeline(n, b)})
+            if bench and b != "cuda" and results[-1].get("status") == "PASS":
+                results[-1]["bench"] = tools.bench_pipeline(n, b, case)
     if as_json:
         print(json.dumps(results, indent=2, default=str))
     else:
@@ -378,6 +382,12 @@ def pipeline(name: str = typer.Argument(None, help="A saved pipeline, or a .json
                 con.print(escape(r["report"]))
             for line in r.get("drift", []):
                 con.print(f"  drift {escape(line)}")
+            if r.get("bench"):
+                bt = r["bench"]
+                con.print(f"  bench {escape(bt['summary'])}")
+                for st in bt.get("stages", []):
+                    orig = f", original {st['original_ms']:.4f} ms ({st['speedup']:.2f}x)" if st.get("speedup") else ""
+                    con.print(f"    {escape(st['stage'])}: {st['port_ms']:.4f} ms{orig}")
     if any(r.get("status") in ("FAIL", "REFUSED") for r in results):
         raise typer.Exit(1)
 

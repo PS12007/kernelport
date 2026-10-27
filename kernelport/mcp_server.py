@@ -93,6 +93,11 @@ def build_server() -> MCPServer:
         """Run the pipeline's ports in a chain; each stage is checked on the real output of the stage before. backend "cuda" chains the originals."""
         return tools.verify_pipeline(name, backend)
 
+    @server.tool()
+    def bench_pipeline(name: str, backend: str, case: str | None = None) -> dict[str, Any]:
+        """Time the pipeline's ports back to back vs the original CUDA kernels, whole chain and per stage. Only after verify_pipeline PASSES here. Default case: the pipeline's last."""
+        return tools.bench_pipeline(name, backend, case)
+
     return server
 
 

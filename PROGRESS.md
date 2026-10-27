@@ -289,6 +289,17 @@
   padded). Also fixed: kernels opening a brace in each `#if` branch (llama.cpp mmf.cuh) crashed the whole
   scan; braces are now matched in the first branch only, and an unparseable kernel is skipped.
 
+- **Pipeline timing** (2026-10-27): `bench_pipeline(name, backend, case=None)` (15th tool) and
+  `kernelport pipeline <name> --bench [--case]`. Requires a current PASS for the pipeline on this backend
+  and hardware. `harness.pipeline.stage_inputs` runs the chain once with the ports and keeps each stage's
+  real input; each stage's port and original are then prepared on their own copy of it, and the whole
+  chain (launched back to back) and each stage are timed in 3 alternating rounds (CUDA events where the
+  backend allows). No data flows between stages while timing, so the numbers are kernel time only. Result
+  in `pipelines/results/<name>/<backend>/bench/<hw>.json` (not read back as a verification result).
+  RTX 5060, Triton: `gpt2_loss_head` at 4x64x50257 = 1.00 ms vs 1.33 ms (1.33x; softmax 1.68x,
+  crossentropy fwd/bwd ~0.97x); `gpt2_embed_gelu_residual` at 4x256x768 bf16 = 1.21x, encoder port 0.44x
+  (noisy runs at ~10 us per kernel).
+
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install

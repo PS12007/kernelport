@@ -439,6 +439,24 @@ def drift(name: str, actual: torch.Tensor, exact: torch.Tensor, dtype: str, tol:
 StageRunner = Callable[[ResolvedStage, CaseData], dict[str, torch.Tensor]]
 
 
+def stage_inputs(pipe: PipelineSpec, stages: list[ResolvedStage], case: CaseSpec,
+                 runner: StageRunner) -> list[CaseData]:
+    """Each stage's real input for one case: the chain run once with ``runner``, inputs kept.
+
+    Timing uses these so every stage is timed on the data it sees in the chain (sizes, and value
+    ranges where they change the work, e.g. early exits on -inf).
+    """
+    bufs, _ = initial_buffers(pipe, case)
+    datas = []
+    for rs in stages:
+        data = stage_data(rs, bufs, case.name, case.dims)
+        datas.append(data)
+        _store(rs, bufs, runner(rs, CaseData(data.case, data.dtype, data.dims,
+                                             {k: v.clone() for k, v in data.tensors.items()},
+                                             data.scalars, data.input_hash)))
+    return datas
+
+
 def run_pipeline(pipe: PipelineSpec, stages: list[ResolvedStage], runner: StageRunner, *, backend: str,
                  hardware: str, code_hashes: dict[str, str], reference_hashes: dict[str, str],
                  tol_overrides: dict[str, Tolerance] | None = None,

@@ -275,3 +275,37 @@ def test_originals_agree_with_references_in_a_chain(repo):
     tools.write_pipeline(small, root=str(repo))
     res = tools.verify_pipeline("small", "cuda", root=str(repo))
     assert res["status"] == "PASS", res
+
+
+# ---------------------------------------------------------------------------- timing
+@needs_torch
+def test_bench_pipeline_refuses_without_a_pass_and_for_cuda(repo):
+    from kernelport import tools
+
+    small = _small(_pipe())
+    small["name"] = "small"
+    tools.write_pipeline(small, root=str(repo))
+    assert "port backend" in tools.bench_pipeline("small", "cuda", root=str(repo))["error"]
+    assert not tools.bench_pipeline("nope", "cpu", root=str(repo))["ok"]
+    res = tools.bench_pipeline("small", "cpu", root=str(repo))
+    assert not res["ok"]
+
+
+@needs_triton
+def test_bench_pipeline_times_chain_and_stages(repo):
+    from kernelport import tools
+
+    small = _small(_pipe())
+    small["name"] = "small"
+    tools.write_pipeline(small, root=str(repo))
+    assert tools.verify_pipeline("small", "triton", root=str(repo))["status"] == "PASS"
+    assert "unknown case" in tools.bench_pipeline("small", "triton", case="zzz", root=str(repo))["error"]
+    res = tools.bench_pipeline("small", "triton", case="odd_3x5x1000", root=str(repo))
+    assert res["ok"], res
+    assert res["case"] == "odd_3x5x1000" and len(res["stages"]) == 3
+    assert res["chain"]["port_ms"] > 0 and all(s["port_ms"] > 0 for s in res["stages"])
+    assert "chain of 3 ports" in res["summary"]
+    assert (repo / ".kernelport" / "pipelines" / "results" / "small" / "triton" / "bench").is_dir()
+    # the bench file must not be read back as a verification result
+    from kernelport.workspace import Workspace
+    assert len(Workspace(repo).pipeline_results("small")) == 1

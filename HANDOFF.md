@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-10-24. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-10-27. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -80,6 +80,14 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 | Static warnings | `kernelport/analyzer/hazards.py`: a lane can return early before a full-mask warp shuffle/reduce. Shown by `scan` and `read_kernel`; the skill tells agents to test warp-splitting sizes. Flags exactly kernel7 + kernel8 in llm.c; 1 of 152 llama.cpp kernels |
 | Analyzer crash | A kernel opening a brace in each `#if` branch (llama.cpp `mmf.cuh`) crashed the whole scan; fixed |
 
+## What was done on 2026-10-27
+
+| Area | Change |
+|---|---|
+| Pipeline timing | New `bench_pipeline` tool (15 tools) and `kernelport pipeline <name> --bench`: after a PASS, the chain is run once to capture each stage's real input, then the whole chain of ports and each stage are timed against the original CUDA kernels on those inputs (3 alternating rounds). Saved under `.kernelport/pipelines/results/<name>/<backend>/bench/` |
+| First numbers (RTX 5060, Triton) | `gpt2_loss_head` at B=4, T=64, V=50257: chain 1.00 ms vs 1.33 ms original (1.33x; softmax 1.68x, the two cross-entropy kernels ~0.97x). `gpt2_embed_gelu_residual` (bf16, 4x256x768): 1.21x, but the encoder port is 0.44x of the original at this small size (runs noisy) |
+| PR #867 reply | Reply to the kernel7 reviewer drafted in `drafts/llm-c-867-kernel7-reply.md` (local, gitignored), with the push steps. Still not pushed or posted |
+
 ## Next steps (owner)
 
 None of these need API credits.
@@ -96,8 +104,8 @@ None of these need API credits.
       a good launch link). Nothing else is needed; it is static.
 - [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X; lead with "proven
       correct, not just translated" and the llm.c bug.
-- [ ] **PR #867:** push the 2 new commits (`cd C:\-CS\llm.c-fork; git push`) and reply to the
-      reviewer's kernel7 comment. Then keep watching for review comments.
+- [ ] **PR #867:** push the 2 new commits (`cd C:\-CS\llm.c-fork; git push`) and post the reply
+      drafted in `drafts/llm-c-867-kernel7-reply.md`. Then keep watching for review comments.
 - [ ] **wgpu loop-var bug (optional):** drafts are ready, not posted, in `drafts/` (local only,
       gitignored): an issue for pygfx/wgpu-py (`wgpu-loop-var-issue.md`, with
       `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
@@ -111,7 +119,7 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 
 ## Ideas to make it better
 
-- **Pipelines, more:** time a whole chain (ports vs originals); a pipeline in the browser check; a chain with a matmul.
+- **Pipelines, more:** a pipeline in the browser check; a chain with a matmul; look at why the bf16 encoder port is slow at small sizes.
 - **More real projects:** a cuBLAS-heavy repo, or flash-attention's backward pass (forward is done).
 - **Linux GPU checks:** free CI runners have no GPU; a Colab or Kaggle run per release would cover Linux + NVIDIA.
 - **Browser check, more:** add the llm.c / flash-attention WGSL ports to `docs/web` (today only the zoo),
@@ -120,7 +128,7 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 - **When wgpu-native ships v30:** the loop-var check can stay (harmless); note the fixed version in the message.
 
 Done 2026-10-15 from this list: macro-defined kernels, report polish, browser demo page, FlashAttention example.
-Done 2026-10-17: multi-kernel pipelines.
+Done 2026-10-17: multi-kernel pipelines. Done 2026-10-27: pipeline timing.
 
 **Handy here:** headless Edge runs WebGPU on this laptop (`scripts/check_web_demo.py`; `--discrete` for
 the RTX 5060) and takes screenshots for checking pages (`msedge --headless=new --screenshot=...`).
