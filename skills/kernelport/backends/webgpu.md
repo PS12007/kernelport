@@ -61,7 +61,7 @@ def grid(n):                         # launch.json names; arrays are NumPy (use 
 | `gridDim.x` | `@builtin(num_workgroups) nwg` → `nwg.x` |
 | `if (i < n)` | `if (i < u32(params.n)) { ... }` |
 | `__shared__ float red[256];` | `var<workgroup> red: array<f32, 256>;` (module scope) |
-| `__syncthreads()` | `workgroupBarrier()` (must be reached by the whole workgroup: not inside a divergent `if`) |
+| `__syncthreads()` | `workgroupBarrier()` (must be reached by the whole workgroup: not inside a divergent `if` or loop, and not after `if (i >= n) { return; }`; CUDA code often returns early like that, browsers reject it, and the runner refuses it) |
 | `__shfl_xor_sync` warp reductions | tree reduction in `var<workgroup>` memory (subgroups are optional in WebGPU) |
 | `atomicAdd(int*)` | `atomicAdd(&buf[i], v)` on `array<atomic<i32>>` / `atomic<u32>` |
 | `atomicAdd(float*)` | **no float atomics in core WGSL**: compare-exchange loop on the bits (below) |
@@ -139,7 +139,8 @@ were not tested and why.
 
 - [ ] No binding declarations in the WGSL (the runner adds them); names match launch.json.
 - [ ] `grid()` returns ≤ 65535 per dimension; large 1-D inputs use a grid-stride loop.
-- [ ] Every `workgroupBarrier()` is in uniform control flow (not inside `if (tid < s)`).
+- [ ] Every `workgroupBarrier()` is in uniform control flow (not inside `if (tid < s)`, and
+      no `if (i >= n) { return; }` before it, even though the CUDA original does that).
 - [ ] Scalars converted before use: `u32(params.n)`, `f32(params.cols)`.
 - [ ] No plain `out[0] = out[0] + v` from several workgroups (a race): use atomics.
 - [ ] int64 inputs read as `.x` of `vec2<u32>`.

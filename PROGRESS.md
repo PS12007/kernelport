@@ -303,6 +303,27 @@
   Triton port was rewritten row-wise anyway (one token-id load per row, no per-element divide): 0.023 vs
   0.025 ms. The original encoder measures 0.024-0.047 ms depending on the session (steady within one).
 
+- **Block-barrier hazards** (2026-10-28): `analyzer/hazards.py` gets a second check,
+  `divergent_barriers`: a block barrier (`__syncthreads*`, `this_thread_block().sync()`, `block.sync()` on a
+  `thread_block`, `cg::sync`, `blockReduce`-style helpers by name or via `__device__` bodies, template calls
+  included) that some threads can miss: (a) a thread-dependent `return` before it, (b) inside an `if` whose
+  condition depends on threadIdx (any dim; `/ 32` does not make it block-uniform), (c) inside a loop whose
+  condition does. CUDA-side exemptions, from false positives in llama.cpp: a `for` whose start and bound
+  shift by the same thread term (wkv.cu, gla.cu), and a return inside a block that always ends in `return;`
+  (mmq.cuh fixup). Early return before `__syncthreads` is a deliberate idiom on NVIDIA (exited threads count
+  as arrived; llm.c's encoder.cuh says so), so that kind is worded as a porting note; branch/loop kinds as a
+  CUDA hazard. Scan of 340 kernels: llm.c fork 7 (4 loop cases: dev layernorm_backward kernel9/10,
+  fused_residual_forward_kernel6, llmc layernorm_backward_kernel10; 3 early returns), llama.cpp ggml-cuda 4
+  early returns, zoo 0.
+  **WGSL gap found:** wgpu-native 29 (naga, wgpu-py 0.32) accepts a `workgroupBarrier()` after a
+  non-uniform return, inside a divergent `if`, or in a divergent loop; Edge (Tint) rejects all three
+  ("must only be called from uniform control flow"), plus two cases the CUDA exemptions would allow (a
+  shifted loop; a return nested in a branch that returns). So a WGSL port could PASS here and not compile in
+  a browser. The runner now refuses these (`check_barrier_uniformity`, reusing `divergent_barriers` in
+  `strict` mode with the invocation-id builtins as sources; WGSL is rewritten to C-style conditions first).
+  Agrees with Edge on all 6 probe shaders; all 15 existing WGSL ports are accepted. Not followed: Tint also
+  treats loads from read_write storage as non-uniform. Skill: SKILL.md, webgpu.md, metal.md.
+
 ## Next (pick up here)
 Owner actions (see RELEASING.md for PyPI):
 - PyPI: DONE 2026-10-14, kernelport 0.1.0 published via release.yml (tag v0.1.0); clean `pip install

@@ -119,7 +119,10 @@ infer a value. Fill every TODO; `write_reference` rejects a spec with TODOs.
   lane that returns early before a full-mask warp shuffle (undefined in CUDA, often
   right by luck). Add cases that trigger it (a size that is not a multiple of 32, smaller
   than the block). If they still PASS, keep them but mention the warning in your report;
-  do not copy the pattern into ports.
+  do not copy the pattern into ports. A warning about a **block barrier** (threads return
+  before `__syncthreads()`, or it sits in a branch/loop that differs between threads)
+  means: in the port, keep every thread alive up to each barrier and guard the work
+  (`if (i < n) { ... }`) instead of returning; WGSL will not compile it otherwise.
 - **init** must respect the kernel's input domain. The suggestion from `read_kernel` is
   `normal` + `edges` everywhere; change it where that is invalid: variances and second
   moments `>= 0` (`uniform`, `low: 0`), probabilities in (0, 1] before a `log`, indices

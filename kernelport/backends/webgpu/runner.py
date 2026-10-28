@@ -170,6 +170,93 @@ def check_loop_vars(wgsl: str) -> None:
                 f"{m.group(2)}();` (the zero value).")
 
 
+_WGSL_BARRIERS = re.compile(r"\b(workgroupBarrier|storageBarrier|textureBarrier|workgroupUniformLoad)\s*\(")
+_WGSL_THREAD_BUILTIN = re.compile(
+    r"@builtin\s*\(\s*(?:local_invocation_id|global_invocation_id|local_invocation_index"
+    r"|subgroup_invocation_id)\s*\)\s*([A-Za-z_]\w*)\s*:")
+_WGSL_FN = re.compile(r"\bfn\s+([A-Za-z_]\w*)\s*\(")
+
+
+def _wgsl_as_c(code: str) -> str:
+    """Rewrite WGSL so the C-style hazard analysis reads it: parenthesise every ``if``/``while``
+    condition (WGSL allows ``if i >= n {``) and drop type annotations from declarations.
+    No newlines are added or removed, so line numbers stay put."""
+    def paren(m: re.Match) -> str:
+        cond = m.group(2).strip()
+        if cond.startswith("(") and _matching_paren(cond, 0) == len(cond):
+            return f"{m.group(1)} {cond} {{"
+        return f"{m.group(1)} ({cond}) {{"
+
+    code = re.sub(r"\b(if|while)\b([^{};]*)\{", paren, code)
+    return re.sub(r"\b(let|var|const)\s+([A-Za-z_]\w*)\s*:\s*[^=;\n]+=", r"\1 \2 =", code)
+
+
+def check_barrier_uniformity(wgsl: str) -> None:
+    """Refuse a barrier that some invocations of the workgroup can skip.
+
+    WGSL requires ``workgroupBarrier()`` (and ``storageBarrier``, ``workgroupUniformLoad``) in
+    uniform control flow. Browsers (Tint, in Chrome and Edge) reject a barrier after an
+    ``if (gid.x >= n) { return; }`` or inside a branch or loop that depends on the invocation id,
+    while wgpu-native 29 (naga) accepts all of these, so such a port would PASS here and fail to
+    compile in a browser. CUDA originals often return early before ``__syncthreads()`` (fine on
+    NVIDIA), which makes this an easy thing to copy into a port. Only values derived from the
+    invocation-id builtins count as non-uniform; Tint also treats loads from read_write storage
+    as non-uniform, which this check does not follow.
+    """
+    from kernelport.analyzer.hazards import divergent_barriers
+
+    code = _wgsl_as_c(re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)),
+                             re.sub(r"//[^\n]*", " ", wgsl), flags=re.S))
+    funcs: dict[str, tuple[int, str, str]] = {}  # name -> (body offset, params, body)
+    for m in _WGSL_FN.finditer(code):
+        close = _matching_paren(code, m.end() - 1)
+        start = code.find("{", close) if close > 0 else -1
+        if start < 0:
+            continue
+        end = _matching_brace(code, start)
+        funcs[m.group(1)] = (start, code[m.end():close], code[start:end])
+    helpers = {n: b for n, (_, _, b) in funcs.items()}
+    for name, (start, params, body) in funcs.items():
+        ids = _WGSL_THREAD_BUILTIN.findall(params)
+        if not ids:
+            continue
+        sources = re.compile(r"(?<![\w.])(?:" + "|".join(map(re.escape, ids)) + r")\b")
+        others = {n: b for n, b in helpers.items() if n != name}
+        hits = divergent_barriers(body, others, sources=sources, barriers=_WGSL_BARRIERS, strict=True)
+        if not hits:
+            continue
+        kind, at, cond, op, bar = hits[0]
+        line = code.count("\n", 0, start + at) + 1
+        bar_line = code.count("\n", 0, start + op) + 1
+        what = {"exit": f"`if ({cond})` lets some invocations return before `{bar}()` at line {bar_line}",
+                "branch": f"`{bar}()` at line {bar_line} is inside `if ({cond})`",
+                "loop": f"`{bar}()` at line {bar_line} is inside a loop whose condition `{cond}` "
+                        "depends on the invocation"}[kind]
+        raise ValueError(
+            f"WGSL line {line}: {what}. Barriers must be in uniform control flow: wgpu-native accepts this, "
+            "but browsers (Tint) reject the shader ('workgroupBarrier' must only be called from uniform "
+            "control flow). Keep every invocation running to the barrier and guard the work instead, e.g. "
+            "`if (i < n) { ... }` around the loads and stores, with the barrier outside it.")
+
+
+def _matching_paren(code: str, i: int) -> int:
+    depth = 0
+    for j in range(i, len(code)):
+        depth += {"(": 1, ")": -1}.get(code[j], 0)
+        if depth == 0:
+            return j + 1
+    return -1
+
+
+def _matching_brace(code: str, i: int) -> int:
+    depth = 0
+    for j in range(i, len(code)):
+        depth += {"{": 1, "}": -1}.get(code[j], 0)
+        if depth == 0:
+            return j + 1
+    return len(code)
+
+
 def _elem_type(p, case_dtype: str) -> tuple[str, type]:
     dt = p.resolved_dtype(case_dtype)
     if dt not in _ELEM:
@@ -271,6 +358,7 @@ def prepare(path: Path, spec: LaunchSpec, data: CaseData) -> Prepared:
         raise KeyError(f"BINDINGS names unknown tensor params {sorted(unknown)}")
     check_browser_literals(mod.WGSL)
     check_loop_vars(mod.WGSL)
+    check_barrier_uniformity(mod.WGSL)
     code = enable + mod.WGSL + "\n" + bindings_source(spec, data.dtype, overrides)
 
     _check_binding_sizes(spec, data, *binding_limits())

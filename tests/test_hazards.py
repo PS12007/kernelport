@@ -19,8 +19,10 @@ def test_llmc_softmax_kernels_flagged():
     kernels = scan(LLMC)
     got = {k.name: k.warnings for k in kernels if k.warnings}
     assert sorted(got) == ["softmax_forward_kernel7", "softmax_forward_online_kernel8"]
-    k7, = got["softmax_forward_kernel7"]
+    k7, k7_block = got["softmax_forward_kernel7"]
     assert k7.startswith("line 413: `if (tid >= C)`") and "`warpReduceMax` at line 432" in k7
+    # its early return also skips a __syncthreads: fine on NVIDIA, a porting note
+    assert "`__syncthreads` at line 435" in k7_block and "WGSL rejects" in k7_block
     k8, = got["softmax_forward_online_kernel8"]
     assert k8.startswith("line 513: `if (tid >= C)`") and "`__syncwarp` at line 544" in k8
 
@@ -40,8 +42,10 @@ def test_fixed_kernel7_not_flagged():
         }
         return;
     }""")
-    assert "softmax_forward_kernel7" not in warned(fixed)
-    assert "softmax_forward_kernel7" in warned(src)
+    def warp_warnings(text):
+        return [w for w in warned(text).get("softmax_forward_kernel7", []) if "warp-wide" in w]
+    assert warp_warnings(fixed) == []
+    assert len(warp_warnings(src)) == 1
 
 
 GLOBAL_IDX = """
@@ -153,3 +157,129 @@ def test_tools_report_warnings(tmp_path):
     assert len(row["warnings"]) == 1 and "warnings for k" in res["summary"]
     read = tools.read_kernel(row["kernel_id"], root=str(repo))
     assert read["warnings"] == row["warnings"] and "1 warning(s)" in read["summary"]
+
+
+# ---- block barriers ----------------------------------------------------------------------
+
+def test_exit_before_syncthreads():
+    src = """
+__global__ void k(float* out, const float* x, int n) {
+    __shared__ float s[256];
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= n) return;
+    s[threadIdx.x] = x[i];
+    __syncthreads();
+    out[i] = s[255 - threadIdx.x];
+}
+"""
+    w, = warned(src)["k"]
+    assert w.startswith("line 5: `if (i >= n)` lets some threads of the block return")
+    assert "`__syncthreads` at line 7" in w and "WGSL rejects" in w
+
+
+def test_guarded_work_not_flagged():
+    src = """
+__global__ void k(float* out, const float* x, int n) {
+    __shared__ float s[256];
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    s[threadIdx.x] = i < n ? x[i] : 0.0f;
+    __syncthreads();
+    if (threadIdx.x == 0) { float t = 0; for (int j = 0; j < 256; j++) t += s[j]; out[blockIdx.x] = t; }
+    if (i >= n) return;
+}
+"""
+    assert warned(src) == {}
+
+
+def test_block_uniform_exit_and_loop_not_flagged():
+    src = """
+__global__ void k(float* out, const float* x, int rows, int n) {
+    __shared__ float tile[32][32];
+    if (blockIdx.x >= rows) return;
+    for (int t = 0; t < (n + 31) / 32; ++t) {
+        tile[threadIdx.y][threadIdx.x] = x[t * 32 + threadIdx.x];
+        __syncthreads();
+        out[t] += tile[threadIdx.x][threadIdx.y];
+        __syncthreads();
+    }
+}
+"""
+    assert warned(src) == {}
+
+
+def test_barrier_in_divergent_branch_and_loop():
+    src = """
+__global__ void branch(float* out, int n) {
+    int tid = threadIdx.x;
+    if (tid < n) {
+        out[tid] = 1.0f;
+        __syncthreads();
+    }
+}
+__global__ void loop(float* out, int N) {
+    int warp = threadIdx.x / 32;  // the same for a warp, not for the block
+    for (int row = warp; row < N; row += 8) {
+        out[row] = 0.0f;
+        __syncthreads();
+    }
+}
+"""
+    got = warned(src)
+    assert "sits inside `if (tid < n)`" in got["branch"][0]
+    assert "inside a loop whose condition `row < N`" in got["loop"][0]
+
+
+def test_loop_shifted_by_thread_has_same_trip_count():
+    # llama.cpp wkv.cu: start and bound both add tid, so every thread loops equally often
+    src = """
+__global__ void k(float* out, int T, int C, int base) {
+    const int tid = threadIdx.x;
+    for (int t = base + tid; t < base + T * C + tid; t += C) {
+        out[t] = 0.0f;
+        __syncthreads();
+    }
+}
+"""
+    assert warned(src) == {}
+
+
+def test_exit_inside_block_that_always_returns():
+    # llama.cpp mmq.cuh fixup: the early return is inside a branch that returns anyway
+    src = """
+__global__ void k(float* out, const int* ids, int n) {
+    __shared__ int s[32];
+    int i = threadIdx.x;
+    if (!ids) {
+        if (i > n) {
+            return;
+        }
+        out[i] += 1.0f;
+        return;
+    }
+    s[i] = ids[i];
+    __syncthreads();
+    out[i] = s[31 - i];
+}
+"""
+    assert warned(src) == {}
+
+
+def test_barrier_helpers_and_block_sync():
+    src = """
+template <float (*warp_red)(float)>
+__device__ float blockReduce(float v) { __shared__ float s[32]; __syncthreads(); return v; }
+__device__ float row_total(float v) { return blockReduce<warp_sum>(v); }
+__global__ void a(float* out, int C) {
+    int c = threadIdx.x;
+    if (c >= C) return;
+    out[0] = row_total(1.0f);
+}
+__global__ void b(float* out, int n) {
+    cg::thread_block block = cg::this_thread_block();
+    if (block.thread_rank() >= n) return;
+    block.sync();
+}
+"""
+    got = warned(src)
+    assert sorted(got) == ["a", "b"]
+    assert "`row_total`" in got["a"][0] and "`block.sync`" in got["b"][0]

@@ -69,6 +69,37 @@ def test_uninitialised_loop_vars_are_refused():
         assert suggestion in str(e.value)
 
 
+_UNIFORMITY_HEAD = """var<workgroup> s: array<f32, 64>;
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>, @builtin(local_invocation_id) lid: vec3<u32>) {
+"""
+
+
+def test_non_uniform_barriers_are_refused():
+    """No GPU needed. naga (wgpu-native 29) accepts each `bad` shader; Edge's Tint rejects every one
+    with "'workgroupBarrier' must only be called from uniform control flow" (measured 2026-10-28)."""
+    from kernelport.backends.webgpu.runner import check_barrier_uniformity, load_port
+
+    bad = {
+        "early return": ("  if (gid.x >= 100u) { return; }\n  s[lid.x] = x[gid.x];\n  workgroupBarrier();\n}", 4),
+        "divergent if": ("  if (lid.x < 10u) { workgroupBarrier(); }\n}", 4),
+        "nested return": ("  if (arrayLength(&x) == 0u) {\n    if (lid.x > 3u) { return; }\n    return;\n  }\n"
+                          "  workgroupBarrier();\n}", 5),
+        "shifted loop": ("  for (var t = 5u + lid.x; t < 105u + lid.x; t += 64u) { workgroupBarrier(); }\n}", 4),
+        "no parens, typed let": ("  let i: u32 = gid.x;\n  if i >= 100u { return; }\n  storageBarrier();\n}", 5),
+        "helper with a barrier": ("  if (lid.x == 0u) { sync_all(); }\n}\nfn sync_all() { workgroupBarrier(); }", 4),
+    }
+    for name, (body, line) in bad.items():
+        with pytest.raises(ValueError, match=f"WGSL line {line}: .*uniform control flow") as e:
+            check_barrier_uniformity(_UNIFORMITY_HEAD + body)
+        assert "browsers (Tint) reject" in str(e.value), name
+    guarded = ("  var v = 0.0;\n  if (gid.x < 100u) { v = x[gid.x]; }\n  s[lid.x] = v;\n  workgroupBarrier();\n"
+               "  if (gid.x < 100u) { x[gid.x] = s[63u - lid.x]; }\n  if (gid.x >= 100u) { return; }\n}")
+    check_barrier_uniformity(_UNIFORMITY_HEAD + guarded)
+    for kernel in KERNELS:  # every zoo port compiles in browsers, so none may be refused
+        check_barrier_uniformity(load_port(ZOO / kernel / "ports" / "webgpu.py").WGSL)
+
+
 def test_binding_size_checks():
     """No GPU needed: limits are passed in."""
     from kernelport.backends.webgpu import runner

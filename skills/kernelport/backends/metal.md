@@ -70,7 +70,8 @@ def grid(n):
 
 - [ ] `grid()` is in threads (rows × threadgroup width), not threadgroups.
 - [ ] Scalars read as `name[0]`; inouts written to `name_out`, with the old value read from `name`.
-- [ ] Every `threadgroup_barrier` is reached by all threads (not inside `if (tid < s)`).
+- [ ] Every `threadgroup_barrier` is reached by all threads (not inside `if (tid < s)`, and
+      no `if (i >= n) return;` before it, even when the CUDA original has one).
 - [ ] Atomic outputs: `INIT_VALUE` set to the identity (0 for sums), and an inout's
       initial value added exactly once.
 - [ ] `metal::precise::` math functions.

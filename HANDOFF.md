@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-10-27. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-10-28. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -90,6 +90,14 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 | Encoder port | `encoder_forward_kernel3` Triton port rewritten row-wise (one program per token and block of C: one token-id load, no per-element divide): 0.023 vs 0.025 ms for the old port, steady across runs; re-verified 4/4 and the bf16 pipeline PASS |
 | PR #867 reply | Reply to the kernel7 reviewer drafted in `drafts/llm-c-867-kernel7-reply.md` (local, gitignored), with the push steps. Still not pushed or posted |
 
+## What was done on 2026-10-28
+
+| Area | Change |
+|---|---|
+| Barrier warnings | `analyzer/hazards.py` also warns when some threads can miss a `__syncthreads()` (or `block.sync()`, or a `blockReduce` helper): a thread-dependent early return before it, or the barrier inside a branch or loop that differs between threads. Over 340 kernels: 4 loop cases in llm.c (threads can hit the barrier a different number of times), 3 + 4 deliberate early returns in llm.c / llama.cpp (fine on NVIDIA, worded as a porting note), 0 in the zoo. Two llama.cpp false-positive patterns fixed and tested |
+| WGSL gap found | wgpu-native (naga, wgpu 0.32) accepts a `workgroupBarrier()` that browsers reject as non-uniform (checked in Edge). A port could PASS in kernelport and not compile in Chrome. The runner now refuses it with a fix hint; it agrees with Edge on 6 probe shaders and accepts all 15 existing WGSL ports |
+| Skill | SKILL.md, webgpu.md and metal.md: keep every thread alive to each barrier in ports, guard the work instead |
+
 ## Next steps (owner)
 
 None of these need API credits.
@@ -147,7 +155,7 @@ Open Claude Code in `C:\-CS\CUDAtoanything` and say "keep working on kernelport"
 | CI runs | https://github.com/PS12007/kernelport/actions |
 | llm.c PR | https://github.com/karpathy/llm.c/pull/867 (branch `fix-softmax-online-kernel8-small-c` on PS12007/llm.c; local clone `C:\-CS\llm.c-fork`, `core.autocrlf=false`) |
 | Environment | `.venv` (Python 3.12, torch 2.11 cu128, triton-windows 3.7, cupy 14.2); run tools as `.venv\Scripts\python.exe` / `.venv\Scripts\kernelport.exe` |
-| Tests | `.venv\Scripts\python.exe -m pytest -q` (~5-7 min; 322 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
+| Tests | `.venv\Scripts\python.exe -m pytest -q` (~6-8 min; 332 pass, 43 skip for hardware not on this machine; with `wgpu` installed the WebGPU tests run too) |
 
 ## Rules to keep
 
