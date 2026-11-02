@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Browser check page redesigned: a plain-language intro, a progress bar and a clear result, one row per
+  kernel with float32 and float16 side by side, real code (llm.c, FlashAttention) first, and the CUDA
+  original next to each WebGPU port. Live at https://ps12007.github.io/kernelport/web/.
+- Landing page (https://ps12007.github.io/kernelport/) tells the llm.c bug story.
+
 ## 0.2.0 (2026-11-02)
 
 **Multi-kernel pipelines**

@@ -61,8 +61,21 @@ def sources() -> list[dict]:
             rel = f"examples/{ex}/.kernelport/kernels/{kdir.name}"
             found.append({"name": info["name"], "group": ex, "port_file": f"{rel}/ports/webgpu/port.py",
                           "spec_file": f"{rel}/frozen/launch.json", "reference_file": f"{rel}/frozen/reference.py",
-                          "cuda_file": f"examples/{ex}/{info['file']}"})
+                          "cuda_file": f"examples/{ex}/{info['file']}",
+                          "cuda_lines": [info["line"], info["end_line"]]})
+    for src in found:
+        src["cuda"] = cuda_source(src)
     return found
+
+
+def cuda_source(src: dict) -> str:
+    """The original CUDA shown next to the port: the zoo's whole kernel.cu, or just the kernel's
+    own lines from an example's (much longer) file."""
+    text = (ROOT / src["cuda_file"]).read_text(encoding="utf-8").replace("\r\n", "\n")
+    if "cuda_lines" in src:
+        first, last = src["cuda_lines"]
+        text = "\n".join(text.split("\n")[first - 1:last])
+    return text.strip("\n")
 
 
 def wgsl_for(spec: LaunchSpec, port, want: str) -> str:

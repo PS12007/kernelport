@@ -43,6 +43,14 @@ reference that was itself validated against the original CUDA kernel.</p>
 <a class="card" href="https://github.com/PS12007/kernelport/tree/main/examples/llm.c"><b>Real code: llm.c →</b><span>9 unmodified llm.c kernels ported to Triton, Metal and WebGPU, and a bug it found upstream.</span></a>
 </div>
 
+<h2>It catches real bugs</h2>
+<p>Checking the original CUDA code is part of the process, and it pays off. On Karpathy's
+<a href="https://github.com/karpathy/llm.c">llm.c</a>, validation showed that <code>softmax_forward_online_kernel8</code>
+leaves whole rows of its output unwritten when a row is shorter than the thread block. A reviewer then spotted
+the same pattern in a second kernel, one that passes every runtime test on today's NVIDIA GPUs.
+Both fixes are in <a href="https://github.com/karpathy/llm.c/pull/867">karpathy/llm.c#867</a>, and kernelport
+now warns about that pattern before anything runs.</p>
+
 <h2>What it looks like</h2>
 <img src="img/demo.svg" alt="Terminal recording: kernelport validates a softmax reference against the original CUDA kernel, a first Triton port fails with NaN, the fixed port passes 24 of 24 cases on an RTX 5060">
 
