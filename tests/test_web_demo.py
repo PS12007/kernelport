@@ -1,30 +1,38 @@
-"""docs/web (the in-browser WebGPU check) stays in step with the zoo's WebGPU ports."""
+"""docs/web (the in-browser WebGPU check) stays in step with the WebGPU ports it packages."""
 
 import hashlib
+import importlib.util
 import json
 
 import pytest
 
-from conftest import ROOT, ZOO
-from kernelport.backends.webgpu.runner import bindings_source, check_browser_literals, load_port
+from conftest import ROOT
+from kernelport.backends.webgpu.runner import check_browser_literals, load_port
 from kernelport.harness.spec import LaunchSpec
 
 WEB = ROOT / "docs" / "web"
 
 
+def _build_script():
+    spec = importlib.util.spec_from_file_location("build_web_demo", ROOT / "scripts" / "build_web_demo.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 @pytest.mark.skipif(not (WEB / "data").is_dir(), reason="docs/web/data is not in the sdist")
-def test_web_demo_matches_zoo_ports():
+def test_web_demo_matches_ports():
     """If this fails, run: python scripts/build_web_demo.py"""
+    build = _build_script()
     manifest = json.loads((WEB / "cases.json").read_text(encoding="utf-8"))
-    zoo = sorted(p.parent.parent.name for p in ZOO.glob("*/ports/webgpu.py"))
-    for dtype in ("float32", "float16"):
-        assert [k["name"] for k in manifest["kernels"] if k["dtype"] == dtype] == zoo
+    sources = build.sources()
+    assert {s["group"] for s in sources} >= {"zoo", "llm.c", "flash-attention-minimal"}
+    packaged = {(k["group"], k["name"]) for k in manifest["kernels"]}
+    assert packaged == {(s["group"], s["name"]) for s in sources}, "docs/web is stale"
     for k in manifest["kernels"]:
-        port = load_port(ZOO / k["name"] / "ports" / "webgpu.py")
-        spec = LaunchSpec.load(ZOO / k["name"] / "launch.json")
-        bindings = bindings_source(spec, k["dtype"], dict(getattr(port, "BINDINGS", {}) or {}))
-        expected = ("enable f16; " if k["dtype"] == "float16" else "") + port.WGSL + "\n" + bindings
-        assert k["wgsl"] == expected, f"{k['name']}: docs/web is stale"
+        port = load_port(ROOT / k["port_file"])
+        spec = LaunchSpec.load(ROOT / k["spec_file"])
+        assert k["wgsl"] == build.wgsl_for(spec, port, k["dtype"]), f"{k['name']}: docs/web is stale"
         check_browser_literals(k["wgsl"])
         blob = (WEB / k["data"]).read_bytes()
         assert hashlib.sha256(blob).hexdigest() == k["data_sha256"]

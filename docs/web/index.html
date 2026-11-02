@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>kernelport WebGPU check</title>
-<meta name="description" content="Run kernelport's WebGPU ports of 12 CUDA kernels on your own GPU and check every output against the reference that was validated on the original CUDA kernel.">
+<meta name="description" content="Run kernelport's WebGPU ports of 15 CUDA kernels (including llm.c and FlashAttention) on your own GPU and check every output against the reference that was validated on the original CUDA kernel.">
 <style>
 :root{--bg:#ffffff;--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--card:#f6f8fa;--code:#eff2f5;
 --pass:#1a7f37;--pass-bg:#dafbe1;--fail:#cf222e;--fail-bg:#ffebe9;--run:#9a6700;--run-bg:#fff8c5;
@@ -47,8 +47,8 @@ ol{padding-left:20px}
 <body>
 <main>
 <h1>Check kernelport's WebGPU ports on your GPU</h1>
-<p class="lede">These are the 12 zoo kernels from <a href="https://github.com/PS12007/kernelport">kernelport</a>,
-ported from CUDA to WGSL. This page runs each port on your GPU, here in the browser, and compares every output
+<p class="lede">These are 15 CUDA kernels ported to WGSL with <a href="https://github.com/PS12007/kernelport">kernelport</a>: its 12-kernel test zoo, two kernels from Karpathy's <a href="https://github.com/karpathy/llm.c">llm.c</a> and a FlashAttention forward pass from <a href="https://github.com/tspeterkim/flash-attention-minimal">flash-attention-minimal</a>.
+This page runs each port on your GPU, here in the browser, and compares every output
 with a reference that was itself validated against the original CUDA kernel. It uses kernelport's fixed tolerances.
 Nothing is uploaded anywhere.</p>
 
@@ -169,10 +169,10 @@ async function runCase(device, module, pipelines, k, c, data) {
 }
 
 function row(k, status, cells = {}) {
-  const id = `row-${k.name}-${k.dtype}`;
+  const id = `row-${k.group}-${k.name}-${k.dtype}`;
   let tr = $(id);
   if (!tr) { tr = document.createElement("tr"); tr.id = id; $("rows").appendChild(tr); }
-  tr.innerHTML = `<td><code>${esc(k.name)}</code> <span class="small muted">${k.dtype === "float16" ? "fp16" : "fp32"}</span>
+  tr.innerHTML = `<td><code>${esc(k.name)}</code> <span class="small muted">${k.group === "zoo" ? "" : esc(k.group) + " · "}${k.dtype === "float16" ? "fp16" : "fp32"}</span>
     <details><summary>WGSL port</summary><pre>${esc(k.wgsl.trim())}</pre>
     <span class="small muted">From <a href="https://github.com/PS12007/kernelport/blob/main/${esc(k.port_file)}">${esc(k.port_file)}</a>,
     port of <a href="https://github.com/PS12007/kernelport/blob/main/${esc(k.cuda_file)}">${esc(k.cuda_file)}</a></span></details>
@@ -237,12 +237,12 @@ async function run() {
       ok = false; why = why || String(e.message || e);
     }
     cases += n;
-    if (ok) passed++; else failed.push(`${k.name} (${k.dtype})`);
+    if (ok) passed++; else failed.push(`${k.group === "zoo" ? "" : k.group + "/"}${k.name} (${k.dtype})`);
     row(k, ok ? "PASS" : "FAIL", {cases: `${npass}/${k.cases.length}`, err: maxAbs ? maxAbs.toExponential(1) : "0",
                                   ms: `${ms.toFixed(1)} ms`, why});
   }
   const total = manifest.kernels.length - skipped;
-  const ports = new Set(manifest.kernels.map((k) => k.name)).size;
+  const ports = new Set(manifest.kernels.map((k) => `${k.group}/${k.name}`)).size;
   const dtypes = hasF16 ? "fp32 + fp16" : "fp32 (no shader-f16 here, fp16 not tested)";
   const secs = ((performance.now() - t0) / 1000).toFixed(1);
   summaryText = `kernelport WebGPU check: ${passed}/${total} PASS (${ports} ports, ${dtypes}, ${cases} cases) on ${adapterLabel}`;

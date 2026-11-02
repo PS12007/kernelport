@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-10-28. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-11-02. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -104,24 +104,26 @@ None of these need API credits.
 
 - [ ] **AMD:** join AMD's AI Developer Program for free Developer Cloud credits, start an MI300X with the
       ROCm image, run `bash scripts/amd_check.sh`, send back `amd_results.txt`.
-- [ ] **Colab:** run `notebooks/freeze_references_colab.ipynb` once on a free T4 (also the first Linux +
-      NVIDIA run).
-- [ ] **Demo video/GIF (30-60 s):** clone a CUDA-only repo, one prompt to the agent, the green status
-      table. The biggest launch lever. (The README now has an animated CLI recording; a video of the
-      agent itself doing it is still the stronger asset.)
-- [ ] **Browser check online:** GitHub repo Settings → Pages → deploy from `main`, folder `/docs`. The
-      page is then at https://ps12007.github.io/kernelport/web/ ("check the ports on your own GPU",
-      a good launch link). Nothing else is needed; it is static.
-- [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X; lead with "proven
-      correct, not just translated" and the llm.c bug.
+- [ ] **Colab:** open `notebooks/freeze_references_colab.ipynb` in Colab (T4 runtime) and run the
+      cells under "Self-test" only (skip the "Your repo" cells). It runs the zoo originals + Triton
+      ports and the llm.c example, the first Linux + NVIDIA run, and downloads `selftest_results.txt`.
+- [ ] **Demo video/GIF (30-60 s):** one prompt to the agent, FAIL → fix → PASS, the green status
+      table. The biggest launch lever. Step-by-step recording plan in `drafts/demo-video-plan.md`.
+- [ ] **Browser check online:** GitHub repo Settings → Pages → Source "Deploy from a branch" → `main`,
+      folder `/docs` → Save. (Claude can't do this: creating a public site is blocked for it.) Then
+      https://ps12007.github.io/kernelport/ is a landing page and `/web/` the browser check (15 ports,
+      27/27 PASS in Edge on the RTX 5060). `docs/.nojekyll` is already there.
+- [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X. Drafts with a
+      pre-post checklist in `drafts/launch-posts.md` (local, gitignored).
 - [x] **PR #867:** kernel7 fix + line-ending restore pushed and the reply posted (2026-11-02); the PR
       diff is now 1 file, +8 / -8. Keep watching for review comments.
 - [ ] **wgpu loop-var bug (optional):** drafts are ready, not posted, in `drafts/` (local only,
       gitignored): an issue for pygfx/wgpu-py (`wgpu-loop-var-issue.md`, with
       `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
-      naga v30 (gfx-rs/wgpu#9592); wgpu-native has no v30 release yet. Re-check both before posting.
-- [ ] **Release 0.1.1:** main has a lot since 0.1.0 (pipelines, macro kernels, report, browser check, new
-      checks, flash-attention example, CLI fixes). Bump the version and push a `v0.1.1` tag (RELEASING.md).
+      naga v30 (gfx-rs/wgpu#9592); wgpu-native has no v30 release yet (re-checked 2026-11-02: latest is
+      still v29.0.1.1, #630 still open). Re-check both before posting.
+- [ ] **Release 0.2.0:** version bumped and CHANGELOG.md written (2026-11-02); push the `v0.2.0` tag
+      (RELEASING.md) if it isn't on PyPI yet.
 - [ ] Optional: try Codex, Cursor or Gemini CLI with `kernelport setup`.
 
 Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.py`, then push a
@@ -132,13 +134,13 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 - **Pipelines, more:** a pipeline in the browser check; a chain with a matmul; why the original encoder's time doubles between sessions.
 - **More real projects:** a cuBLAS-heavy repo, or flash-attention's backward pass (forward is done).
 - **Linux GPU checks:** free CI runners have no GPU; a Colab or Kaggle run per release would cover Linux + NVIDIA.
-- **Browser check, more:** add the llm.c / flash-attention WGSL ports to `docs/web` (today only the zoo),
-  or let visitors paste a WGSL port.
+- **Browser check, more:** let visitors paste a WGSL port; larger cases as an optional download.
 - **Real Mac timings:** CI's virtual M1 proves correctness but gives no fair speed numbers.
 - **When wgpu-native ships v30:** the loop-var check can stay (harmless); note the fixed version in the message.
 
 Done 2026-10-15 from this list: macro-defined kernels, report polish, browser demo page, FlashAttention example.
 Done 2026-10-17: multi-kernel pipelines. Done 2026-10-27: pipeline timing.
+Done 2026-11-02: llm.c + FlashAttention WGSL ports in the browser check.
 
 **Handy here:** headless Edge runs WebGPU on this laptop (`scripts/check_web_demo.py`; `--discrete` for
 the RTX 5060) and takes screenshots for checking pages (`msedge --headless=new --screenshot=...`).

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>kernelport</title>
+<meta name="description" content="kernelport brings CUDA-only kernels to Mac, AMD, browsers and CPU, with proof they are correct: every port is checked on real hardware against a reference validated on the original CUDA kernel.">
+<style>
+:root{--bg:#ffffff;--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--card:#f6f8fa;--code:#eff2f5;--accent:#0969da}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d1117;--fg:#e6edf3;
+--muted:#9198a1;--line:#3d444d;--card:#151b23;--code:#151b23;--accent:#4493f8}}
+:root[data-theme="dark"]{--bg:#0d1117;--fg:#e6edf3;--muted:#9198a1;--line:#3d444d;--card:#151b23;--code:#151b23;--accent:#4493f8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:2rem;margin:0 0 4px;line-height:1.2}
+h2{font-size:1.15rem;margin:36px 0 8px}
+a{color:var(--accent)}
+.muted{color:var(--muted)}
+.lede{font-size:1.1rem;margin:6px 0 20px;max-width:62ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:20px 0}
+.card{display:block;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--fg)}
+.card:hover{border-color:var(--accent)}
+.card b{display:block;color:var(--accent);margin-bottom:2px}
+.card span{font-size:.9rem;color:var(--muted)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;font:.85rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+img{max-width:100%;height:auto;border-radius:8px}
+ul{padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>kernelport</h1>
+<p class="lede">Bring CUDA-only kernels to Mac, AMD, browsers and CPU, with proof they are correct.
+Your coding agent writes the ports; kernelport runs each one on real hardware and checks it against a
+reference that was itself validated against the original CUDA kernel.</p>
+
+<pre>pip install kernelport</pre>
+
+<div class="cards">
+<a class="card" href="web/"><b>Check the ports on your GPU →</b><span>Runs 12 WebGPU ports here in your browser and compares every output with the validated reference.</span></a>
+<a class="card" href="https://github.com/PS12007/kernelport"><b>Source and docs →</b><span>README, install guide, the agent skill and the MCP server.</span></a>
+<a class="card" href="https://github.com/PS12007/kernelport/tree/main/examples/llm.c"><b>Real code: llm.c →</b><span>9 unmodified llm.c kernels ported to Triton, Metal and WebGPU, and a bug it found upstream.</span></a>
+</div>
+
+<h2>What it looks like</h2>
+<img src="img/demo.svg" alt="Terminal recording: kernelport validates a softmax reference against the original CUDA kernel, a first Triton port fails with NaN, the fixed port passes 24 of 24 cases on an RTX 5060">
+
+<h2>Backends</h2>
+<ul>
+<li><b>Triton</b> (NVIDIA, AMD): verified on an RTX 5060</li>
+<li><b>Metal</b> via MLX (Apple Silicon): verified on Apple M1 in CI on every push</li>
+<li><b>WebGPU</b> (WGSL, any GPU and browsers): verified on NVIDIA, Apple, Intel and software adapters</li>
+<li><b>CPU</b> via Numba: verified</li>
+<li><b>HIP</b> (AMD): ports written, not yet run on AMD hardware</li>
+</ul>
+<p class="muted">A port is reported as PASS only if its current code ran on real hardware and matched.</p>
+</main>
+</body>
+</html>
