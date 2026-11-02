@@ -6,7 +6,7 @@
 
 ## Where things stand
 
-kernelport 0.1.0 is on [PyPI](https://pypi.org/project/kernelport/), and the llm.c bug it found is
+kernelport 0.2.0 is on [PyPI](https://pypi.org/project/kernelport/), and the llm.c bug it found is
 fixed upstream in an open PR, [karpathy/llm.c#867](https://github.com/karpathy/llm.c/pull/867).
 CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters and headless Chrome
 (the in-browser check). HIP (AMD) is the only backend never run on its real hardware.
@@ -122,8 +122,7 @@ None of these need API credits.
       `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
       naga v30 (gfx-rs/wgpu#9592); wgpu-native has no v30 release yet (re-checked 2026-11-02: latest is
       still v29.0.1.1, #630 still open). Re-check both before posting.
-- [ ] **Release 0.2.0:** version bumped and CHANGELOG.md written (2026-11-02); push the `v0.2.0` tag
-      (RELEASING.md) if it isn't on PyPI yet.
+- [x] **Release 0.2.0:** on PyPI since 2026-11-02 (tag `v0.2.0`); `main` is 0.2.1.dev0.
 - [ ] Optional: try Codex, Cursor or Gemini CLI with `kernelport setup`.
 
 Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.py`, then push a
