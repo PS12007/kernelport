@@ -109,10 +109,8 @@ None of these need API credits.
       ports and the llm.c example, the first Linux + NVIDIA run, and downloads `selftest_results.txt`.
 - [ ] **Demo video/GIF (30-60 s):** one prompt to the agent, FAIL → fix → PASS, the green status
       table. The biggest launch lever. Step-by-step recording plan in `drafts/demo-video-plan.md`.
-- [ ] **Browser check online:** GitHub repo Settings → Pages → Source "Deploy from a branch" → `main`,
-      folder `/docs` → Save. (Claude can't do this: creating a public site is blocked for it.) Then
-      https://ps12007.github.io/kernelport/ is a landing page and `/web/` the browser check (15 ports,
-      27/27 PASS in Edge on the RTX 5060). `docs/.nojekyll` is already there.
+- [x] **Browser check online:** GitHub Pages is on (main, /docs) since 2026-11-02:
+      https://ps12007.github.io/kernelport/ (landing) and https://ps12007.github.io/kernelport/web/.
 - [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X. Drafts with a
       pre-post checklist in `drafts/launch-posts.md` (local, gitignored).
 - [x] **PR #867:** kernel7 fix + line-ending restore pushed and the reply posted (2026-11-02); the PR

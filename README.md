@@ -21,7 +21,8 @@ Re-record it with [scripts/record_demo.py](https://github.com/PS12007/kernelport
 
 ![kernelport status for nine llm.c kernels: Triton, Metal and WebGPU ports, each verified against a reference frozen on NVIDIA](https://raw.githubusercontent.com/PS12007/kernelport/main/docs/img/llmc-status.svg)
 
-*Real code, real hardware: [examples/llm.c](https://github.com/PS12007/kernelport/tree/main/examples/llm.c).*
+*Real code, real hardware: [examples/llm.c](https://github.com/PS12007/kernelport/tree/main/examples/llm.c).
+Run the WebGPU ports on your own GPU, in the browser: [ps12007.github.io/kernelport/web](https://ps12007.github.io/kernelport/web/).*
 
 ## How it works
 
@@ -140,8 +141,11 @@ Measured on an RTX 5060 Laptop GPU (sm_120) and an i7-14700HX (28 threads), benc
 
 ### Check the WGSL ports in your browser
 
+**Try it: https://ps12007.github.io/kernelport/web/** (Chrome, Edge, or Safari on macOS 26+).
+
 [`docs/web/`](https://github.com/PS12007/kernelport/tree/main/docs/web) is a single page with no
-dependencies. It runs the 12 WGSL ports on your GPU through the browser's WebGPU and compares every
+dependencies. It runs 15 WGSL ports (the 12 zoo kernels, two llm.c kernels and the FlashAttention
+forward pass) on your GPU through the browser's WebGPU and compares every
 output with the frozen reference, using kernelport's tolerances, in float32 and (where the GPU has `shader-f16`) float16. The inputs, expected outputs,
 tolerances and shaders come from kernelport's own harness (`scripts/build_web_demo.py`).
 
@@ -150,7 +154,8 @@ python -m http.server -d docs/web 8000     # then open http://localhost:8000
 python scripts/check_web_demo.py           # or headless, in Chrome/Edge (add --discrete for the dGPU)
 ```
 
-All 12 ports pass in both dtypes (24/24, 114 cases) in Edge on an RTX 5060 and on Intel UHD Graphics (the i7-14700HX's iGPU). The page also caught a
+All ports pass in both dtypes (27/27, 120 cases) in Edge on an RTX 5060; the 12 zoo ports also pass
+on Intel UHD Graphics (the i7-14700HX's iGPU). The page also caught a
 real portability bug: the softmax port wrote `-3.4028235e38`, a decimal just above the largest f32.
 wgpu-native rounds it, but browsers reject the shader. The webgpu runner now refuses such literals.
 
