@@ -114,8 +114,8 @@ None of these need API credits.
       a good launch link). Nothing else is needed; it is static.
 - [ ] **Launch posts, same day:** Show HN, r/LocalLLaMA, r/MachineLearning, X; lead with "proven
       correct, not just translated" and the llm.c bug.
-- [ ] **PR #867:** push the 2 new commits (`cd C:\-CS\llm.c-fork; git push`) and post the reply
-      drafted in `drafts/llm-c-867-kernel7-reply.md`. Then keep watching for review comments.
+- [x] **PR #867:** kernel7 fix + line-ending restore pushed and the reply posted (2026-11-02); the PR
+      diff is now 1 file, +8 / -8. Keep watching for review comments.
 - [ ] **wgpu loop-var bug (optional):** drafts are ready, not posted, in `drafts/` (local only,
       gitignored): an issue for pygfx/wgpu-py (`wgpu-loop-var-issue.md`, with
       `wgpu-loop-var-repro.py`) and a short comment for gfx-rs/wgpu-native PR #630. Already fixed in
