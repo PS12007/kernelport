@@ -1,6 +1,6 @@
 # kernelport: handoff notes
 
-*Last updated 2026-11-02. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
+*Last updated 2026-11-04. Read this first when resuming. Deeper detail: [PROGRESS.md](PROGRESS.md)
 (full technical history), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (launch strategy), [RELEASING.md](RELEASING.md)
 (publishing).*
 
@@ -98,6 +98,12 @@ CI is green on Linux, Windows, macOS, Apple Silicon (Metal), two WebGPU adapters
 | WGSL gap found | wgpu-native (naga, wgpu 0.32) accepts a `workgroupBarrier()` that browsers reject as non-uniform (checked in Edge). A port could PASS in kernelport and not compile in Chrome. The runner now refuses it with a fix hint; it agrees with Edge on 6 probe shaders and accepts all 15 existing WGSL ports |
 | Skill | SKILL.md, webgpu.md and metal.md: keep every thread alive to each barrier in ports, guard the work instead |
 
+## What was done on 2026-11-04
+
+| Area | Change |
+|---|---|
+| Browser check | Each kernel's WGSL port is an editor with "Run this version": the edit runs against the same cases, expected outputs and tolerances (fp32/fp16 tabs). Wrong edits FAIL with the first differing element; non-compiling ones show the compiler error. `check_web_demo.py` drives the editor too (4 checks). 27/27 + editor checks pass in Edge on the RTX 5060. Fixed the code panels: a long CUDA line no longer squeezes the WGSL side |
+
 ## Next steps (owner)
 
 None of these need API credits.
@@ -131,13 +137,13 @@ Future releases: bump the version in `pyproject.toml` and `kernelport/__init__.p
 - **Pipelines, more:** a pipeline in the browser check; a chain with a matmul; why the original encoder's time doubles between sessions.
 - **More real projects:** a cuBLAS-heavy repo, or flash-attention's backward pass (forward is done).
 - **Linux GPU checks:** free CI runners have no GPU; a Colab or Kaggle run per release would cover Linux + NVIDIA.
-- **Browser check, more:** let visitors paste a WGSL port; larger cases as an optional download.
+- **Browser check, more:** larger cases as an optional download; a pipeline in the browser; share an edited port by link.
 - **Real Mac timings:** CI's virtual M1 proves correctness but gives no fair speed numbers.
 - **When wgpu-native ships v30:** the loop-var check can stay (harmless); note the fixed version in the message.
 
 Done 2026-10-15 from this list: macro-defined kernels, report polish, browser demo page, FlashAttention example.
 Done 2026-10-17: multi-kernel pipelines. Done 2026-10-27: pipeline timing.
-Done 2026-11-02: llm.c + FlashAttention WGSL ports in the browser check.
+Done 2026-11-02: llm.c + FlashAttention WGSL ports in the browser check. Done 2026-11-04: editable ports in the browser check.
 
 **Handy here:** headless Edge runs WebGPU on this laptop (`scripts/check_web_demo.py`; `--discrete` for
 the RTX 5060) and takes screenshots for checking pages (`msedge --headless=new --screenshot=...`).

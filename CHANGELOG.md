@@ -6,6 +6,10 @@
   kernel with float32 and float16 side by side, real code (llm.c, FlashAttention) first, and the CUDA
   original next to each WebGPU port. Live at https://ps12007.github.io/kernelport/web/.
 - Landing page (https://ps12007.github.io/kernelport/) tells the llm.c bug story.
+- Browser check: every WebGPU port is editable. Change the WGSL (or break it on purpose) and run your
+  version against the same inputs, frozen expected outputs and tolerances; a wrong edit FAILs with the
+  first differing element, one that does not compile shows the compiler's message.
+  `scripts/check_web_demo.py` also drives the editor (shipped port PASS, wrong edit FAIL, broken edit FAIL).
 
 ## 0.2.0 (2026-11-02)
 

@@ -81,7 +81,11 @@ def main() -> None:
         print("  " + line.replace(" ▶ WGSL port", "").replace(" WGSL port", ""))
     skipped = f", {got['skipped']} not tested (no shader-f16)" if got.get("skipped") else ""
     print(f"{got['passed']}/{got['total']} PASS ({got['cases']} cases{skipped}) on {got['adapter']}")
-    sys.exit(0 if got["passed"] == got["total"] else 1)
+    editor = got.get("editor") or {"ok": False, "lines": ["page did not report an editor self-test"]}
+    print("editor self-test:")
+    for line in editor["lines"]:
+        print("  " + line)
+    sys.exit(0 if got["passed"] == got["total"] and editor["ok"] else 1)
 
 
 if __name__ == "__main__":
